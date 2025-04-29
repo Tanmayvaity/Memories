@@ -1,6 +1,7 @@
 package com.example.memories
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,16 +58,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNav(navController: NavHostController) {
 
-    val topLevelRoutes = listOf(
-        TopLevelRoute<Screen.Feed>("Feed", Screen.Feed, R.drawable.ic_feed),
-        TopLevelRoute<Screen.Search>("Search", Screen.Search, R.drawable.ic_search),
-        TopLevelRoute<Screen.Notification>("Notification", Screen.Notification, R.drawable.ic_notification),
-        TopLevelRoute<Screen.Other>("Other", Screen.Other, R.drawable.ic_other),
 
-        )
-
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    var isBottomBarVisible by remember { mutableStateOf(true) }
 
 
     Surface(
@@ -75,36 +68,10 @@ fun AppNav(navController: NavHostController) {
     ) {
         Scaffold(
             bottomBar = {
-                NavigationBar(containerColor = Color.White) {
-                    topLevelRoutes.forEachIndexed { index, item ->
-
-                        NavigationBarItem(
-                            selected = currentDestination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
-                            icon = {
-                                Icon(
-                                    painter = painterResource(item.resource),
-                                    contentDescription = item.name
-                                )
-                            },
-                            label = {
-                                Text(text = item.name)
-                            },
-                            onClick = {
-                                navController.navigate(item.route){
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-
-                                }
-
-                            },
-
-                        )
-
-                    }
+                if (isBottomBarVisible) {
+                    BottomNavBar(navController = navController)
                 }
+
             }
         ) { innerPadding ->
             NavHost(
@@ -112,12 +79,77 @@ fun AppNav(navController: NavHostController) {
                 startDestination = Screen.Feed,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable<Screen.Feed>() { FeedScreen() }
-                composable<Screen.Search> { SearchScreen() }
-                composable<Screen.Notification> { NotificationScreen() }
-                composable<Screen.Other> { OtherScreen() }
-                composable<Screen.Camera>{CameraScreen()}
+                composable<Screen.Feed> {
+                    isBottomBarVisible = true
+                    FeedScreen()
+                }
+                composable<Screen.Search> {
+                    isBottomBarVisible = true
+                    SearchScreen()
+                }
+                composable<Screen.Notification> {
+                    isBottomBarVisible = true
+                    NotificationScreen()
+                }
+                composable<Screen.Other> {
+                    isBottomBarVisible = true
+                    OtherScreen()
+                }
+                composable<Screen.Camera> {
+                    isBottomBarVisible = false
+                    CameraScreen()
+                }
             }
+
+
+        }
+    }
+}
+
+
+@Composable
+fun BottomNavBar(navController: NavHostController) {
+    val topLevelRoutes = listOf(
+        TopLevelRoute<Screen.Feed>(Screen.Feed.route, Screen.Feed, R.drawable.ic_feed),
+        TopLevelRoute<Screen.Search>(Screen.Search.route, Screen.Search, R.drawable.ic_search),
+        TopLevelRoute<Screen.Camera>(Screen.Camera.route, Screen.Camera, R.drawable.ic_camera),
+        TopLevelRoute<Screen.Notification>(
+            Screen.Notification.route,
+            Screen.Notification,
+            R.drawable.ic_notification
+        ),
+        TopLevelRoute<Screen.Other>(Screen.Other.route, Screen.Other, R.drawable.ic_other),
+
+        )
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    NavigationBar(containerColor = Color.White) {
+        topLevelRoutes.forEachIndexed { index, item ->
+
+            NavigationBarItem(
+                selected = currentDestination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
+                icon = {
+                    Icon(
+                        painter = painterResource(item.resource),
+                        contentDescription = item.name
+                    )
+                },
+//                label = {
+//                    Text(text = item.name)
+//                },
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+
+                    }
+
+                },
+            )
         }
     }
 }

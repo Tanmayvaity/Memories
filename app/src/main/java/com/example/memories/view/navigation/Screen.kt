@@ -2,19 +2,32 @@ package com.example.memories.view.navigation
 
 import kotlinx.serialization.Serializable
 
-sealed class Screen{
+@Serializable
+sealed class Screen(val route:String){
     @Serializable
-    object Feed : Screen()
+    object Feed : Screen("Feed")
 
     @Serializable
-    object Search : Screen()
+    object Search : Screen("Search")
 
     @Serializable
-    object Notification : Screen()
+    object Notification : Screen("Notification")
 
     @Serializable
-    object Other : Screen()
+    object Other : Screen("Other")
 
     @Serializable
-    object Camera : Screen()
+    object Camera : Screen("Camera")
+
+
+    companion object {
+        fun fromRoute(route : String): Screen? = when(route){
+            Feed.route -> Feed
+            Search.route -> Search
+            Notification.route -> Notification
+            Other.route -> Other
+            Camera.route -> Camera
+            else -> null
+        }
+    }
 }
