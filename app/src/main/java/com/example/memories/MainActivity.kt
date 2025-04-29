@@ -6,12 +6,40 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.memories.ui.theme.MemoriesTheme
+import com.example.memories.view.navigation.Screen
+import com.example.memories.view.navigation.TopLevelRoute
+import com.example.memories.view.screens.CameraScreen
+import com.example.memories.view.screens.FeedScreen
+import com.example.memories.view.screens.NotificationScreen
+import com.example.memories.view.screens.OtherScreen
+import com.example.memories.view.screens.SearchScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +47,90 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MemoriesTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val navController = rememberNavController()
+                AppNav(navController)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun AppNav(navController: NavHostController) {
+
+    val topLevelRoutes = listOf(
+        TopLevelRoute<Screen.Feed>("Feed", Screen.Feed, R.drawable.ic_feed),
+        TopLevelRoute<Screen.Search>("Search", Screen.Search, R.drawable.ic_search),
+        TopLevelRoute<Screen.Notification>("Notification", Screen.Notification, R.drawable.ic_notification),
+        TopLevelRoute<Screen.Other>("Other", Screen.Other, R.drawable.ic_other),
+
+        )
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Scaffold(
+            bottomBar = {
+                NavigationBar(containerColor = Color.White) {
+                    topLevelRoutes.forEachIndexed { index, item ->
+
+                        NavigationBarItem(
+                            selected = currentDestination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
+                            icon = {
+                                Icon(
+                                    painter = painterResource(item.resource),
+                                    contentDescription = item.name
+                                )
+                            },
+                            label = {
+                                Text(text = item.name)
+                            },
+                            onClick = {
+                                navController.navigate(item.route){
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+
+                                }
+
+                            },
+
+                        )
+
+                    }
+                }
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Feed,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable<Screen.Feed>() { FeedScreen() }
+                composable<Screen.Search> { SearchScreen() }
+                composable<Screen.Notification> { NotificationScreen() }
+                composable<Screen.Other> { OtherScreen() }
+                composable<Screen.Camera>{CameraScreen()}
+            }
+        }
+    }
 }
+
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun AppNavPreview() {
     MemoriesTheme {
-        Greeting("Android")
+        AppNav(rememberNavController())
     }
 }
+
+
+
+
