@@ -10,13 +10,23 @@ import android.widget.ImageButton
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.compose.CameraXViewfinder
+import androidx.camera.viewfinder.compose.IdentityCoordinateTransformer.transform
+import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,10 +43,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.geometry.takeOrElse
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -46,6 +61,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.view.utils.PermissionUtil
 import com.example.memories.view.utils.isPermissionGranted
 import com.example.memories.viewmodel.CameraScreenViewModel
+import kotlinx.coroutines.delay
+import java.util.UUID
 
 
 @Composable
@@ -154,6 +171,7 @@ fun CameraPreviewContent(
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val lensFacing by viewModel.lensFacing.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coordinateTransformer = remember{ MutableCoordinateTransformer() }
 
     LaunchedEffect(lensFacing) {
         viewModel.bindToCamera(
@@ -162,13 +180,38 @@ fun CameraPreviewContent(
         )
     }
 
+    var autofocusRequest by remember { mutableStateOf(UUID.randomUUID() to Offset.Unspecified) }
+
+    val autofocusRequestId = autofocusRequest.first
+    // Show the autofocus indicator if the offset is specified
+    val showAutofocusIndicator = autofocusRequest.second.isSpecified
+    // Cache the initial coords for each autofocus request
+    val autofocusCoords = remember(autofocusRequestId) { autofocusRequest.second }
+
+    // Queue hiding the request for each unique autofocus tap
+    if (showAutofocusIndicator) {
+        LaunchedEffect(autofocusRequestId) {
+            delay(1000L)
+            // Clear the offset to finish the request and hide the indicator
+            autofocusRequest = autofocusRequestId to Offset.Unspecified
+        }
+    }
+
     surfaceRequest?.let{ request ->
         Box(
             modifier = Modifier.fillMaxSize()
         ){
             CameraXViewfinder(
-                modifier = modifier,
-                surfaceRequest = request
+                surfaceRequest = request,
+                coordinateTransformer = coordinateTransformer,
+                modifier = modifier.pointerInput(Unit){
+                    detectTapGestures{tapCoords ->
+                        with(coordinateTransformer){
+                            viewModel.tapToFocus(tapCoords.transform())
+                        }
+                        autofocusRequest = UUID.randomUUID() to tapCoords
+                    }
+                }
             )
 
             IconButton(
@@ -182,6 +225,17 @@ fun CameraPreviewContent(
                     tint = Color.White,
                     modifier = Modifier.size(64.dp)
                 )
+            }
+
+            AnimatedVisibility(
+                visible = showAutofocusIndicator,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .offset { autofocusCoords.takeOrElse { Offset.Zero } .round() }
+                    .offset((-24).dp, (-24).dp)
+            ) {
+                Spacer(Modifier.border(1.dp, Color.White, CircleShape).size(48.dp))
             }
         }
 
