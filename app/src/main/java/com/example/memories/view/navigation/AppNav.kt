@@ -88,7 +88,7 @@ fun AppNav(navController: NavHostController) {
                     OtherScreen()
                 }
                 composable<Screen.Camera> {
-                    isBottomBarVisible = false
+                    isBottomBarVisible = true
                     CameraScreen(
                         popBack = {
                             navController.popBackStack()
@@ -119,7 +119,7 @@ fun BottomNavBar(navController: NavHostController) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    NavigationBar(containerColor = Color.White) {
+    NavigationBar(contentColor = Color.White) {
         topLevelRoutes.forEachIndexed { index, item ->
 
             NavigationBarItem(
