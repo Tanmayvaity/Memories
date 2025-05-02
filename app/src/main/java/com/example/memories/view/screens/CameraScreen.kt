@@ -6,6 +6,7 @@ import android.R
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import android.widget.ImageButton
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -171,7 +172,7 @@ fun CameraPreviewContent(
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val lensFacing by viewModel.lensFacing.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val coordinateTransformer = remember{ MutableCoordinateTransformer() }
+    val coordinateTransformer = remember { MutableCoordinateTransformer() }
 
     LaunchedEffect(lensFacing) {
         viewModel.bindToCamera(
@@ -197,26 +198,33 @@ fun CameraPreviewContent(
         }
     }
 
-    surfaceRequest?.let{ request ->
+    surfaceRequest?.let { request ->
         Box(
             modifier = Modifier.fillMaxSize()
-        ){
+        ) {
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = coordinateTransformer,
-                modifier = modifier.pointerInput(Unit){
-                    detectTapGestures{tapCoords ->
-                        with(coordinateTransformer){
-                            viewModel.tapToFocus(tapCoords.transform())
-                        }
-                        autofocusRequest = UUID.randomUUID() to tapCoords
-                    }
+                modifier = modifier.pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = { tapCoords ->
+                            Log.d("CameraScreen", "Double Tap Detected")
+                            viewModel.toggleCamera()
+                        },
+                        onTap = { tapCoords ->
+                            with(coordinateTransformer) {
+                                viewModel.tapToFocus(tapCoords.transform())
+                            }
+                            autofocusRequest = UUID.randomUUID() to tapCoords
+                        },
+                    )
                 }
             )
 
             IconButton(
-                onClick = {viewModel.toggleCamera()},
-                modifier = Modifier.align(Alignment.BottomCenter)
+                onClick = { viewModel.toggleCamera() },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .padding(24.dp)
             ) {
                 Icon(
@@ -232,10 +240,14 @@ fun CameraPreviewContent(
                 enter = fadeIn(),
                 exit = fadeOut(),
                 modifier = Modifier
-                    .offset { autofocusCoords.takeOrElse { Offset.Zero } .round() }
+                    .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
                     .offset((-24).dp, (-24).dp)
             ) {
-                Spacer(Modifier.border(1.dp, Color.White, CircleShape).size(48.dp))
+                Spacer(
+                    Modifier
+                        .border(1.dp, Color.White, CircleShape)
+                        .size(48.dp)
+                )
             }
         }
 
