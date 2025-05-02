@@ -2,6 +2,7 @@ package com.example.memories.viewmodel
 
 import android.content.Context
 import androidx.camera.core.CameraControl
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.MeteringPoint
@@ -13,9 +14,11 @@ import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 class CameraScreenViewModel : ViewModel() {
@@ -25,8 +28,12 @@ class CameraScreenViewModel : ViewModel() {
     private val _lensFacing = MutableStateFlow(CameraSelector.LENS_FACING_BACK)
     val lensFacing = _lensFacing.asStateFlow()
 
+    private val _zoomScale = MutableStateFlow(0f)
+    val zoomScale = _zoomScale.asStateFlow()
+
     private var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory? = null
     private var cameraControl: CameraControl? = null
+    private var cameraInfo : CameraInfo? = null
 
 
     private val cameraPreviewUseCase = Preview.Builder().build().apply {
@@ -62,6 +69,9 @@ class CameraScreenViewModel : ViewModel() {
         )
 
         cameraControl = camera.cameraControl
+        cameraInfo = camera.cameraInfo
+
+        cameraControl?.setLinearZoom(_zoomScale.value)
 
 
         // Cancellation signals we're done with the camera
@@ -70,6 +80,7 @@ class CameraScreenViewModel : ViewModel() {
         } finally {
             processCameraProvider.unbindAll()
             cameraControl = null
+            cameraInfo = null
         }
     }
 
@@ -80,6 +91,12 @@ class CameraScreenViewModel : ViewModel() {
             val meteringAction = FocusMeteringAction.Builder(point).build()
             cameraControl?.startFocusAndMetering(meteringAction)
         }
+    }
+
+    fun zoom(scale : Float){
+        _zoomScale.update { scale }
+        cameraControl?.setLinearZoom(_zoomScale.value)
+
     }
 
 }

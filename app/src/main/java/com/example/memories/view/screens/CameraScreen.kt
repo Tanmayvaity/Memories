@@ -36,14 +36,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Label
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,8 +63,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +86,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.view.utils.PermissionUtil
 import com.example.memories.view.utils.isPermissionGranted
@@ -178,6 +192,7 @@ fun CameraScreen(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraPreviewContent(
     modifier: Modifier = Modifier,
@@ -189,11 +204,16 @@ fun CameraPreviewContent(
     val context = LocalContext.current
     val coordinateTransformer = remember { MutableCoordinateTransformer() }
 
+    val zoomScale by viewModel.zoomScale.collectAsStateWithLifecycle()
+
     LaunchedEffect(lensFacing) {
-        viewModel.bindToCamera(
-            context.applicationContext,
-            lifecycleOwner
-        )
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED){
+            viewModel.bindToCamera(
+                context.applicationContext,
+                lifecycleOwner
+            )
+        }
+
     }
 
     var autofocusRequest by remember { mutableStateOf(UUID.randomUUID() to Offset.Unspecified) }
@@ -290,23 +310,39 @@ fun CameraPreviewContent(
                     .padding(16.dp)
                     .pointerInput(Unit) {}
             ) {
-                Surface(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .align(Alignment.BottomCenter)
-                        .clip(CircleShape)
-                        .border(
-                            width = 3.dp,
-                            color = Color.White,
-                            shape = CircleShape
-                        )
-                        .padding(10.dp)
-                        .clickable(
-                            onClick = {}
-                        ),
-                    color = Color.Transparent,
-                    shape = CircleShape,
-                ) {}
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ){
+                    Slider(
+                        value = zoomScale,
+                        onValueChange = {
+                            viewModel.zoom(it)
+                        },
+                        valueRange = 0f..1f,
+                        modifier = Modifier.width((64*2).dp),
+
+                    )
+                    Surface(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = 3.dp,
+                                color = Color.White,
+                                shape = CircleShape
+                            )
+                            .padding(10.dp)
+                            .clickable(
+                                onClick = {}
+                            ),
+                        color = Color.Transparent,
+                        shape = CircleShape,
+                    ) {}
+
+                }
+
             }
 
 
