@@ -15,6 +15,8 @@ import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -33,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +45,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -186,8 +190,10 @@ fun CameraPreviewContent(
 
     val zoomScale by viewModel.zoomScale.collectAsStateWithLifecycle()
     val exposureValue by viewModel.exposureValue.collectAsStateWithLifecycle()
+    val torchState by viewModel.torchState.collectAsStateWithLifecycle()
 
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showExposureBottomSheet by remember { mutableStateOf(false) }
+    var showTorchBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(lensFacing) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -264,12 +270,16 @@ fun CameraPreviewContent(
                         drawableRes = R.drawable.ic_exposure,
                         contentDescription = "Change Camera Exposure",
                         onClick = {
-                            showBottomSheet = true
+                            showExposureBottomSheet = true
                         }
                     )
                     IconItem(
-                        drawableRes = R.drawable.ic_flash_off,
-                        contentDescription = "toggle flash on and off"
+                        drawableRes = if(torchState) R.drawable.ic_torch_off else R.drawable.ic_torch_on,
+                        contentDescription = "toggle flash on and off",
+                        onClick = {
+                            showTorchBottomSheet = true
+                            viewModel.toggleTorch()
+                        }
                     )
 
 
@@ -333,7 +343,6 @@ fun CameraPreviewContent(
                     ) {}
 
 
-
                 }
 
             }
@@ -356,10 +365,10 @@ fun CameraPreviewContent(
 
             }
 
-            if (showBottomSheet) {
+            if (showExposureBottomSheet) {
                 ModalBottomSheet(
                     onDismissRequest = {
-                        showBottomSheet = false
+                        showExposureBottomSheet = false
                     },
                 ) {
                     Slider(
@@ -376,10 +385,12 @@ fun CameraPreviewContent(
                 }
             }
 
+
         }
 
     }
 }
+
 
 
 @Composable

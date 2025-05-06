@@ -36,6 +36,9 @@ class CameraScreenViewModel : ViewModel() {
     private val _exposureValue : MutableStateFlow<Int> = MutableStateFlow(0)
     val exposureValue = _exposureValue.asStateFlow()
 
+    private val _torchState  = MutableStateFlow(false)
+    val torchState = _torchState.asStateFlow()
+
     private var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory? = null
     private var cameraControl: CameraControl? = null
     private var cameraInfo : CameraInfo? = null
@@ -79,6 +82,7 @@ class CameraScreenViewModel : ViewModel() {
 
         cameraControl?.setLinearZoom(_zoomScale.value)
         cameraControl?.setExposureCompensationIndex(_exposureValue.value)
+        cameraControl?.enableTorch(_torchState.value)
 
 
         // Cancellation signals we're done with the camera
@@ -130,11 +134,11 @@ class CameraScreenViewModel : ViewModel() {
         return cameraInfo?.exposureState?.isExposureCompensationSupported!!
     }
 
-
-
-
-    
-
+    fun toggleTorch(){
+        val torch = !(_torchState.value)
+        _torchState.update { !_torchState.value }
+        cameraControl?.enableTorch(torch)
+    }
 
 
 
