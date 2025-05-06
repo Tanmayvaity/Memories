@@ -1,9 +1,12 @@
 package com.example.memories.viewmodel
 
 import android.content.Context
+import android.util.Range
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExposureState
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.MeteringPoint
 import androidx.camera.core.Preview
@@ -18,6 +21,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlin.math.exp
 
 class CameraScreenViewModel : ViewModel() {
     private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
@@ -29,9 +33,13 @@ class CameraScreenViewModel : ViewModel() {
     private val _zoomScale = MutableStateFlow(0f)
     val zoomScale = _zoomScale.asStateFlow()
 
+    private val _exposureValue : MutableStateFlow<Int> = MutableStateFlow(0)
+    val exposureValue = _exposureValue.asStateFlow()
+
     private var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory? = null
     private var cameraControl: CameraControl? = null
     private var cameraInfo : CameraInfo? = null
+    private var camera:Camera? = null
 
 
     private val cameraPreviewUseCase = Preview.Builder().build().apply {
@@ -62,14 +70,15 @@ class CameraScreenViewModel : ViewModel() {
         var cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(_lensFacing.value)
             .build()
-        val camera = processCameraProvider.bindToLifecycle(
+       camera = processCameraProvider.bindToLifecycle(
             lifecycleOwner, cameraSelector, cameraPreviewUseCase
         )
 
-        cameraControl = camera.cameraControl
-        cameraInfo = camera.cameraInfo
+        cameraControl = camera?.cameraControl
+        cameraInfo = camera?.cameraInfo
 
         cameraControl?.setLinearZoom(_zoomScale.value)
+        cameraControl?.setExposureCompensationIndex(_exposureValue.value)
 
 
         // Cancellation signals we're done with the camera
@@ -79,6 +88,7 @@ class CameraScreenViewModel : ViewModel() {
             processCameraProvider.unbindAll()
             cameraControl = null
             cameraInfo = null
+            camera = null
         }
     }
 
@@ -89,6 +99,8 @@ class CameraScreenViewModel : ViewModel() {
             val meteringAction = FocusMeteringAction.Builder(point).build()
             cameraControl?.startFocusAndMetering(meteringAction)
         }
+        cameraControl?.setExposureCompensationIndex(0)
+
     }
 
     fun zoom(scale : Float){
@@ -96,5 +108,34 @@ class CameraScreenViewModel : ViewModel() {
         cameraControl?.setLinearZoom(_zoomScale.value)
 
     }
+
+    fun changeExposure(value : Int){
+        _exposureValue.update { value }
+        if(!isExposureSupported()){
+            return
+        }
+
+        val range = getExposureRange()
+
+        if(range.contains(value)){
+            cameraControl?.setExposureCompensationIndex(value)
+        }
+    }
+
+    fun getExposureRange(): Range<Int> {
+        return cameraInfo?.exposureState?.exposureCompensationRange!!
+    }
+
+    fun isExposureSupported():Boolean {
+        return cameraInfo?.exposureState?.isExposureCompensationSupported!!
+    }
+
+
+
+
+    
+
+
+
 
 }

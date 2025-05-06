@@ -37,6 +37,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -171,6 +172,7 @@ fun CameraScreen(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraPreviewContent(
     modifier: Modifier = Modifier,
@@ -183,9 +185,12 @@ fun CameraPreviewContent(
     val coordinateTransformer = remember { MutableCoordinateTransformer() }
 
     val zoomScale by viewModel.zoomScale.collectAsStateWithLifecycle()
+    val exposureValue by viewModel.exposureValue.collectAsStateWithLifecycle()
+
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(lensFacing) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED){
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.bindToCamera(
                 context.applicationContext,
                 lifecycleOwner
@@ -219,26 +224,28 @@ fun CameraPreviewContent(
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = coordinateTransformer,
-                modifier = modifier.pointerInput(Unit) {
-                    detectTapGestures(
-                        onDoubleTap = { tapCoords ->
-                            Log.d("CameraScreen", "Double Tap Detected")
-                            viewModel.toggleCamera()
-                        },
-                        onTap = { tapCoords ->
-                            with(coordinateTransformer) {
-                                viewModel.tapToFocus(tapCoords.transform())
-                            }
-                            autofocusRequest = UUID.randomUUID() to tapCoords
-                        },
-                    )
-                }.pointerInput(Unit){
-                    detectTransformGestures { _,_,zoom,_ ->
-                        val scale = (zoomScale + (zoom - 1f)).coerceIn(0f,1f)
-
-                        viewModel.zoom(scale)
+                modifier = modifier
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = { tapCoords ->
+                                Log.d("CameraScreen", "Double Tap Detected")
+                                viewModel.toggleCamera()
+                            },
+                            onTap = { tapCoords ->
+                                with(coordinateTransformer) {
+                                    viewModel.tapToFocus(tapCoords.transform())
+                                }
+                                autofocusRequest = UUID.randomUUID() to tapCoords
+                            },
+                        )
                     }
-                }
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, _, zoom, _ ->
+                            val scale = (zoomScale + (zoom - 1f)).coerceIn(0f, 1f)
+
+                            viewModel.zoom(scale)
+                        }
+                    }
             )
 
             Box(
@@ -254,8 +261,11 @@ fun CameraPreviewContent(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     IconItem(
-                        drawableRes = R.drawable.ic_settings,
-                        contentDescription = "Camera Settings"
+                        drawableRes = R.drawable.ic_exposure,
+                        contentDescription = "Change Camera Exposure",
+                        onClick = {
+                            showBottomSheet = true
+                        }
                     )
                     IconItem(
                         drawableRes = R.drawable.ic_flash_off,
@@ -295,16 +305,16 @@ fun CameraPreviewContent(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.align(Alignment.BottomCenter)
-                ){
+                ) {
                     Slider(
                         value = zoomScale,
                         onValueChange = {
                             viewModel.zoom(it)
                         },
                         valueRange = 0f..1f,
-                        modifier = Modifier.width((64*2).dp),
+                        modifier = Modifier.width((64 * 2).dp),
 
-                    )
+                        )
                     Surface(
                         modifier = Modifier
                             .size(64.dp)
@@ -321,6 +331,8 @@ fun CameraPreviewContent(
                         color = Color.Transparent,
                         shape = CircleShape,
                     ) {}
+
+
 
                 }
 
@@ -341,7 +353,29 @@ fun CameraPreviewContent(
                         .border(1.dp, Color.White, CircleShape)
                         .size(48.dp)
                 )
+
             }
+
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showBottomSheet = false
+                    },
+                ) {
+                    Slider(
+                        value = exposureValue.toFloat(),
+                        onValueChange = {
+                            viewModel.changeExposure(it.toInt())
+                        },
+                        valueRange = viewModel.getExposureRange().lower.toFloat()..viewModel.getExposureRange().upper.toFloat(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+
+                        )
+                }
+            }
+
         }
 
     }
