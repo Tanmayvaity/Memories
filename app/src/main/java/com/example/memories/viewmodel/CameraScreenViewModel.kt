@@ -85,6 +85,7 @@ class CameraScreenViewModel : ViewModel() {
         cameraControl?.enableTorch(_torchState.value)
 
 
+
         // Cancellation signals we're done with the camera
         try {
             awaitCancellation()
@@ -103,7 +104,8 @@ class CameraScreenViewModel : ViewModel() {
             val meteringAction = FocusMeteringAction.Builder(point).build()
             cameraControl?.startFocusAndMetering(meteringAction)
         }
-        cameraControl?.setExposureCompensationIndex(0)
+        _exposureValue.update{0}
+        cameraControl?.setExposureCompensationIndex(_exposureValue.value)
 
     }
 
