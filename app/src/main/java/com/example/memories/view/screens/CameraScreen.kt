@@ -222,6 +222,20 @@ fun CameraPreviewContent(
         }
     }
 
+    if(surfaceRequest==null){
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ){
+            CircularProgressIndicator(
+                modifier = Modifier.width(64.dp),
+                color = Color.Black,
+                strokeWidth = 5.dp
+            )
+        }
+
+    }
+
     surfaceRequest?.let{ request ->
         Box(
             modifier = Modifier.fillMaxSize()
