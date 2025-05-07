@@ -2,6 +2,7 @@ package com.example.memories.view.screens
 
 
 import android.Manifest
+import android.R.attr.contentDescription
 import com.example.memories.R
 import android.content.Intent
 import android.net.Uri
@@ -37,6 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,6 +74,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.memories.view.components.CameraRationaleDialog
+import com.example.memories.view.components.IconItem
+import com.example.memories.view.components.TextItem
 import com.example.memories.view.utils.PermissionUtil
 import com.example.memories.view.utils.isPermissionGranted
 import com.example.memories.viewmodel.CameraScreenViewModel
@@ -85,7 +91,7 @@ fun CameraScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraViewModel = CameraScreenViewModel()
+    val cameraViewModel: CameraScreenViewModel = viewModel()
     var cameraPermissionStatus by remember {
         mutableStateOf(
             isPermissionGranted(
@@ -145,35 +151,31 @@ fun CameraScreen(
     }
 
     if (showRationale) {
-        CameraRationaleDialog {
-            showRationale = false
-            popBack()
-        }
+        CameraRationaleDialog(
+            title = "Camera Permission has not been granted",
+            text = "you cannot use any camera features without this permission. Go to settings and grant Camera permission",
+            onDismissRequest = {
+                showRationale = false
+                popBack()
+            },
+            onConfirm = {
+                val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                settingsIntent.data = uri
+                context.startActivity(settingsIntent)
+            }
+        )
+
     }
 
     if (cameraPermissionStatus) {
-//        Surface(
-//            modifier = Modifier.fillMaxSize(),
-//            color = MaterialTheme.colorScheme.secondary,
-//        ) {
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Text(
-//                    text = "permission has been granted"
-//                )
-//            }
-//        }
-
-
         CameraPreviewContent(
             modifier = Modifier.fillMaxSize(),
             viewModel = cameraViewModel,
             lifecycleOwner = lifecycleOwner
         )
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,8 +195,6 @@ fun CameraPreviewContent(
     val torchState by viewModel.torchState.collectAsStateWithLifecycle()
 
     var showExposureBottomSheet by remember { mutableStateOf(false) }
-    var showTorchBottomSheet by remember { mutableStateOf(false) }
-
     LaunchedEffect(lensFacing) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.bindToCamera(
@@ -222,7 +222,7 @@ fun CameraPreviewContent(
         }
     }
 
-    surfaceRequest?.let { request ->
+    surfaceRequest?.let{ request ->
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -254,99 +254,29 @@ fun CameraPreviewContent(
                     }
             )
 
-            Box(
+            UpperBox(
+                modifier = Modifier.align(Alignment.TopCenter),
+                onExposureBtnClicked = {
+                    showExposureBottomSheet = true
+                },
+                torchState = torchState,
+                onTorchToggle = {
+                    viewModel.toggleTorch()
+                },
+                onSwitchCamera = {
+                    viewModel.toggleCamera()
+                },
+            )
+
+            LowerBox(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .align(Alignment.TopCenter)
-                    .pointerInput(Unit) {}
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    IconItem(
-                        drawableRes = R.drawable.ic_exposure,
-                        contentDescription = "Change Camera Exposure",
-                        onClick = {
-                            showExposureBottomSheet = true
-                        }
-                    )
-                    IconItem(
-                        drawableRes = if(torchState) R.drawable.ic_torch_off else R.drawable.ic_torch_on,
-                        contentDescription = "toggle flash on and off",
-                        onClick = {
-                            showTorchBottomSheet = true
-                            viewModel.toggleTorch()
-                        }
-                    )
-
-
-                    IconItem(
-                        drawableRes = R.drawable.ic_timer,
-                        contentDescription = "Photo Capture Timer"
-                    )
-                    TextItem("Full")
-                    TextItem("16M")
-                    IconItem(
-                        drawableRes = R.drawable.ic_filter,
-                        contentDescription = "Choose filter"
-                    )
-                    IconItem(
-                        drawableRes = R.drawable.ic_switch_camera,
-                        contentDescription = "Toggle Camera",
-                    ) {
-                        viewModel.toggleCamera()
-                    }
-                }
-            }
-
-
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .pointerInput(Unit) {}
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Slider(
-                        value = zoomScale,
-                        onValueChange = {
-                            viewModel.zoom(it)
-                        },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.width((64 * 2).dp),
-
-                        )
-                    Surface(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .border(
-                                width = 3.dp,
-                                color = Color.White,
-                                shape = CircleShape
-                            )
-                            .padding(10.dp)
-                            .clickable(
-                                onClick = {}
-                            ),
-                        color = Color.Transparent,
-                        shape = CircleShape,
-                    ) {}
-
-
-                }
-
-            }
-
+                ,
+                onExposureSliderChange = { zoomValue ->
+                    viewModel.zoom(zoomValue)
+                },
+                zoomScale = zoomScale
+            )
 
 
             AnimatedVisibility(
@@ -366,140 +296,178 @@ fun CameraPreviewContent(
             }
 
             if (showExposureBottomSheet) {
-                ModalBottomSheet(
+                SliderModalBottomSheet(
                     onDismissRequest = {
                         showExposureBottomSheet = false
                     },
-                ) {
-                    Slider(
-                        value = exposureValue.toFloat(),
-                        onValueChange = {
-                            viewModel.changeExposure(it.toInt())
-                        },
-                        valueRange = viewModel.getExposureRange().lower.toFloat()..viewModel.getExposureRange().upper.toFloat(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-
-                        )
-                }
+                    onExposureChange = {exposure ->
+                        viewModel.changeExposure(exposure.toInt())
+                    },
+                    exposureValue = exposureValue,
+                    min = viewModel.getExposureRange().lower.toFloat(),
+                    max = viewModel.getExposureRange().upper.toFloat()
+                )
             }
 
 
         }
-
     }
+
+
+
 }
 
-
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TextItem(
-    text: String,
-    color: Color = Color.White,
-    onClick: () -> Unit = {}
-) {
-    Text(
-        text = text,
-        fontSize = 24.sp,
-        modifier = Modifier
-            .padding(10.dp)
-            .clickable {
-                onClick()
-            },
-        color = color
-    )
-}
+fun SliderModalBottomSheet(
+    onDismissRequest : () -> Unit,
+    onExposureChange : (Float) -> Unit = {},
+    exposureValue : Int,
+    min : Float,
+    max : Float,
 
-@Composable
-fun IconItem(
-    @DrawableRes drawableRes: Int,
-    contentDescription: String,
-    color: Color = Color.White,
-    onClick: () -> Unit = {}
 ) {
-    IconButton(
-        onClick = {
-            onClick()
+    ModalBottomSheet(
+        onDismissRequest = {
+            onDismissRequest()
         },
-        modifier = Modifier
-            .padding(10.dp)
-            .size(24.dp)
     ) {
-        Icon(
-            painter = painterResource(drawableRes),
-            contentDescription = contentDescription,
-            tint = color
-        )
+        Slider(
+            value = exposureValue.toFloat(),
+            onValueChange = {
+                onExposureChange(it)
+            },
+            valueRange = min..max,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+
+            )
     }
 }
 
 @Composable
-fun CameraPermissionRejectionDialog(
-    onDismissRequest: () -> Unit
+fun UpperBox(
+    modifier : Modifier = Modifier,
+    onExposureBtnClicked: () -> Unit = {},
+    torchState: Boolean,
+    onTorchToggle: () -> Unit = {},
+    onTimerSet: () -> Unit = {},
+    onFilter: () -> Unit = {},
+    onSwitchCamera: () -> Unit = {}
 ) {
-    AlertDialog(
-        title = {
-            Text(text = "Camera Permission Rejected")
-        },
-        text = {
-            Text(text = "You won't be able to use camera features without this permission")
-        },
-        onDismissRequest = {
-            onDismissRequest()
-        },
-        confirmButton = {
-            TextButton(
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .pointerInput(Unit) {}
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            IconItem(
+                drawableRes = R.drawable.ic_exposure,
+                contentDescription = "Change Camera Exposure",
                 onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text("Ok")
-            }
-        },
 
-        )
+                    onExposureBtnClicked()
+                }
+            )
+            IconItem(
+                drawableRes = if (torchState) R.drawable.ic_torch_off else R.drawable.ic_torch_on,
+                contentDescription = "toggle flash on and off",
+                onClick = {
+                    onTorchToggle()
+                }
+            )
+
+
+            IconItem(
+                drawableRes = R.drawable.ic_timer,
+                contentDescription = "Photo Capture Timer",
+                onClick = {
+                    onTimerSet()
+                }
+            )
+            TextItem("Full")
+            TextItem("16M")
+            IconItem(
+                drawableRes = R.drawable.ic_filter,
+                contentDescription = "Choose filter",
+                onClick = {
+                    onFilter()
+                }
+            )
+            IconItem(
+                drawableRes = R.drawable.ic_switch_camera,
+                contentDescription = "Toggle Camera",
+            ) {
+                onSwitchCamera()
+            }
+        }
+    }
 }
 
 @Composable
-fun CameraRationaleDialog(
-    onDismissRequest: () -> Unit,
+fun LowerBox(
+    modifier: Modifier = Modifier,
+    onExposureSliderChange : (Float) -> Unit = {},
+    zoomScale : Float,
 ) {
-    val context = LocalContext.current
-    AlertDialog(
-        title = {
-            Text(text = "Camera Permission has not been granted")
-        },
-        text = {
-            Text(text = "you cannot use any camera features without this permission. Go to settings and grant Camera permission")
-        },
-        onDismissRequest = {
-            onDismissRequest()
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    val uri = Uri.fromParts("package", context.packageName, null)
-                    settingsIntent.data = uri
-                    context.startActivity(settingsIntent)
-                }
-            ) {
-                Text("Settings")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text("Dismiss")
-            }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(16.dp)
+            .pointerInput(Unit){},
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Slider(
+                value = zoomScale,
+                onValueChange = { it ->
+                    onExposureSliderChange(it)
+                },
+                valueRange = 0f..1f,
+                modifier = Modifier.width((64 * 2).dp),
+
+                )
+            Surface(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .border(
+                        width = 3.dp,
+                        color = Color.White,
+                        shape = CircleShape
+                    )
+                    .padding(10.dp)
+                    .clickable(
+                        onClick = {}
+                    ),
+                color = Color.Transparent,
+                shape = CircleShape,
+            ) {}
+
+
         }
-    )
+
+    }
 }
+
+
+
+
+
+
+
+
 
 
 
