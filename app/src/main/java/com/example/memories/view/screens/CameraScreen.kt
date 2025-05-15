@@ -3,6 +3,7 @@ package com.example.memories.view.screens
 
 import android.Manifest
 import android.R.attr.contentDescription
+import android.app.ProgressDialog.show
 import com.example.memories.R
 import android.content.Intent
 import android.net.Uri
@@ -18,6 +19,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -44,6 +46,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderColors
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
@@ -205,28 +210,33 @@ fun CameraPreviewContent(
 
     }
 
+    var isUserInteractingWithSlider by remember { mutableStateOf(false) }
+//    var showExposureSlider = false
+
     var autofocusRequest by remember { mutableStateOf(UUID.randomUUID() to Offset.Unspecified) }
 
     val autofocusRequestId = autofocusRequest.first
     // Show the autofocus indicator if the offset is specified
-    val showAutofocusIndicator = autofocusRequest.second.isSpecified
+    var showAutofocusIndicator = autofocusRequest.second.isSpecified
     // Cache the initial coords for each autofocus request
     val autofocusCoords = remember(autofocusRequestId) { autofocusRequest.second }
 
     // Queue hiding the request for each unique autofocus tap
     if (showAutofocusIndicator) {
-        LaunchedEffect(autofocusRequestId) {
-            delay(1000L)
-            // Clear the offset to finish the request and hide the indicator
-            autofocusRequest = autofocusRequestId to Offset.Unspecified
+        LaunchedEffect(autofocusRequestId,isUserInteractingWithSlider) {
+
+            if(!isUserInteractingWithSlider){
+                delay(2000)
+                autofocusRequest = autofocusRequestId to Offset.Unspecified
+            }
         }
     }
 
-    if(surfaceRequest==null){
+    if (surfaceRequest == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
-        ){
+        ) {
             CircularProgressIndicator(
                 modifier = Modifier.width(64.dp),
                 color = Color.Black,
@@ -236,7 +246,7 @@ fun CameraPreviewContent(
 
     }
 
-    surfaceRequest?.let{ request ->
+    surfaceRequest?.let { request ->
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -270,9 +280,9 @@ fun CameraPreviewContent(
 
             UpperBox(
                 modifier = Modifier.align(Alignment.TopCenter),
-                onExposureBtnClicked = {
-                    showExposureBottomSheet = true
-                },
+//                onExposureBtnClicked = {
+//                    showExposureBottomSheet = true
+//                },
                 torchState = torchState,
                 onTorchToggle = {
                     viewModel.toggleTorch()
@@ -284,8 +294,7 @@ fun CameraPreviewContent(
 
             LowerBox(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                ,
+                    .align(Alignment.BottomCenter),
                 onExposureSliderChange = { zoomValue ->
                     viewModel.zoom(zoomValue)
                 },
@@ -298,13 +307,43 @@ fun CameraPreviewContent(
                 enter = fadeIn(),
                 exit = fadeOut(),
                 modifier = Modifier
-                    .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
-                    .offset((-24).dp, (-24).dp)
             ) {
                 Spacer(
                     Modifier
+                        .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
+                        .offset((-24).dp, (-24).dp)
                         .border(1.dp, Color.White, CircleShape)
                         .size(48.dp)
+                )
+                CustomSlider(
+                    modifier = Modifier
+                        .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
+                        .offset((-50).dp, 32.dp)
+                        .width(100.dp),
+                    colors = SliderColors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        inactiveTrackColor = Color.White,
+                        inactiveTickColor = Color.White,
+                        disabledThumbColor = Color.Gray,
+                        disabledActiveTrackColor = Color.Gray,
+                        disabledActiveTickColor = Color.Gray,
+                        disabledInactiveTrackColor = Color.Gray,
+                        disabledInactiveTickColor = Color.Gray,
+                        activeTickColor = Color.White
+                    ),
+                    thumbIcon = com.example.memories.R.drawable.ic_exposure,
+                    onExposureChange = { exposure ->
+                        isUserInteractingWithSlider = true
+                        viewModel.changeExposure(exposure.toInt())
+                    },
+                    onExposureChangeFinished = {
+                        isUserInteractingWithSlider = false
+                    },
+                    exposureValue = exposureValue,
+                    min = viewModel.getExposureRange().lower.toFloat(),
+                    max = viewModel.getExposureRange().upper.toFloat(),
+                    thumbColor = Color.White
                 )
 
             }
@@ -314,7 +353,7 @@ fun CameraPreviewContent(
                     onDismissRequest = {
                         showExposureBottomSheet = false
                     },
-                    onExposureChange = {exposure ->
+                    onExposureChange = { exposure ->
                         viewModel.changeExposure(exposure.toInt())
                     },
                     exposureValue = exposureValue,
@@ -328,42 +367,91 @@ fun CameraPreviewContent(
     }
 
 
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SliderModalBottomSheet(
-    onDismissRequest : () -> Unit,
-    onExposureChange : (Float) -> Unit = {},
-    exposureValue : Int,
-    min : Float,
-    max : Float,
+    onDismissRequest: () -> Unit,
+    onExposureChange: (Float) -> Unit = {},
+    exposureValue: Int,
+    min: Float,
+    max: Float,
 
-) {
+    ) {
     ModalBottomSheet(
         onDismissRequest = {
             onDismissRequest()
         },
     ) {
-        Slider(
-            value = exposureValue.toFloat(),
-            onValueChange = {
-                onExposureChange(it)
-            },
-            valueRange = min..max,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-
-            )
+        CustomSlider(
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderColors(
+                thumbColor = Color.Black,
+                activeTrackColor = Color.Black,
+                inactiveTrackColor = Color.Black,
+                inactiveTickColor = Color.Black,
+                disabledThumbColor = Color.Gray,
+                disabledActiveTrackColor = Color.Gray,
+                disabledActiveTickColor = Color.Gray,
+                disabledInactiveTrackColor = Color.Gray,
+                disabledInactiveTickColor = Color.Gray,
+                activeTickColor = Color.Black
+            ),
+            thumbIcon = com.example.memories.R.drawable.ic_exposure,
+            onExposureChange = onExposureChange,
+            exposureValue = exposureValue,
+            min = min,
+            max = max,
+            thumbColor = Color.Black
+        )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomSlider(
+    modifier: Modifier = Modifier,
+    colors: SliderColors,
+    @DrawableRes thumbIcon: Int,
+    thumbColor: Color,
+    onExposureChange: (Float) -> Unit = {},
+    onExposureChangeFinished : () -> Unit = {},
+    exposureValue: Int,
+    min: Float,
+    max: Float,
+) {
+    Slider(
+        value = exposureValue.toFloat(),
+        onValueChange = {
+            onExposureChange(it)
+        },
+        onValueChangeFinished = {
+            onExposureChangeFinished()
+        },
+        valueRange = min..max,
+        modifier = modifier,
+        track = { sliderState ->
+            SliderDefaults.Track(
+                sliderState = sliderState,
+                modifier = Modifier.height(2.dp),
+                colors = colors
+            )
+        },
+        thumb = { sliderState ->
+            Icon(
+                painter = painterResource(thumbIcon),
+                contentDescription = "Exposure Change Icon",
+                tint = thumbColor
+            )
+        }
+    )
 }
 
 @Composable
 fun UpperBox(
-    modifier : Modifier = Modifier,
-    onExposureBtnClicked: () -> Unit = {},
+    modifier: Modifier = Modifier,
+//    onExposureBtnClicked: () -> Unit = {},
     torchState: Boolean,
     onTorchToggle: () -> Unit = {},
     onTimerSet: () -> Unit = {},
@@ -382,14 +470,14 @@ fun UpperBox(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            IconItem(
-                drawableRes = R.drawable.ic_exposure,
-                contentDescription = "Change Camera Exposure",
-                onClick = {
-
-                    onExposureBtnClicked()
-                }
-            )
+//            IconItem(
+//                drawableRes = R.drawable.ic_exposure,
+//                contentDescription = "Change Camera Exposure",
+//                onClick = {
+//
+//                    onExposureBtnClicked()
+//                }
+//            )
             IconItem(
                 drawableRes = if (torchState) R.drawable.ic_torch_off else R.drawable.ic_torch_on,
                 contentDescription = "toggle flash on and off",
@@ -428,15 +516,15 @@ fun UpperBox(
 @Composable
 fun LowerBox(
     modifier: Modifier = Modifier,
-    onExposureSliderChange : (Float) -> Unit = {},
-    zoomScale : Float,
+    onExposureSliderChange: (Float) -> Unit = {},
+    zoomScale: Float,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .padding(16.dp)
-            .pointerInput(Unit){},
+            .pointerInput(Unit) {},
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
