@@ -1,5 +1,6 @@
 package com.example.memories.view.components
 
+import android.R.attr.text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -11,6 +12,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TextItem(
+    modifier : Modifier = Modifier,
     text: String,
     color: Color = Color.White,
     onClick: () -> Unit = {}
@@ -18,7 +20,7 @@ fun TextItem(
     Text(
         text = text,
         fontSize = 24.sp,
-        modifier = Modifier
+        modifier = modifier
             .padding(10.dp)
             .clickable {
                 onClick()

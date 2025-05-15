@@ -88,7 +88,7 @@ fun AppNav(navController: NavHostController) {
                     OtherScreen()
                 }
                 composable<Screen.Camera> {
-                    isBottomBarVisible = true
+                    isBottomBarVisible = false
                     CameraScreen(
                         popBack = {
                             navController.popBackStack()

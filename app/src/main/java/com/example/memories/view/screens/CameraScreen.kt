@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,17 +38,31 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.ChipColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonColors
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +86,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
@@ -87,6 +104,7 @@ import com.example.memories.view.utils.PermissionUtil
 import com.example.memories.view.utils.isPermissionGranted
 import com.example.memories.viewmodel.CameraScreenViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 
@@ -223,9 +241,9 @@ fun CameraPreviewContent(
 
     // Queue hiding the request for each unique autofocus tap
     if (showAutofocusIndicator) {
-        LaunchedEffect(autofocusRequestId,isUserInteractingWithSlider) {
+        LaunchedEffect(autofocusRequestId, isUserInteractingWithSlider) {
 
-            if(!isUserInteractingWithSlider){
+            if (!isUserInteractingWithSlider) {
                 delay(2000)
                 autofocusRequest = autofocusRequestId to Offset.Unspecified
             }
@@ -298,7 +316,15 @@ fun CameraPreviewContent(
                 onExposureSliderChange = { zoomValue ->
                     viewModel.zoom(zoomValue)
                 },
-                zoomScale = zoomScale
+                zoomScale = zoomScale,
+                cameraActionItems = listOf<String>(
+                    "FUN",
+                    "PORTRAIT",
+                    "PHOTO",
+                    "VIDEO",
+                    "SLOW MOTION",
+                    "PANAROMA"
+                )
             )
 
 
@@ -332,7 +358,7 @@ fun CameraPreviewContent(
                         disabledInactiveTickColor = Color.Gray,
                         activeTickColor = Color.White
                     ),
-                    thumbIcon = com.example.memories.R.drawable.ic_exposure,
+                    thumbIcon = R.drawable.ic_exposure,
                     onExposureChange = { exposure ->
                         isUserInteractingWithSlider = true
                         viewModel.changeExposure(exposure.toInt())
@@ -398,7 +424,7 @@ fun SliderModalBottomSheet(
                 disabledInactiveTickColor = Color.Gray,
                 activeTickColor = Color.Black
             ),
-            thumbIcon = com.example.memories.R.drawable.ic_exposure,
+            thumbIcon = R.drawable.ic_exposure,
             onExposureChange = onExposureChange,
             exposureValue = exposureValue,
             min = min,
@@ -416,7 +442,7 @@ fun CustomSlider(
     @DrawableRes thumbIcon: Int,
     thumbColor: Color,
     onExposureChange: (Float) -> Unit = {},
-    onExposureChangeFinished : () -> Unit = {},
+    onExposureChangeFinished: () -> Unit = {},
     exposureValue: Int,
     min: Float,
     max: Float,
@@ -463,6 +489,7 @@ fun UpperBox(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .pointerInput(Unit) {}
+            .background(Color.LightGray.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -494,8 +521,8 @@ fun UpperBox(
                     onTimerSet()
                 }
             )
-            TextItem("Full")
-            TextItem("16M")
+            TextItem(text = "Full")
+            TextItem(text = "16M")
             IconItem(
                 drawableRes = R.drawable.ic_filter,
                 contentDescription = "Choose filter",
@@ -518,28 +545,61 @@ fun LowerBox(
     modifier: Modifier = Modifier,
     onExposureSliderChange: (Float) -> Unit = {},
     zoomScale: Float,
+    cameraActionItems: List<String>
 ) {
+
+    var selectedIndex by remember { mutableStateOf(2) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .padding(16.dp)
+            .background(Color.LightGray.copy(alpha = 0.2f))
             .pointerInput(Unit) {},
     ) {
         Column(
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Slider(
-                value = zoomScale,
-                onValueChange = { it ->
-                    onExposureSliderChange(it)
-                },
-                valueRange = 0f..1f,
-                modifier = Modifier.width((64 * 2).dp),
 
-                )
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                itemsIndexed(cameraActionItems) { index, item ->
+                    OutlinedButton(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .padding(end = 10.dp),
+                        colors = ButtonColors(
+                            containerColor = if(selectedIndex == index)Color.LightGray.copy(alpha = 0.5f) else Color.Transparent,
+                            contentColor = Color.White,
+                            disabledContainerColor = Color.LightGray,
+                            disabledContentColor = Color.LightGray
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(0.dp),
+                        border = BorderStroke(width = 1.dp,color = Color.White),
+                        onClick = {
+                            selectedIndex = index
+                            Log.d("CameraScreen", "Mode : ${item.toString()}")
+                        }
+                    ) {
+                        Text(
+                            text = item.toString(),
+                            fontSize = 16.sp,
+                        )
+                    }
+                }
+            }
+
+
             Surface(
                 modifier = Modifier
                     .size(64.dp)
@@ -549,12 +609,11 @@ fun LowerBox(
                         color = Color.White,
                         shape = CircleShape
                     )
-                    .padding(10.dp)
                     .clickable(
                         onClick = {}
                     ),
-                color = Color.Transparent,
                 shape = CircleShape,
+                color = Color.White,
             ) {}
 
 
