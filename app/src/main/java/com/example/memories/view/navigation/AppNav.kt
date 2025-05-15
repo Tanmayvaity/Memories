@@ -2,6 +2,7 @@ package com.example.memories.view.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.LinearEasing
@@ -9,8 +10,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOut
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,7 +65,14 @@ fun AppNav(navController: NavHostController) {
     ) {
         Scaffold(
             bottomBar = {
-                if (isBottomBarVisible) {
+//                if (isBottomBarVisible) {
+//                    BottomNavBar(navController = navController)
+//                }
+                AnimatedVisibility(
+                    visible = isBottomBarVisible,
+//                    enter = fadeIn() + slideInVertically(initialOffsetY = {56}),
+//                    exit = fadeOut() + slideOutVertically(targetOffsetY = {56})
+                ) {
                     BottomNavBar(navController = navController)
                 }
 
@@ -69,7 +81,16 @@ fun AppNav(navController: NavHostController) {
             NavHost(
                 navController = navController,
                 startDestination = Screen.Feed,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                popExitTransition = {
+                    scaleOut(
+                        targetScale = 0.9f,
+                        transformOrigin = TransformOrigin(pivotFractionX = 0.5f, pivotFractionY = 0.5f)
+                    )
+                },
+                popEnterTransition = {
+                    EnterTransition.None
+                },
             ) {
                 composable<Screen.Feed>{
                     isBottomBarVisible = true
