@@ -1,5 +1,7 @@
 package com.example.memories.view.navigation
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -43,18 +46,25 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.toRoute
 import com.example.memories.R
 import com.example.memories.view.screens.CameraScreen
 import com.example.memories.view.screens.FeedScreen
+import com.example.memories.view.screens.ImageEditScreen
 import com.example.memories.view.screens.NotificationScreen
 import com.example.memories.view.screens.OtherScreen
 import com.example.memories.view.screens.SearchScreen
+import com.example.memories.viewmodel.CameraScreenViewModel
+import kotlinx.serialization.Serializable
+import kotlin.reflect.typeOf
 
 @Composable
 fun AppNav(navController: NavHostController) {
 
 
     var isBottomBarVisible by remember { mutableStateOf(true) }
+
+    val viewModel : CameraScreenViewModel = viewModel()
 
     val density = LocalDensity.current
 
@@ -65,13 +75,8 @@ fun AppNav(navController: NavHostController) {
     ) {
         Scaffold(
             bottomBar = {
-//                if (isBottomBarVisible) {
-//                    BottomNavBar(navController = navController)
-//                }
                 AnimatedVisibility(
                     visible = isBottomBarVisible,
-//                    enter = fadeIn() + slideInVertically(initialOffsetY = {56}),
-//                    exit = fadeOut() + slideOutVertically(targetOffsetY = {56})
                 ) {
                     BottomNavBar(navController = navController)
                 }
@@ -108,12 +113,61 @@ fun AppNav(navController: NavHostController) {
                     isBottomBarVisible = true
                     OtherScreen()
                 }
-                composable<Screen.Camera> {
+                composable<Screen.Camera>(
+                    enterTransition = {
+                        slideIntoContainer(
+                            animationSpec = tween(500, easing = EaseOut),
+                            towards = AnimatedContentTransitionScope.SlideDirection.Up
+                        ) + fadeIn(
+                            animationSpec = tween(500, easing = LinearEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            animationSpec = tween(500, easing = EaseIn),
+                            towards = AnimatedContentTransitionScope.SlideDirection.Down
+                        ) + fadeOut(
+                            animationSpec = tween(500, easing = LinearEasing)
+                        )
+                    }
+                ) {
                     isBottomBarVisible = false
                     CameraScreen(
                         popBack = {
                             navController.popBackStack()
+                        },
+                        onImageCaptureNavigate = { route ->
+                            navController.navigate(route)
+                        },
+                        viewModel = viewModel
+
+                    )
+                }
+                composable<Screen.ImageEdit>(
+                    enterTransition = {
+                        slideIntoContainer(
+                            animationSpec = tween(500, easing = EaseOut),
+                            towards = AnimatedContentTransitionScope.SlideDirection.End
+                        ) + fadeIn(
+                            animationSpec = tween(500, easing = LinearEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            animationSpec = tween(500, easing = EaseIn),
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start
+                        ) + fadeOut(
+                            animationSpec = tween(500, easing = LinearEasing)
+                        )
+                    }
+                ) {
+                    isBottomBarVisible = false
+                    ImageEditScreen(
+                       viewModel = viewModel,
+                        onBack = {
+                            navController.popBackStack()
                         }
+
                     )
                 }
             }
@@ -137,7 +191,6 @@ fun BottomNavBar(navController: NavHostController) {
         TopLevelRoute<Screen.Other>(Screen.Other.route, Screen.Other, R.drawable.ic_other),
 
         )
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     NavigationBar(contentColor = Color.White) {
@@ -151,10 +204,8 @@ fun BottomNavBar(navController: NavHostController) {
                         contentDescription = item.name
                     )
                 },
-//                label = {
-//                    Text(text = item.name)
-//                },
                 onClick = {
+
                     navController.navigate(item.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true

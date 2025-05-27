@@ -2,6 +2,7 @@ package com.example.memories.view.navigation
 
 import kotlinx.serialization.Serializable
 
+
 @Serializable
 sealed class Screen(val route:String){
     @Serializable
@@ -19,6 +20,8 @@ sealed class Screen(val route:String){
     @Serializable
     object Camera : Screen("Camera")
 
+    @Serializable
+    object ImageEdit : Screen("ImageEdit")
 
     companion object {
         fun fromRoute(route : String): Screen? = when(route){
@@ -27,6 +30,7 @@ sealed class Screen(val route:String){
             Notification.route -> Notification
             Other.route -> Other
             Camera.route -> Camera
+            ImageEdit.route -> ImageEdit
             else -> null
         }
     }

@@ -11,6 +11,7 @@ composeBom = "2024.09.00"
 navigation = "2.8.9"
 serialization = "1.6.3"
 camerax = "1.5.0-alpha06"
+coil = "3.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,6 +38,7 @@ androidx-camera-compose = { module = "androidx.camera:camera-compose", version.r
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 # The specific camera implementation that renders the preview
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+coil-compose = {module = "io.coil-kt.coil3:coil-compose",version.ref = "coil"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
