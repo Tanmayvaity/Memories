@@ -5,6 +5,7 @@ import android.util.Range
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import java.io.File
 
@@ -59,6 +60,11 @@ class CameraRepository {
     ) : CaptureResult{
         return cameraManager.takePicture(file)
     }
+
+    fun setAspectRatio(aspectRatio : AspectRatio){
+        cameraManager.setAspectRatio(aspectRatio)
+    }
+
 
 
 }

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,6 +66,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
@@ -84,6 +86,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.memories.model.models.AspectRatio
 import com.example.memories.view.components.CameraRationaleDialog
 import com.example.memories.view.components.IconItem
 import com.example.memories.view.components.TextItem
@@ -233,9 +236,14 @@ fun CameraPreviewContent(
     val torchState by viewModel.torchState.collectAsStateWithLifecycle()
     val tempImageState by viewModel.tempImageBitmap.collectAsStateWithLifecycle()
 
+    val aspectRatio by viewModel.aspectRatio.collectAsStateWithLifecycle()
+
+    var ratio = aspectRatio.ratio
+
+
 
     var showExposureBottomSheet by remember { mutableStateOf(false) }
-    LaunchedEffect(lensFacing) {
+    LaunchedEffect(lensFacing,aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.bindToCamera(
                 context.applicationContext,
@@ -283,13 +291,15 @@ fun CameraPreviewContent(
 
     surfaceRequest?.let { request ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().background(Color.Black)
         ) {
 
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = coordinateTransformer,
-                modifier = modifier
+                modifier = Modifier
+                    .aspectRatio(ratio)
+                    .align(Alignment.Center)
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onDoubleTap = { tapCoords ->
@@ -325,6 +335,10 @@ fun CameraPreviewContent(
                 onSwitchCamera = {
                     viewModel.toggleCamera()
                 },
+                onAspectRatioChange = {
+                    viewModel.setAspectRatio()
+                }
+
             )
 
             LowerBox(
@@ -534,15 +548,16 @@ fun UpperBox(
     torchState: Boolean,
     onTorchToggle: () -> Unit = {},
     onTimerSet: () -> Unit = {},
-    onFilter: () -> Unit = {},
-    onSwitchCamera: () -> Unit = {}
+    onAspectRatioChange: () -> Unit =  {},
+    onSwitchCamera: () -> Unit = {},
+
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .pointerInput(Unit) {}
-            .background(Color.LightGray.copy(alpha = 0.2f))
+//            .background(Color.LightGray.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -574,14 +589,13 @@ fun UpperBox(
                     onTimerSet()
                 }
             )
-            TextItem(text = "Full")
+            TextItem(text = "Full"){
+                onAspectRatioChange()
+            }
             TextItem(text = "16M")
             IconItem(
                 drawableRes = R.drawable.ic_filter,
                 contentDescription = "Choose filter",
-                onClick = {
-                    onFilter()
-                }
             )
             IconItem(
                 drawableRes = R.drawable.ic_switch_camera,
@@ -609,7 +623,7 @@ fun LowerBox(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .background(Color.LightGray.copy(alpha = 0.2f))
+//            .background(Color.LightGray.copy(alpha = 0.2f))
             .pointerInput(Unit) {},
     ) {
         Column(

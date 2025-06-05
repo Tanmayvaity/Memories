@@ -19,11 +19,15 @@ import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.UseCaseGroup
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.ui.geometry.Offset
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -40,15 +44,28 @@ class CameraManager {
     private var cameraControl: CameraControl? = null
     private var cameraInfo: CameraInfo? = null
 
-    private val previewUseCase: Preview = Preview.Builder().build()
-    private val imageCaptureUseCase: ImageCapture = ImageCapture.Builder().build()
+    private  lateinit var previewUseCase: Preview
+    private  lateinit var imageCaptureUseCase: ImageCapture
 
     private var _surfaceRequestCallback: ((SurfaceRequest) -> Unit)? = null
     private var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory? = null
 
+    private val resolutionSelectorBuilder = ResolutionSelector.Builder()
+
 
     init {
-        previewUseCase.setSurfaceProvider { surfaceRequest ->
+        setAspectRatio(AspectRatio.RATIO_4_3)
+
+        initUseCases()
+
+    }
+
+    private fun initUseCases(){
+        previewUseCase = Preview.Builder()
+            .setResolutionSelector(resolutionSelectorBuilder.build())
+            .build()
+
+        previewUseCase!!.setSurfaceProvider { surfaceRequest ->
             _surfaceRequestCallback?.invoke(surfaceRequest)
             surfaceMeteringPointFactory = SurfaceOrientedMeteringPointFactory(
                 surfaceRequest.resolution.width.toFloat(),
@@ -56,10 +73,12 @@ class CameraManager {
             )
         }
 
-        imageCaptureUseCase.apply {
-            targetRotation = previewUseCase.targetRotation
-        }
+        imageCaptureUseCase = ImageCapture.Builder()
+            .setTargetRotation(previewUseCase!!.targetRotation)
+            .setResolutionSelector(resolutionSelectorBuilder.build())
+            .build()
     }
+
 
     fun setSurfaceRequestCallback(callback: (SurfaceRequest) -> Unit) {
         _surfaceRequestCallback = callback
@@ -122,8 +141,6 @@ class CameraManager {
             val meteringAction = FocusMeteringAction.Builder(point).build()
             cameraControl?.startFocusAndMetering(meteringAction)
         }
-//        _exposureValue.update{0}
-//        cameraControl?.setExposureCompensationIndex(_exposureValue.value)
 
     }
 
@@ -181,16 +198,27 @@ class CameraManager {
             }
             val executor: Executor = Executors.newSingleThreadExecutor()
 
-            imageCaptureUseCase.takePicture(outputFileOptions,executor,imageSavedCallback)
+            imageCaptureUseCase.takePicture(outputFileOptions, executor, imageSavedCallback)
 
 
         }
 
-
-
-
     }
 
+    fun setAspectRatio(aspectRatio: AspectRatio = AspectRatio.RATIO_4_3) {
+        val aspect = if(aspectRatio == AspectRatio.RATIO_4_3) AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
+        else AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
+        setAspect(aspect)
+
+        initUseCases()
+
+
+        Log.d("CameraManager", "Aspect Ratio : ${resolutionSelectorBuilder.build().aspectRatioStrategy}")
+    }
+
+    private fun setAspect(aspect: AspectRatioStrategy){
+        resolutionSelectorBuilder.setAspectRatioStrategy(aspect)
+    }
 
     companion object {
         private const val TAG = "CameraManager"

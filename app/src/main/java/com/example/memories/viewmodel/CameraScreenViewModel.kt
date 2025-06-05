@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.model.CameraRepository
+import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,6 +44,9 @@ class CameraScreenViewModel() : ViewModel() {
 
     private val _successfullImageCapture = MutableStateFlow<Uri?>(null)
     val successfullImageCapture = _successfullImageCapture.asStateFlow()
+
+    private val _aspectRatio = MutableStateFlow<AspectRatio>(AspectRatio.RATIO_4_3)
+    val aspectRatio = _aspectRatio.asStateFlow()
 
 
     private val cameraRepository = CameraRepository()
@@ -115,14 +119,15 @@ class CameraScreenViewModel() : ViewModel() {
     }
 
 
-    fun takePicture(tempImageFile : File ) {
+    fun takePicture(tempImageFile: File) {
         viewModelScope.launch {
             val captureResult = cameraRepository.takePicture(tempImageFile)
-            when(captureResult){
+            when (captureResult) {
                 is CaptureResult.Success -> {
                     _successfullImageCapture.update { captureResult.uri }
                     resetErrorState()
                 }
+
                 is CaptureResult.Error -> {
                     _errorMessage.update { captureResult.error }
                     resetUriState()
@@ -131,13 +136,25 @@ class CameraScreenViewModel() : ViewModel() {
         }
     }
 
-    fun resetUriState(){
+    fun setAspectRatio() {
+        if(_aspectRatio.value == AspectRatio.RATIO_4_3){
+            _aspectRatio.update { AspectRatio.RATIO_16_9 }
+        }else{
+            _aspectRatio.update { AspectRatio.RATIO_4_3 }
+        }
+        cameraRepository.setAspectRatio(_aspectRatio.value)
+    }
+
+
+    fun resetUriState() {
         _successfullImageCapture.update { null }
     }
 
-    fun resetErrorState(){
+    fun resetErrorState() {
         _errorMessage.update { null }
     }
+
+
 
 
 
