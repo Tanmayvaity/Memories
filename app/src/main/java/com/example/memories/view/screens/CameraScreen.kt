@@ -2,6 +2,7 @@ package com.example.memories.view.screens
 
 
 import android.Manifest
+import android.R.attr.text
 import com.example.memories.R
 import android.content.Intent
 import android.graphics.Bitmap
@@ -16,6 +17,10 @@ import androidx.annotation.DrawableRes
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
@@ -25,6 +30,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,11 +50,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
@@ -68,6 +76,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.geometry.takeOrElse
@@ -76,6 +85,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
@@ -86,10 +98,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.view.components.CameraRationaleDialog
 import com.example.memories.view.components.IconItem
-import com.example.memories.view.components.TextItem
+import com.example.memories.view.components.TextUnderLinedItem
 import com.example.memories.view.navigation.Screen
 import com.example.memories.view.utils.PermissionUtil
 import com.example.memories.view.utils.isPermissionGranted
@@ -103,7 +116,7 @@ private const val TAG = "CameraScreen"
 @Composable
 fun CameraScreen(
     popBack: () -> Unit,
-    onImageCaptureNavigate : (Screen.ImageEdit) -> Unit,
+    onImageCaptureNavigate: (Screen.ImageEdit) -> Unit,
     viewModel: CameraScreenViewModel
 ) {
     val context = LocalContext.current
@@ -196,13 +209,13 @@ fun CameraScreen(
         )
     }
 
-    LaunchedEffect(errorMessage,successfullImageCapture) {
-        if(errorMessage!=null){
-            Toast.makeText(context,errorMessage!!.message,Toast.LENGTH_SHORT).show()
+    LaunchedEffect(errorMessage, successfullImageCapture) {
+        if (errorMessage != null) {
+            Toast.makeText(context, errorMessage!!.message, Toast.LENGTH_SHORT).show()
             viewModel.resetErrorState()
         }
-        if(successfullImageCapture!=null){
-            Toast.makeText(context,"Image Captured Successfully",Toast.LENGTH_SHORT).show()
+        if (successfullImageCapture != null) {
+            Toast.makeText(context, "Image Captured Successfully", Toast.LENGTH_SHORT).show()
             Log.d(TAG, "CameraScreen-content uri : ${successfullImageCapture.toString()}")
             onImageCaptureNavigate(Screen.ImageEdit)
 
@@ -216,6 +229,7 @@ fun CameraScreen(
         popBack()
 
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -224,7 +238,7 @@ fun CameraPreviewContent(
     modifier: Modifier = Modifier,
     viewModel: CameraScreenViewModel,
     lifecycleOwner: LifecycleOwner,
-    onImageCaptureNavigate : (Screen.ImageEdit) -> Unit
+    onImageCaptureNavigate: (Screen.ImageEdit) -> Unit
 ) {
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val lensFacing by viewModel.lensFacing.collectAsStateWithLifecycle()
@@ -241,9 +255,8 @@ fun CameraPreviewContent(
     var ratio = aspectRatio.ratio
 
 
-
     var showExposureBottomSheet by remember { mutableStateOf(false) }
-    LaunchedEffect(lensFacing,aspectRatio) {
+    LaunchedEffect(lensFacing, aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.bindToCamera(
                 context.applicationContext,
@@ -291,15 +304,18 @@ fun CameraPreviewContent(
 
     surfaceRequest?.let { request ->
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
         ) {
 
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = coordinateTransformer,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .aspectRatio(ratio)
-                    .align(Alignment.Center)
+                    .align(if (aspectRatio == AspectRatio.RATIO_4_3) Alignment.Center else Alignment.BottomCenter)
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onDoubleTap = { tapCoords ->
@@ -324,16 +340,13 @@ fun CameraPreviewContent(
             )
 
             UpperBox(
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = Modifier.align(Alignment.TopEnd),
 //                onExposureBtnClicked = {
 //                    showExposureBottomSheet = true
 //                },
                 torchState = torchState,
                 onTorchToggle = {
                     viewModel.toggleTorch()
-                },
-                onSwitchCamera = {
-                    viewModel.toggleCamera()
                 },
                 onAspectRatioChange = {
                     viewModel.setAspectRatio()
@@ -344,26 +357,23 @@ fun CameraPreviewContent(
             LowerBox(
                 modifier = Modifier
                     .align(Alignment.BottomCenter),
-                onExposureSliderChange = { zoomValue ->
-                    viewModel.zoom(zoomValue)
+                onToggleCamera = {
+                    viewModel.toggleCamera()
                 },
-                zoomScale = zoomScale,
                 cameraActionItems = listOf<String>(
-                    "FUN",
-                    "PORTRAIT",
-                    "PHOTO",
-                    "VIDEO",
-                    "SLOW MOTION",
-                    "PANAROMA"
+                    "Portrait",
+                    "Photo",
+                    "Video",
+                    "Panorama"
                 ),
                 onClick = {
                     Log.d(TAG, "photo capture btn clicked")
-                    val imageDirPath = File(context.cacheDir,"imagess").apply{
-                        if(!exists()){
+                    val imageDirPath = File(context.cacheDir, "imagess").apply {
+                        if (!exists()) {
                             mkdir()
                         }
                     }
-                    val tempImageFile = File.createTempFile("temp_",".jpg",imageDirPath)
+                    val tempImageFile = File.createTempFile("temp_", ".jpg", imageDirPath)
 
 
                     viewModel.takePicture(tempImageFile)
@@ -418,40 +428,9 @@ fun CameraPreviewContent(
 
             }
 
-            if (showExposureBottomSheet) {
-                SliderModalBottomSheet(
-                    onDismissRequest = {
-                        showExposureBottomSheet = false
-                    },
-                    onExposureChange = { exposure ->
-                        viewModel.changeExposure(exposure.toInt())
-                    },
-                    exposureValue = exposureValue,
-                    min = viewModel.getExposureRange().lower.toFloat(),
-                    max = viewModel.getExposureRange().upper.toFloat(),
-                    tempImageState!!
-                )
-            }
-
 
         }
     }
-
-    LaunchedEffect(tempImageState) {
-        if (tempImageState != null) {
-            showExposureBottomSheet = true
-        }
-    }
-
-
-
-
-
-//    LaunchedEffect(successfullImageCapture) {
-//        if(successfullImageCapture!=null){
-//
-//        }
-//    }
 
 
 }
@@ -544,64 +523,59 @@ fun CustomSlider(
 @Composable
 fun UpperBox(
     modifier: Modifier = Modifier,
-//    onExposureBtnClicked: () -> Unit = {},
     torchState: Boolean,
     onTorchToggle: () -> Unit = {},
     onTimerSet: () -> Unit = {},
-    onAspectRatioChange: () -> Unit =  {},
-    onSwitchCamera: () -> Unit = {},
-
+    onAspectRatioChange: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .width(IntrinsicSize.Min)
             .height(IntrinsicSize.Min)
             .pointerInput(Unit) {}
 //            .background(Color.LightGray.copy(alpha = 0.2f))
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Column(
+            modifier = Modifier.padding(5.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            IconItem(
-//                drawableRes = R.drawable.ic_exposure,
-//                contentDescription = "Change Camera Exposure",
-//                onClick = {
-//
-//                    onExposureBtnClicked()
-//                }
-//            )
+            // flash
             IconItem(
-                drawableRes = if (torchState) R.drawable.ic_torch_off else R.drawable.ic_torch_on,
+                modifier = Modifier.padding(5.dp),
+                drawableRes = if (torchState) R.drawable.ic_flash_off else R.drawable.ic_flash_on,
                 contentDescription = "toggle flash on and off",
+                alpha = 0.1f,
                 onClick = {
                     onTorchToggle()
                 }
             )
 
-
+            // timer picture
             IconItem(
+                modifier = Modifier.padding(5.dp),
                 drawableRes = R.drawable.ic_timer,
-                contentDescription = "Photo Capture Timer",
+                contentDescription = "Photo capture timer",
+                alpha = 0.1f,
                 onClick = {
                     onTimerSet()
                 }
             )
-            TextItem(text = "Full"){
-                onAspectRatioChange()
-            }
-            TextItem(text = "16M")
+            // night mode
             IconItem(
-                drawableRes = R.drawable.ic_filter,
-                contentDescription = "Choose filter",
+                modifier = Modifier.padding(5.dp),
+                drawableRes = R.drawable.ic_night_mode,
+                contentDescription = "Toggle night mode on/off",
+                alpha = 0.1f
             )
+            // aspect ratio
             IconItem(
-                drawableRes = R.drawable.ic_switch_camera,
-                contentDescription = "Toggle Camera",
+                modifier = Modifier.padding(5.dp),
+                drawableRes = R.drawable.ic_aspect,
+                contentDescription = "Change Aspect Ratio",
+                alpha = 0.1f
             ) {
-                onSwitchCamera()
+                onAspectRatioChange()
             }
         }
     }
@@ -610,19 +584,16 @@ fun UpperBox(
 @Composable
 fun LowerBox(
     modifier: Modifier = Modifier,
-    onExposureSliderChange: (Float) -> Unit = {},
-    zoomScale: Float,
+    onToggleCamera: () -> Unit = {},
     cameraActionItems: List<String>,
     onClick: () -> Unit
 ) {
 
-    var selectedIndex by remember { mutableStateOf(2) }
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
+    var selectedIndex by remember { mutableStateOf(0) }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
+            .height(150.dp)
 //            .background(Color.LightGray.copy(alpha = 0.2f))
             .pointerInput(Unit) {},
     ) {
@@ -631,60 +602,154 @@ fun LowerBox(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
+            // Take Picture layer
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp,end = 10.dp , bottom = 5.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
+//                IconButton(
+//                    onClick = {},
+//                    modifier = Modifier
+//                        .clip(CircleShape)
+//                        .background(Color.LightGray.copy(0.5f))
+//                    ,
+//                ) {
+//                    Icon(
+//                        modifier = Modifier.size(24.dp),
+//                        painter = painterResource(R.drawable.ic_feed),
+//                        contentDescription = "Choose from Gallery",
+//                        tint = Color.White,
+//                    )
+//                }
+
+                IconItem(
+                    drawableRes = R.drawable.ic_feed,
+                    contentDescription = "Choose from gallery",
+                    color = Color.White,
+                    alpha = 0.5f,
+                    onClick = {},
+                )
+
+                //external circle
+                Box(
+                    contentAlignment= Alignment.Center,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .border(
+                            width = 5.dp,
+                            color = Color.White,
+                            shape = CircleShape
+                        )
+                        .clickable {
+                            onClick()
+                        }
+                    ,
+                ){
+                    //internal circle with icon
+                    Icon(
+                        painter = painterResource(R.drawable.ic_take_photo),
+                        contentDescription = "Capture Photo",
+                        modifier = Modifier
+                            .size(58.dp)
+                            .background(Color.White, CircleShape)
+                            .padding(2.dp),
+                        tint = Color.White
+                    )
+                }
+
+
+//                Surface(
+//                    modifier = Modifier
+//                        .size(128.dp)
+//                        .clip(CircleShape)
+//                        .border(
+//                            width = 3.dp,
+//                            color = Color.White,
+//                            shape = CircleShape
+//                        )
+//                        .clickable {
+//                            onClick()
+////                        Log.d("Camera", "LowerBox: ")
+//                        },
+//                    shape = CircleShape,
+//                    color = Color.White,
+//                ) {}
+
+
+//                IconButton(
+//                    onClick = {
+//                        onToggleCamera()
+//                    },
+//                    modifier = Modifier
+//                        .clip(CircleShape)
+//                        .background(Color.LightGray.copy(0.5f))
+//                    ,
+//                ) {
+//                    Icon(
+//                        modifier = Modifier.size(24.dp),
+//                        painter = painterResource(R.drawable.ic_camera_flip),
+//                        contentDescription = "Toogle camera lens",
+//                        tint = Color.White,
+//                    )
+//                }
+
+                IconItem(
+                    drawableRes = R.drawable.ic_camera_flip,
+                    contentDescription = "Toggle camera lens",
+                    color = Color.White,
+                    alpha = 0.5f,
+                    onClick = {onToggleCamera()},
+                )
+
+            }
+
+            // Camera Action Items
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                itemsIndexed(cameraActionItems) { index, item ->
-                    OutlinedButton(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .padding(end = 10.dp),
-                        colors = ButtonColors(
-                            containerColor = if (selectedIndex == index) Color.LightGray.copy(alpha = 0.5f) else Color.Transparent,
-                            contentColor = Color.White,
-                            disabledContainerColor = Color.LightGray,
-                            disabledContentColor = Color.LightGray
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(0.dp),
-                        border = BorderStroke(width = 1.dp, color = Color.White),
-                        onClick = {
-                            selectedIndex = index
-                            Log.d("CameraScreen", "Mode : ${item.toString()}")
-                        }
-                    ) {
-                        Text(
-                            text = item.toString(),
-                            fontSize = 16.sp,
-                        )
-                    }
-                }
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ){
+
+
+
+                itemsIndexed(cameraActionItems) { index,item ->
+                   TextUnderLinedItem(
+                       modifier = Modifier
+                           .drawBehind {
+                               val strokeWidthPx = 1.dp.toPx()
+                               val verticalOffset = size.height + 1.sp.toPx()
+                               drawLine(
+                                   color = if (selectedIndex == index) Color.White else Color.Transparent,
+                                   strokeWidth = strokeWidthPx,
+                                   start = Offset(30f, verticalOffset),
+                                   end = Offset(size.width - 30f, verticalOffset)
+                               )
+                           }
+                           .padding(start = 10.dp, end = 10.dp)
+                           .clickable(
+                               interactionSource = remember { MutableInteractionSource() },
+                               indication = null,
+                               onClick = {
+                                   selectedIndex = index
+                               }
+                           )
+                       ,
+                       fontSize = 16,
+                       text = item.toString(),
+                       textColor = if(selectedIndex == index) Color.White else Color.LightGray,
+                       fontWeight = FontWeight.Bold
+                   )
+
+               }
+
+
             }
-
-
-            Surface(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .border(
-                        width = 3.dp,
-                        color = Color.White,
-                        shape = CircleShape
-                    )
-                    .clickable {
-                        onClick()
-//                        Log.d("Camera", "LowerBox: ")
-                    },
-                shape = CircleShape,
-                color = Color.White,
-            ) {}
-
 
         }
 

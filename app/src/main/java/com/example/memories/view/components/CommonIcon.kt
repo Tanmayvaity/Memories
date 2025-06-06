@@ -1,14 +1,21 @@
 package com.example.memories.view.components
 
+import android.R.attr.onClick
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ShapeDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -17,20 +24,26 @@ fun IconItem(
     @DrawableRes drawableRes: Int,
     contentDescription: String,
     color: Color = Color.White,
-    onClick: () -> Unit = {}
+    shape : Shape = CircleShape,
+    iconSize : Dp = 24.dp,
+    backgroundColor : Color = Color.LightGray,
+    alpha : Float = 1f,
+    onClick: () -> Unit = {},
 ) {
     IconButton(
         onClick = {
             onClick()
         },
         modifier = modifier
-            .padding(10.dp)
-            .size(24.dp)
+            .clip(shape)
+            .background(backgroundColor.copy(alpha = alpha))
     ) {
         Icon(
             painter = painterResource(drawableRes),
             contentDescription = contentDescription,
-            tint = color
+            tint = color,
+            modifier = Modifier
+                .size(iconSize)
         )
     }
 }
