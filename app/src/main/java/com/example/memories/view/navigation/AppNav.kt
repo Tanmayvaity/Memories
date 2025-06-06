@@ -139,7 +139,6 @@ fun AppNav(navController: NavHostController) {
                         onImageCaptureNavigate = { route ->
                             navController.navigate(route)
                         },
-                        viewModel = viewModel
 
                     )
                 }
@@ -161,13 +160,10 @@ fun AppNav(navController: NavHostController) {
                         )
                     }
                 ) {
+                    val args = it.toRoute<Screen.ImageEdit>()
                     isBottomBarVisible = false
                     ImageEditScreen(
-                       viewModel = viewModel,
-                        onBack = {
-                            navController.popBackStack()
-                        }
-
+                        uri = args.uri
                     )
                 }
             }

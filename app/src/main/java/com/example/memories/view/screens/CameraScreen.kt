@@ -117,10 +117,10 @@ private const val TAG = "CameraScreen"
 fun CameraScreen(
     popBack: () -> Unit,
     onImageCaptureNavigate: (Screen.ImageEdit) -> Unit,
-    viewModel: CameraScreenViewModel
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val viewModel : CameraScreenViewModel = viewModel()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val successfullImageCapture by viewModel.successfullImageCapture.collectAsStateWithLifecycle()
     var cameraPermissionStatus by remember {
@@ -205,7 +205,6 @@ fun CameraScreen(
             modifier = Modifier.fillMaxSize(),
             viewModel = viewModel,
             lifecycleOwner = lifecycleOwner,
-            onImageCaptureNavigate = onImageCaptureNavigate
         )
     }
 
@@ -215,17 +214,17 @@ fun CameraScreen(
             viewModel.resetErrorState()
         }
         if (successfullImageCapture != null) {
+            val tempImageUriString = successfullImageCapture.toString()
             Toast.makeText(context, "Image Captured Successfully", Toast.LENGTH_SHORT).show()
-            Log.d(TAG, "CameraScreen-content uri : ${successfullImageCapture.toString()}")
-            onImageCaptureNavigate(Screen.ImageEdit)
-
+            Log.d(TAG, "CameraScreen-content uri : ${tempImageUriString}")
+            onImageCaptureNavigate(Screen.ImageEdit(uri = tempImageUriString))
+            viewModel.resetUriState()
         }
     }
 
     BackHandler(
         enabled = true
     ) {
-        viewModel.resetUriState()
         popBack()
 
     }
@@ -238,7 +237,6 @@ fun CameraPreviewContent(
     modifier: Modifier = Modifier,
     viewModel: CameraScreenViewModel,
     lifecycleOwner: LifecycleOwner,
-    onImageCaptureNavigate: (Screen.ImageEdit) -> Unit
 ) {
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val lensFacing by viewModel.lensFacing.collectAsStateWithLifecycle()

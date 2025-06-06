@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-sealed class Screen(val route:String){
+sealed class Screen(val route: String) {
     @Serializable
     object Feed : Screen("Feed")
 
@@ -21,16 +21,17 @@ sealed class Screen(val route:String){
     object Camera : Screen("Camera")
 
     @Serializable
-    object ImageEdit : Screen("ImageEdit")
+    data class ImageEdit(
+        val uri: String
+    ) : Screen("ImageEdit")
 
     companion object {
-        fun fromRoute(route : String): Screen? = when(route){
+        fun fromRoute(route: String): Screen? = when (route) {
             Feed.route -> Feed
             Search.route -> Search
             Notification.route -> Notification
             Other.route -> Other
             Camera.route -> Camera
-            ImageEdit.route -> ImageEdit
             else -> null
         }
     }
