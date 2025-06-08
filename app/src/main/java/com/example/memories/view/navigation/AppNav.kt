@@ -163,7 +163,10 @@ fun AppNav(navController: NavHostController) {
                     val args = it.toRoute<Screen.ImageEdit>()
                     isBottomBarVisible = false
                     ImageEditScreen(
-                        uri = args.uri
+                        uri = args.uri,
+                        onArrowBackButtonClick = {
+                            navController.popBackStack()
+                        },
                     )
                 }
             }
