@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.camera.compose.CameraXViewfinder
@@ -122,8 +123,7 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel : CameraScreenViewModel = viewModel()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
-    val successfullImageCapture by viewModel.successfullImageCapture.collectAsStateWithLifecycle()
+
     var cameraPermissionStatus by remember {
         mutableStateOf(
             isPermissionGranted(
@@ -206,22 +206,11 @@ fun CameraScreen(
             modifier = Modifier.fillMaxSize(),
             viewModel = viewModel,
             lifecycleOwner = lifecycleOwner,
+            onImageCaptureNavigate = onImageCaptureNavigate
         )
     }
 
-    LaunchedEffect(errorMessage, successfullImageCapture) {
-        if (errorMessage != null) {
-            Toast.makeText(context, errorMessage!!.message, Toast.LENGTH_SHORT).show()
-            viewModel.resetErrorState()
-        }
-        if (successfullImageCapture != null) {
-            val tempImageUriString = successfullImageCapture.toString()
-            Toast.makeText(context, "Image Captured Successfully", Toast.LENGTH_SHORT).show()
-            Log.d(TAG, "CameraScreen-content uri : ${tempImageUriString}")
-            onImageCaptureNavigate(Screen.ImageEdit(uri = tempImageUriString))
-            viewModel.resetUriState()
-        }
-    }
+
 
     BackHandler(
         enabled = true
@@ -238,6 +227,7 @@ fun CameraPreviewContent(
     modifier: Modifier = Modifier,
     viewModel: CameraScreenViewModel,
     lifecycleOwner: LifecycleOwner,
+    onImageCaptureNavigate: (Screen.ImageEdit) -> Unit
 ) {
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val lensFacing by viewModel.lensFacing.collectAsStateWithLifecycle()
@@ -248,13 +238,26 @@ fun CameraPreviewContent(
     val exposureValue by viewModel.exposureValue.collectAsStateWithLifecycle()
     val torchState by viewModel.torchState.collectAsStateWithLifecycle()
     val tempImageState by viewModel.tempImageBitmap.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val successfullImageCapture by viewModel.successfullImageCapture.collectAsStateWithLifecycle()
 
     val aspectRatio by viewModel.aspectRatio.collectAsStateWithLifecycle()
 
     var ratio = aspectRatio.ratio
 
-
     var showExposureBottomSheet by remember { mutableStateOf(false) }
+
+    val mediaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+
+        if (uri!=null){
+            val imageUri = uri.toString()
+            onImageCaptureNavigate(Screen.ImageEdit(imageUri))
+        }
+
+    }
+
     LaunchedEffect(lensFacing, aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.bindToCamera(
@@ -365,6 +368,13 @@ fun CameraPreviewContent(
                     "Video",
                     "Panorama"
                 ),
+                onChooseFromGallery = {
+                    mediaLauncher.launch(
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
+                    )
+                },
                 onClick = {
                     Log.d(TAG, "photo capture btn clicked")
                     val imageDirPath = File(context.cacheDir, "imagess").apply {
@@ -428,6 +438,20 @@ fun CameraPreviewContent(
             }
 
 
+        }
+
+        LaunchedEffect(errorMessage, successfullImageCapture) {
+            if (errorMessage != null) {
+                Toast.makeText(context, errorMessage!!.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetErrorState()
+            }
+            if (successfullImageCapture != null) {
+                val tempImageUriString = successfullImageCapture.toString()
+                Toast.makeText(context, "Image Captured Successfully", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "CameraScreen-content uri : ${tempImageUriString}")
+                onImageCaptureNavigate(Screen.ImageEdit(uri = tempImageUriString))
+                viewModel.resetUriState()
+            }
         }
     }
 
@@ -584,6 +608,7 @@ fun UpperBox(
 fun LowerBox(
     modifier: Modifier = Modifier,
     onToggleCamera: () -> Unit = {},
+    onChooseFromGallery : () -> Unit = {},
     cameraActionItems: List<String>,
     onClick: () -> Unit
 ) {
@@ -631,7 +656,9 @@ fun LowerBox(
                     contentDescription = "Choose from gallery",
                     color = Color.White,
                     alpha = 0.5f,
-                    onClick = {},
+                    onClick = {
+                        onChooseFromGallery()
+                    },
                 )
 
                 //external circle

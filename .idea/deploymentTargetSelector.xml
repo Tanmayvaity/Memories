@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-05-27T16:31:21.905257100Z">
+        <DropdownSelection timestamp="2025-06-09T09:23:54.351099800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="Default" identifier="serial=192.168.29.248:44467;connection=3103f76e" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\tanma\.android\avd\Pixel_Tablet.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="AppNavPreview">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-05-24T06:04:31.888531100Z">
+        <DropdownSelection timestamp="2025-06-08T14:54:33.756262Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RZCT91RWLFJ" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\tanma\.android\avd\Pixel_4_sdk_29.avd" />
             </handle>
           </Target>
         </DropdownSelection>
