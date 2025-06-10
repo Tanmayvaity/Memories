@@ -3,6 +3,7 @@ package com.example.memories.model.media
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
@@ -11,6 +12,8 @@ import com.example.memories.model.models.CaptureResult
 import com.example.memories.model.models.MediaResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import kotlin.coroutines.suspendCoroutine
 
 class MediaManager {
 
@@ -109,6 +112,31 @@ class MediaManager {
 
         return@withContext MediaResult.Success("Image Saved Succesfully")
 
+    }
+
+    suspend fun copyFromSharedStorage(
+        context : Context,
+        sharedUri : Uri,
+        file : File
+    ): CaptureResult = withContext(Dispatchers.IO){
+        val resolver = context.contentResolver
+        try{
+            Log.d("MediaManager", "uri : ${file.toUri()} ")
+            Log.d("MediaManager", "uri : ${sharedUri} ")
+
+            resolver.openInputStream(sharedUri)?.use{input->
+                resolver.openOutputStream(file.toUri())?.use{output ->
+                    input.copyTo(output)
+                }
+            }
+        }catch(e:Exception){
+            e.printStackTrace()
+            Log.e("MediaManager", "copyFromSharedStorage : ${e.message}")
+            return@withContext CaptureResult.Error(e)
+        }
+
+
+        return@withContext CaptureResult.Success(file.toUri())
     }
 
 }

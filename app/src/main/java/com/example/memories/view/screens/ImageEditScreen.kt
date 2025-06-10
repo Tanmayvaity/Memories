@@ -87,10 +87,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.memories.R
 import com.example.memories.view.components.IconItem
+import com.example.memories.view.utils.createTempFile
 import com.example.memories.viewmodel.ImageEditScreenViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,6 +109,16 @@ fun ImageEditScreen(
     val downloadImageState by viewModel.downloadImageFlow.collectAsStateWithLifecycle()
 
     val snackbarHostState =  remember { SnackbarHostState() }
+
+
+    val tempImageUri by viewModel.tempImageUri.collectAsStateWithLifecycle()
+
+    var selectedIndex by remember { mutableStateOf<Int?>(null) }
+    var scaleType by remember { mutableStateOf(ContentScale.Fit) }
+
+    var showProgressBar by remember { mutableStateOf(false)}
+
+    var showImage by remember { mutableStateOf(false)}
 
 
     Scaffold(
@@ -154,10 +167,30 @@ fun ImageEditScreen(
             Pair("Blur", R.drawable.ic_blur),
         )
 
-        var selectedIndex by remember { mutableStateOf<Int?>(null) }
-        var scaleType by remember { mutableStateOf(ContentScale.Fit) }
 
-        var showProgressBar by remember { mutableStateOf(false)}
+
+        LaunchedEffect(Unit) {
+
+            Log.d("ImageEditScreen", "ImageEditScreen content Uri:  ${uri}")
+            Log.d("ImageEditScreen", "ImageEditScreen: ${uri.toUri().scheme == "content"}")
+            if(uri.toUri().scheme != "content"){
+                showImage = true
+                return@LaunchedEffect
+            }
+            val tempFile = createTempFile(context)
+            viewModel.copyFromSharedStorage(context,uri.toUri(),tempFile)
+
+        }
+
+        LaunchedEffect(tempImageUri) {
+            if(tempImageUri.data!=null){
+                showImage = true
+            }
+            if(tempImageUri.error!=null){
+                Toast.makeText(context,"${tempImageUri.error}",Toast.LENGTH_SHORT).show()
+            }
+
+        }
 
 
         Box(
@@ -180,14 +213,36 @@ fun ImageEditScreen(
                             .height(350.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
 
+
                         ) {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = "Captured Image",
+                        if(showImage){
+                            AsyncImage(
+                                model = if(uri.toUri().scheme == "content") tempImageUri.data else uri,
+                                contentDescription = "Captured Image",
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = scaleType,
+                            )
+                        }
+
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize(),
-                            contentScale = scaleType,
-                        )
+                                .fillMaxWidth()
+                                .height(350.dp)
+                        ){
+                            if(!showImage){
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(50.dp)
+                                        .align(Alignment.Center),
+                                    strokeWidth = 3.dp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+
+
+
                     }
 
                     IconItem(
@@ -289,6 +344,7 @@ fun ImageEditScreen(
                             .weight(1f),
                         enabled = !showProgressBar,
                         onClick = {
+                            showProgressBar = true
                             viewModel.downloadPictureBitmap(context,uri)
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -352,16 +408,18 @@ fun ImageEditScreen(
                 }
 
             }
-
-
-
-
-//
         }
     }
 
 
+
+
+
+
+
 }
+
+
 
 
 

@@ -3,6 +3,7 @@ package com.example.memories.view.screens
 
 import android.Manifest
 import android.R.attr.text
+import android.content.Context
 import com.example.memories.R
 import android.content.Intent
 import android.graphics.Bitmap
@@ -107,6 +108,7 @@ import com.example.memories.view.components.IconItem
 import com.example.memories.view.components.TextUnderLinedItem
 import com.example.memories.view.navigation.Screen
 import com.example.memories.view.utils.PermissionUtil
+import com.example.memories.view.utils.createTempFile
 import com.example.memories.view.utils.isPermissionGranted
 import com.example.memories.viewmodel.CameraScreenViewModel
 import kotlinx.coroutines.delay
@@ -241,6 +243,7 @@ fun CameraPreviewContent(
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val successfullImageCapture by viewModel.successfullImageCapture.collectAsStateWithLifecycle()
 
+
     val aspectRatio by viewModel.aspectRatio.collectAsStateWithLifecycle()
 
     var ratio = aspectRatio.ratio
@@ -252,11 +255,13 @@ fun CameraPreviewContent(
     ) { uri ->
 
         if (uri!=null){
+            Log.d("CameraScreen", "Camera Screen content uri : ${uri.toString()} ")
             val imageUri = uri.toString()
             onImageCaptureNavigate(Screen.ImageEdit(imageUri))
         }
 
     }
+
 
     LaunchedEffect(lensFacing, aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -377,14 +382,7 @@ fun CameraPreviewContent(
                 },
                 onClick = {
                     Log.d(TAG, "${context.cacheDir}")
-                    val imageDirPath = File(context.cacheDir, "images").apply {
-                        if (!exists()) {
-                            mkdir()
-                        }
-                    }
-                    val tempImageFile = File.createTempFile("temp_", ".jpg", imageDirPath)
-
-
+                    val tempImageFile = createTempFile(context)
                     viewModel.takePicture(tempImageFile)
                 }
             )
@@ -457,6 +455,7 @@ fun CameraPreviewContent(
 
 
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -631,7 +630,7 @@ fun LowerBox(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 10.dp,end = 10.dp , bottom = 5.dp),
+                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -781,6 +780,8 @@ fun LowerBox(
 
     }
 }
+
+
 
 
 

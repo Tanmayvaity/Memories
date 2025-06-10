@@ -12,7 +12,6 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil3.util.CoilUtils.result
 import com.example.memories.model.media.MediaRepository
 import com.example.memories.model.models.CaptureResult
 import com.example.memories.model.models.MediaResult
@@ -32,6 +31,11 @@ class ImageEditScreenViewModel() : ViewModel() {
         DownloadImageUiState()
     )
     val downloadImageFlow = _downloadImageFlow.asStateFlow()
+
+    private val _tempImageUri = MutableStateFlow<DownloadImageUiState<Uri?>>(DownloadImageUiState())
+    val tempImageUri = _tempImageUri.asStateFlow()
+
+
 
 
     // with uri
@@ -102,6 +106,32 @@ class ImageEditScreenViewModel() : ViewModel() {
                 error = null
             )
         }
+    }
+
+    fun copyFromSharedStorage(
+        context : Context,
+        sharedUri : Uri,
+        file : File
+    ){
+        viewModelScope.launch {
+            val result = mediaRepository.copyFromSharedStorage(context, sharedUri,file)
+            when(result){
+                is CaptureResult.Success ->{
+                    _tempImageUri.update { _tempImageUri.value.copy(
+                        data = result.uri,
+                    ) }
+                }
+                is CaptureResult.Error -> {
+                    Log.e("ImageEditScreenViewModel", "copyFromSharedStorage : ${result.error} " )
+                    _tempImageUri.update {
+                        _tempImageUri.value.copy(
+                            error = result.error.message
+                        )
+                    }
+                }
+            }
+        }
+
     }
 
     suspend fun uriToBitmap(context: Context, uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
