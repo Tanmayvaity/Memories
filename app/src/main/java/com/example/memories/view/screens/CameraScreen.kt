@@ -376,8 +376,8 @@ fun CameraPreviewContent(
                     )
                 },
                 onClick = {
-                    Log.d(TAG, "photo capture btn clicked")
-                    val imageDirPath = File(context.cacheDir, "imagess").apply {
+                    Log.d(TAG, "${context.cacheDir}")
+                    val imageDirPath = File(context.cacheDir, "images").apply {
                         if (!exists()) {
                             mkdir()
                         }

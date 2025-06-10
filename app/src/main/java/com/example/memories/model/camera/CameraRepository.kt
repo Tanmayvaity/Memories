@@ -1,10 +1,11 @@
-package com.example.memories.model
+package com.example.memories.model.camera
 
 import android.content.Context
 import android.util.Range
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.model.camera.CameraManager
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import java.io.File
@@ -47,7 +48,7 @@ class CameraRepository {
         cameraManager.changeExposure(value)
     }
 
-    fun getExposureRange(): Range<Int>{
+    fun getExposureRange(): Range<Int> {
         return cameraManager.getExposureRange()
     }
 
@@ -57,7 +58,7 @@ class CameraRepository {
 
     suspend fun takePicture(
         file : File
-    ) : CaptureResult{
+    ) : CaptureResult {
         return cameraManager.takePicture(file)
     }
 

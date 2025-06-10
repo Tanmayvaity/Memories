@@ -10,7 +10,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.memories.model.CameraRepository
+import com.example.memories.model.camera.CameraRepository
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import kotlinx.coroutines.flow.MutableStateFlow

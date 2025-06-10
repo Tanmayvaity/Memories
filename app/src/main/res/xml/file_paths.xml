@@ -4,5 +4,7 @@
         name="temp_images"
         path="images/"
         />
-
+    <external-path
+        name="permanent_images"
+        path="images/"/>
 </paths>

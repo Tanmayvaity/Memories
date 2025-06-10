@@ -1,19 +1,15 @@
-package com.example.memories.model
+package com.example.memories.model.camera
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Log
 import android.util.Range
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraControl
-import androidx.camera.core.CameraExecutor
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureCapabilities
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.MeteringPoint
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
@@ -21,17 +17,13 @@ import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.ui.geometry.Offset
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.util.concurrent.Executor
@@ -92,7 +84,7 @@ class CameraManager {
         torchEnabledState: Boolean,
         exposureScale: Int
     ) {
-        val processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
+        val processCameraProvider = ProcessCameraProvider.Companion.awaitInstance(appContext)
         var cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(lensFacing)
             .build()
