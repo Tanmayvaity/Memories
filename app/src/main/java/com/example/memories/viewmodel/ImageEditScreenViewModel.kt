@@ -35,9 +35,6 @@ class ImageEditScreenViewModel() : ViewModel() {
     private val _tempImageUri = MutableStateFlow<DownloadImageUiState<Uri?>>(DownloadImageUiState())
     val tempImageUri = _tempImageUri.asStateFlow()
 
-
-
-
     // with uri
     fun downloadPicture(
         appContext: Context,
@@ -58,7 +55,6 @@ class ImageEditScreenViewModel() : ViewModel() {
     ) {
         viewModelScope.launch() {
             _downloadImageFlow.update { _downloadImageFlow.value.copy(isLoading = true) }
-
             try{
                 val bitmap = uriToBitmap(appContext,uri.toUri())
                 if(bitmap!=null){

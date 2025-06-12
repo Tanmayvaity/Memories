@@ -1,23 +1,8 @@
 package com.example.memories.view.navigation
 
-import android.net.Uri
-import android.util.Log
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOut
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -31,13 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -51,12 +34,11 @@ import com.example.memories.R
 import com.example.memories.view.screens.CameraScreen
 import com.example.memories.view.screens.FeedScreen
 import com.example.memories.view.screens.ImageEditScreen
+import com.example.memories.view.screens.MemoryScreen
 import com.example.memories.view.screens.NotificationScreen
 import com.example.memories.view.screens.OtherScreen
 import com.example.memories.view.screens.SearchScreen
 import com.example.memories.viewmodel.CameraScreenViewModel
-import kotlinx.serialization.Serializable
-import kotlin.reflect.typeOf
 
 @Composable
 fun AppNav(navController: NavHostController) {
@@ -113,24 +95,7 @@ fun AppNav(navController: NavHostController) {
                     isBottomBarVisible = true
                     OtherScreen()
                 }
-                composable<Screen.Camera>(
-                    enterTransition = {
-                        slideIntoContainer(
-                            animationSpec = tween(500, easing = EaseOut),
-                            towards = AnimatedContentTransitionScope.SlideDirection.Up
-                        ) + fadeIn(
-                            animationSpec = tween(500, easing = LinearEasing)
-                        )
-                    },
-                    exitTransition = {
-                        slideOutOfContainer(
-                            animationSpec = tween(500, easing = EaseIn),
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down
-                        ) + fadeOut(
-                            animationSpec = tween(500, easing = LinearEasing)
-                        )
-                    }
-                ) {
+                composable<Screen.Camera> {
                     isBottomBarVisible = false
                     CameraScreen(
                         popBack = {
@@ -142,24 +107,7 @@ fun AppNav(navController: NavHostController) {
 
                     )
                 }
-                composable<Screen.ImageEdit>(
-                    enterTransition = {
-                        slideIntoContainer(
-                            animationSpec = tween(500, easing = EaseOut),
-                            towards = AnimatedContentTransitionScope.SlideDirection.End
-                        ) + fadeIn(
-                            animationSpec = tween(500, easing = LinearEasing)
-                        )
-                    },
-                    exitTransition = {
-                        slideOutOfContainer(
-                            animationSpec = tween(500, easing = EaseIn),
-                            towards = AnimatedContentTransitionScope.SlideDirection.Start
-                        ) + fadeOut(
-                            animationSpec = tween(500, easing = LinearEasing)
-                        )
-                    }
-                ) {
+                composable<Screen.ImageEdit> {
                     val args = it.toRoute<Screen.ImageEdit>()
                     isBottomBarVisible = false
                     ImageEditScreen(
@@ -167,6 +115,19 @@ fun AppNav(navController: NavHostController) {
                         onArrowBackButtonClick = {
                             navController.popBackStack()
                         },
+                        onNextButtonClick = { route ->
+                            navController.navigate(route)
+                        }
+                    )
+                }
+
+                composable<Screen.Memory> {
+                    val args = it.toRoute<Screen.Memory>()
+                    MemoryScreen(
+                        uri = args.uri,
+                        onArrowBackButtonClick = {
+                            navController.popBackStack()
+                        }
                     )
                 }
             }
