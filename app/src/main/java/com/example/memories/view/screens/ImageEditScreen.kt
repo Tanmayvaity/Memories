@@ -3,6 +3,7 @@ package com.example.memories.view.screens
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,16 +45,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.example.memories.R
 import com.example.memories.view.components.IconItem
 import com.example.memories.view.navigation.Screen
@@ -66,25 +67,29 @@ import com.example.memories.viewmodel.ImageEditScreenViewModel
 fun ImageEditScreen(
     uri: String,
     onArrowBackButtonClick: () -> Unit,
-    onNextButtonClick : (Screen.Memory) -> Unit
+    onNextButtonClick: (Screen.Memory) -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel : ImageEditScreenViewModel = ImageEditScreenViewModel()
+    val viewModel: ImageEditScreenViewModel = ImageEditScreenViewModel()
 
 
     val downloadImageState by viewModel.downloadImageFlow.collectAsStateWithLifecycle()
+    val imageBitmapState by viewModel.imageBitmap.collectAsStateWithLifecycle()
+    val internalBitmapUri by viewModel.internalBitmapUri.collectAsStateWithLifecycle()
 
-    val snackbarHostState =  remember { SnackbarHostState() }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-
-    val tempImageUri by viewModel.tempImageUri.collectAsStateWithLifecycle()
 
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var scaleType by remember { mutableStateOf(ContentScale.Fit) }
 
-    var showProgressBar by remember { mutableStateOf(false)}
+    var showProgressBar by remember { mutableStateOf(false) }
 
-    var showImage by remember { mutableStateOf(false)}
+    var showImage by remember { mutableStateOf(false) }
+
+    var showInternalBitmapCreationProgressBar by remember { mutableStateOf(false) }
+
+
 
 
     Scaffold(
@@ -98,21 +103,50 @@ fun ImageEditScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                 ),
-                modifier = Modifier.border(1.dp,Color.Black),
+                modifier = Modifier.border(1.dp, Color.Black),
                 title = {
                     Text("")
                 },
                 actions = {
-                    Text(
-                        text = "Next",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(10.dp).clickable{
-                            onNextButtonClick(Screen.Memory(
-                                uri = if(uri.toUri().scheme == "content") tempImageUri.data.toString() else uri
-                            ))
-                        },
-                    )
+                    Button(
+                        onClick = {
+                            showInternalBitmapCreationProgressBar = true
+                            Log.i("ImageEditScreen", "Next:${imageBitmapState.toString()}")
+//                            Log.e("ImageEditScreen","Next:${inter}")
+                            if (imageBitmapState.data != null) {
+                                viewModel.saveBitmapToInternalStorage(
+                                    file = createTempFile(context),
+                                    bitmap = imageBitmapState.data!!
+                                )
+                            }
 
+                        },
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .padding(start = 15.dp, top = 10.dp, bottom = 5.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Color.Black,
+                            disabledContentColor = Color.Gray,
+                            disabledContainerColor = Color.LightGray
+                        ),
+                        enabled = imageBitmapState.data != null && !showInternalBitmapCreationProgressBar
+                    ) {
+                        if (!showInternalBitmapCreationProgressBar && imageBitmapState.data !=null) {
+                            Text(
+                                text = "Next",
+                            )
+                        }
+
+                        if (showInternalBitmapCreationProgressBar || imageBitmapState.data==null) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.Gray,
+                            )
+                        }
+
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { onArrowBackButtonClick() }) {
@@ -140,24 +174,17 @@ fun ImageEditScreen(
 
 
         LaunchedEffect(Unit) {
-
-            Log.d("ImageEditScreen", "ImageEditScreen content Uri:  ${uri}")
-            Log.d("ImageEditScreen", "ImageEditScreen: ${uri.toUri().scheme == "content"}")
-            if(uri.toUri().scheme != "content"){
-                showImage = true
-                return@LaunchedEffect
-            }
-            val tempFile = createTempFile(context)
-            viewModel.copyFromSharedStorage(context,uri.toUri(),tempFile)
-
+            viewModel.uriToBitmap(uri.toUri(), context)
         }
 
-        LaunchedEffect(tempImageUri) {
-            if(tempImageUri.data!=null){
+        LaunchedEffect(imageBitmapState) {
+            Log.d("ImageEditScreen", "launcheffect : ${imageBitmapState.toString()}")
+            if (imageBitmapState.data != null) {
                 showImage = true
             }
-            if(tempImageUri.error!=null){
-                Toast.makeText(context,"${tempImageUri.error}",Toast.LENGTH_SHORT).show()
+            if (imageBitmapState.error != null) {
+                Log.e("ImageEditScreen", "ImageEditScreen: ${imageBitmapState.error}")
+                Toast.makeText(context, "${imageBitmapState.error}", Toast.LENGTH_SHORT).show()
             }
 
         }
@@ -182,12 +209,15 @@ fun ImageEditScreen(
                             .fillMaxWidth()
                             .height(350.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
-
-
-                        ) {
-                        if(showImage){
-                            AsyncImage(
-                                model = if(uri.toUri().scheme == "content") tempImageUri.data else uri,
+                    ) {
+                        if (showImage) {
+                            Log.d(
+                                "ImageEditScreen",
+                                "image : ${imageBitmapState.data!!::class.qualifiedName}"
+                            )
+                            Log.d("ImageEditScreen", "image : ${imageBitmapState.toString()}")
+                            Image(
+                                bitmap = imageBitmapState.data!!.asImageBitmap(),
                                 contentDescription = "Captured Image",
                                 modifier = Modifier
                                     .fillMaxSize(),
@@ -199,8 +229,8 @@ fun ImageEditScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(350.dp)
-                        ){
-                            if(!showImage){
+                        ) {
+                            if (!showImage) {
                                 CircularProgressIndicator(
                                     modifier = Modifier
                                         .size(50.dp)
@@ -210,7 +240,6 @@ fun ImageEditScreen(
                                 )
                             }
                         }
-
 
 
                     }
@@ -277,19 +306,17 @@ fun ImageEditScreen(
                 }
 
 
-
-
             }
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-            ){
+            ) {
 
                 Row(
 
-                ){
+                ) {
 
                     OutlinedButton(
                         modifier = Modifier
@@ -312,27 +339,32 @@ fun ImageEditScreen(
                             .height(70.dp)
                             .padding(10.dp)
                             .weight(1f),
-                        enabled = !showProgressBar,
+                        enabled = !showProgressBar && imageBitmapState.data != null,
                         onClick = {
+                            Log.d(
+                                "ImageEditScreen",
+                                "download click : ${imageBitmapState.data!!::class.qualifiedName}"
+                            )
                             showProgressBar = true
-                            viewModel.downloadPictureBitmap(context,uri)
+                            viewModel.downloadPictureBitmap(context, imageBitmapState.data!!)
+
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White,
                             disabledContainerColor = Color.LightGray,
-                            disabledContentColor = Color.LightGray
+                            disabledContentColor = Color.Gray
                         )
-                    ){
+                    ) {
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
-                        ){
-                            if(!showProgressBar){
+                        ) {
+                            if (!showProgressBar) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_download),
                                     contentDescription = "Download icon",
-                                    tint = Color.White,
+                                    tint = if(imageBitmapState.data==null)Color.Gray else Color.White,
                                     modifier = Modifier.padding(end = 5.dp)
                                 )
                                 Text(
@@ -341,7 +373,7 @@ fun ImageEditScreen(
                                 )
                             }
 
-                            if(showProgressBar){
+                            if (showProgressBar) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(25.dp),
                                     color = Color.Gray,
@@ -351,17 +383,21 @@ fun ImageEditScreen(
 
 
                             LaunchedEffect(downloadImageState) {
-                                if(downloadImageState.isLoading){
+                                if (downloadImageState.isLoading) {
                                     showProgressBar = true
                                 }
 
-                                if(downloadImageState.error!= null){
-                                    Toast.makeText(context,"${downloadImageState.error}",Toast.LENGTH_SHORT).show()
+                                if (downloadImageState.error != null) {
+                                    Toast.makeText(
+                                        context,
+                                        "${downloadImageState.error}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                     showProgressBar = false
                                     viewModel.reset()
                                 }
 
-                                if(downloadImageState.data !=null){
+                                if (downloadImageState.data != null) {
                                     showProgressBar = false
                                     //TODO : handle snack bar collapse due to config change
                                     snackbarHostState.showSnackbar(
@@ -372,6 +408,33 @@ fun ImageEditScreen(
                                 }
                             }
 
+                            LaunchedEffect(internalBitmapUri) {
+                                if (!internalBitmapUri.isLoading) {
+                                    showInternalBitmapCreationProgressBar = false
+                                }
+
+                                Log.i(
+                                    "ImageEditScreen",
+                                    "internalBitmapUri : ${internalBitmapUri.toString()}",
+                                )
+                                if (internalBitmapUri.data != null) {
+                                    onNextButtonClick(Screen.Memory(uri = internalBitmapUri.data.toString()))
+                                }
+
+                                if (internalBitmapUri.error != null) {
+                                    Toast.makeText(
+                                        context,
+                                        "${internalBitmapUri.error}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    Log.e(
+                                        "ImageEditScreen",
+                                        "internalBitmapUri : ${internalBitmapUri.error}",
+                                    )
+                                }
+
+                            }
+
 
                         }
                     }
@@ -380,11 +443,6 @@ fun ImageEditScreen(
             }
         }
     }
-
-
-
-
-
 
 
 }

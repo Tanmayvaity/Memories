@@ -1,26 +1,19 @@
 package com.example.memories.viewmodel
 
 
-import android.R.attr.bitmap
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.model.media.MediaRepository
+import com.example.memories.model.models.BitmapResult
 import com.example.memories.model.models.CaptureResult
 import com.example.memories.model.models.MediaResult
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class ImageEditScreenViewModel() : ViewModel() {
@@ -31,9 +24,15 @@ class ImageEditScreenViewModel() : ViewModel() {
         DownloadImageUiState()
     )
     val downloadImageFlow = _downloadImageFlow.asStateFlow()
+    private val _imageBitmap =
+        MutableStateFlow<DownloadImageUiState<Bitmap>>(DownloadImageUiState())
+    val imageBitmap = _imageBitmap.asStateFlow()
 
-    private val _tempImageUri = MutableStateFlow<DownloadImageUiState<Uri?>>(DownloadImageUiState())
-    val tempImageUri = _tempImageUri.asStateFlow()
+    private val _internalBitmapUri = MutableStateFlow<DownloadImageUiState<Uri>>(
+        DownloadImageUiState()
+    )
+    val internalBitmapUri = _internalBitmapUri.asStateFlow()
+
 
     // with uri
     fun downloadPicture(
@@ -50,27 +49,18 @@ class ImageEditScreenViewModel() : ViewModel() {
 
     // with bitmap
     fun downloadPictureBitmap(
-        appContext: Context,
-        uri: String
+        context: Context,
+        bitmap: Bitmap
     ) {
         viewModelScope.launch() {
             _downloadImageFlow.update { _downloadImageFlow.value.copy(isLoading = true) }
-            try{
-                val bitmap = uriToBitmap(appContext,uri.toUri())
-                if(bitmap!=null){
-                    val result = mediaRepository.downloadImageWithBitmap(appContext, bitmap)
-                    resultLogic(result)
-                }
-            }catch(e : Exception){
-                e.printStackTrace()
-                Log.e("ImageEditViewModel", "downloadPictureBitmap: ${e.message}" )
-            }
-
+            val result = mediaRepository.downloadImageWithBitmap(context, bitmap)
+            resultLogic(result)
 
         }
     }
 
-    private fun resultLogic(result : MediaResult){
+    private fun resultLogic(result: MediaResult) {
         when (result) {
             is MediaResult.Error -> {
                 _downloadImageFlow.update {
@@ -104,45 +94,65 @@ class ImageEditScreenViewModel() : ViewModel() {
         }
     }
 
-    fun copyFromSharedStorage(
-        context : Context,
-        sharedUri : Uri,
-        file : File
-    ){
+
+
+
+    fun uriToBitmap(uri: Uri, context: Context) {
         viewModelScope.launch {
-            val result = mediaRepository.copyFromSharedStorage(context, sharedUri,file)
-            when(result){
-                is CaptureResult.Success ->{
-                    _tempImageUri.update { _tempImageUri.value.copy(
-                        data = result.uri,
-                    ) }
+            _imageBitmap.update { _imageBitmap.value.copy(isLoading = true) }
+            val result = mediaRepository.uriToBitmap(uri, context)
+            when (result) {
+                is BitmapResult.Error -> {
+                    _imageBitmap.update {
+                        _imageBitmap.value.copy(
+                            isLoading = false,
+                            error = result.error.message.toString(),
+                            data = null
+                        )
+                    }
                 }
-                is CaptureResult.Error -> {
-                    Log.e("ImageEditScreenViewModel", "copyFromSharedStorage : ${result.error} " )
-                    _tempImageUri.update {
-                        _tempImageUri.value.copy(
-                            error = result.error.message
+
+                is BitmapResult.Success -> {
+                    _imageBitmap.update {
+                        _imageBitmap.value.copy(
+                            isLoading = false,
+                            error = null,
+                            data = result.bitmap
                         )
                     }
                 }
             }
-        }
 
+        }
     }
 
-    suspend fun uriToBitmap(context: Context, uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
-        try {
-            if (Build.VERSION.SDK_INT < 28) {
-                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-            } else {
-                val source = ImageDecoder.createSource(context.contentResolver, uri)
-                ImageDecoder.decodeBitmap(source)
+    fun saveBitmapToInternalStorage(
+        file:File,
+        bitmap:Bitmap
+    ){
+        viewModelScope.launch {
+            _internalBitmapUri.update { _internalBitmapUri.value.copy(isLoading = true) }
+            val result = mediaRepository.saveToInternalStorage(file,bitmap)
+            when(result){
+                is CaptureResult.Error -> {
+                    _internalBitmapUri.update { _internalBitmapUri.value.copy(
+                        isLoading = false,
+                        error = result.error.message,
+                        data = null
+                    ) }
+                }
+
+                is CaptureResult.Success -> {
+                    _internalBitmapUri.update { _internalBitmapUri.value.copy(
+                        isLoading = false,
+                        error = null,
+                        data = result.uri
+                    ) }
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
+
 
     data class DownloadImageUiState<T>(
         val isLoading: Boolean = false,

@@ -96,9 +96,6 @@ fun MemoryScreen(
                     }
                 },
                 actions = {
-                    if (!showProgressBar) {
-
-                    }
                     Button(
                         onClick = {
                             showProgressBar = true

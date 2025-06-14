@@ -4,6 +4,7 @@ package com.example.memories.model.media
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import com.example.memories.model.models.BitmapResult
 import com.example.memories.model.models.CaptureResult
 import com.example.memories.model.models.MediaResult
 import java.io.File
@@ -37,6 +38,19 @@ class MediaRepository {
     ):CaptureResult{
         return mediaManager.copyFromSharedStorage(context, sharedUri,file)
     }
+
+    suspend fun uriToBitmap(uri:Uri,context:Context): BitmapResult {
+        return mediaManager.uriToBitmap(uri,context)
+    }
+
+    suspend fun saveToInternalStorage(
+        file:File,
+        bitmap : Bitmap
+    ):CaptureResult{
+        return mediaManager.saveBitmapToInternalStorage(bitmap,file)
+    }
+
+
 
 
 

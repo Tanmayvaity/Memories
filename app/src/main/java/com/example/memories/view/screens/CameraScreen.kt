@@ -2,9 +2,6 @@ package com.example.memories.view.screens
 
 
 import android.Manifest
-import android.R.attr.text
-import android.content.Context
-import com.example.memories.R
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -19,13 +16,8 @@ import androidx.annotation.DrawableRes
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,37 +41,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.geometry.takeOrElse
@@ -88,9 +67,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
@@ -101,7 +78,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.memories.R
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.view.components.CameraRationaleDialog
 import com.example.memories.view.components.IconItem
@@ -112,7 +89,6 @@ import com.example.memories.view.utils.createTempFile
 import com.example.memories.view.utils.isPermissionGranted
 import com.example.memories.viewmodel.CameraScreenViewModel
 import kotlinx.coroutines.delay
-import java.io.File
 import java.util.UUID
 
 private const val TAG = "CameraScreen"
@@ -445,7 +421,7 @@ fun CameraPreviewContent(
             }
             if (successfullImageCapture != null) {
                 val tempImageUriString = successfullImageCapture.toString()
-                Toast.makeText(context, "Image Captured Successfully", Toast.LENGTH_SHORT).show()
+                Log.i("CameraScreen" ,"Image saved successfully")
                 Log.d(TAG, "CameraScreen-content uri : ${tempImageUriString}")
                 onImageCaptureNavigate(Screen.ImageEdit(uri = tempImageUriString))
                 viewModel.resetUriState()

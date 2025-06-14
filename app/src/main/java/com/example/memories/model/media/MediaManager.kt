@@ -3,17 +3,19 @@ package com.example.memories.model.media
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
+import com.example.memories.model.models.BitmapResult
 import com.example.memories.model.models.CaptureResult
 import com.example.memories.model.models.MediaResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import kotlin.coroutines.suspendCoroutine
+import java.io.FileOutputStream
 
 class MediaManager {
 
@@ -114,6 +116,8 @@ class MediaManager {
 
     }
 
+
+
     suspend fun copyFromSharedStorage(
         context : Context,
         sharedUri : Uri,
@@ -137,6 +141,45 @@ class MediaManager {
 
 
         return@withContext CaptureResult.Success(file.toUri())
+    }
+
+    suspend fun uriToBitmap(uri:Uri, context : Context): BitmapResult = withContext(Dispatchers.IO){
+        try{
+            val bitmap =  if (Build.VERSION.SDK_INT < 28) {
+                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            } else {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source)
+            }
+            return@withContext BitmapResult.Success(bitmap)
+        }catch(e : Exception){
+            e.printStackTrace()
+            return@withContext BitmapResult.Error(e)
+        }
+    }
+
+    // cache or internal/external storage
+    suspend fun saveBitmapToInternalStorage(
+        bitmap:Bitmap,
+        file : File
+    ): CaptureResult = withContext(Dispatchers.IO){
+        try{
+            FileOutputStream(file)?.use { output->
+                bitmap.compress(
+                    Bitmap.CompressFormat.JPEG,
+                    100,
+                    output
+                )
+            }
+
+
+            val uri = Uri.fromFile(file)
+            Log.i("MediaManager", "internal bitmap uri : ${uri.toString()}")
+            return@withContext CaptureResult.Success(uri)
+        }catch(e :Exception){
+            e.printStackTrace()
+            return@withContext CaptureResult.Error(e)
+        }
     }
 
 }
