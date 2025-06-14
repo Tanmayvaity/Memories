@@ -5,6 +5,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -40,6 +41,7 @@ import com.example.memories.view.screens.OtherScreen
 import com.example.memories.view.screens.SearchScreen
 import com.example.memories.viewmodel.CameraScreenViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNav(navController: NavHostController) {
 
@@ -63,7 +65,7 @@ fun AppNav(navController: NavHostController) {
                     BottomNavBar(navController = navController)
                 }
 
-            }
+            },
         ) { innerPadding ->
             NavHost(
                 navController = navController,
@@ -105,11 +107,11 @@ fun AppNav(navController: NavHostController) {
                             navController.navigate(route)
                         },
 
-                    )
+                        )
                 }
                 composable<Screen.ImageEdit> {
                     val args = it.toRoute<Screen.ImageEdit>()
-                    isBottomBarVisible = false
+//                    isBottomBarVisible = false
                     ImageEditScreen(
                         uri = args.uri,
                         onArrowBackButtonClick = {
@@ -131,6 +133,7 @@ fun AppNav(navController: NavHostController) {
                     )
                 }
             }
+
 
 
         }
