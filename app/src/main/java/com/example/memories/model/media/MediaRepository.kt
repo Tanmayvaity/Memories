@@ -6,7 +6,9 @@ import android.graphics.Bitmap
 import android.net.Uri
 import com.example.memories.model.models.BitmapResult
 import com.example.memories.model.models.CaptureResult
+import com.example.memories.model.models.MediaImage
 import com.example.memories.model.models.MediaResult
+import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 class MediaRepository {
@@ -48,6 +50,12 @@ class MediaRepository {
         bitmap : Bitmap
     ):CaptureResult{
         return mediaManager.saveBitmapToInternalStorage(bitmap,file)
+    }
+
+
+
+    suspend fun fetchMediaFromShared(context : Context,fromApp:Boolean): Flow<MediaImage> {
+        return mediaManager.fetchMediaFromShared(context,fromApp)
     }
 
 

@@ -4,6 +4,7 @@ package com.example.memories.viewmodel
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.model.media.MediaRepository
@@ -151,6 +152,11 @@ class ImageEditScreenViewModel() : ViewModel() {
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("Cleared", "ImageEditScreenViewmodel : onCleared: ")
     }
 
 

@@ -39,6 +39,7 @@ import com.example.memories.view.screens.MemoryScreen
 import com.example.memories.view.screens.NotificationScreen
 import com.example.memories.view.screens.OtherScreen
 import com.example.memories.view.screens.SearchScreen
+import com.example.memories.view.screens.SharedScreen
 import com.example.memories.viewmodel.CameraScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +84,11 @@ fun AppNav(navController: NavHostController) {
             ) {
                 composable<Screen.Feed>{
                     isBottomBarVisible = true
-                    FeedScreen()
+                    FeedScreen(
+                        navigateToShared = { route ->
+                            navController.navigate(route)
+                        }
+                    )
                 }
                 composable<Screen.Search> {
                     isBottomBarVisible = true
@@ -122,7 +127,6 @@ fun AppNav(navController: NavHostController) {
                         }
                     )
                 }
-
                 composable<Screen.Memory> {
                     val args = it.toRoute<Screen.Memory>()
                     MemoryScreen(
@@ -132,6 +136,15 @@ fun AppNav(navController: NavHostController) {
                         }
                     )
                 }
+                composable<Screen.Shared> {
+                    isBottomBarVisible = false
+                    SharedScreen(
+                        onArrowBackButtonClick = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
             }
 
 

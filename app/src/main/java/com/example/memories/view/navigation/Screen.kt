@@ -30,6 +30,9 @@ sealed class Screen(val route: String) {
         val uri : String
     ) : Screen("Memory")
 
+    @Serializable
+    object Shared : Screen("Shared")
+
     companion object {
         fun fromRoute(route: String): Screen? = when (route) {
             Feed.route -> Feed

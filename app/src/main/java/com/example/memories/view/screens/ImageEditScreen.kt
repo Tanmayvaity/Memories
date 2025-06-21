@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.R
 import com.example.memories.view.components.IconItem
 import com.example.memories.view.navigation.Screen
@@ -70,7 +71,7 @@ fun ImageEditScreen(
     onNextButtonClick: (Screen.Memory) -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: ImageEditScreenViewModel = ImageEditScreenViewModel()
+    val viewModel: ImageEditScreenViewModel = viewModel()
 
 
     val downloadImageState by viewModel.downloadImageFlow.collectAsStateWithLifecycle()
@@ -88,10 +89,6 @@ fun ImageEditScreen(
     var showImage by remember { mutableStateOf(false) }
 
     var showInternalBitmapCreationProgressBar by remember { mutableStateOf(false) }
-
-
-
-
     Scaffold(
         snackbarHost = {
             SnackbarHost(

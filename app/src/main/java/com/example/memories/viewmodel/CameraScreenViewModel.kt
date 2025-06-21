@@ -3,6 +3,7 @@ package com.example.memories.viewmodel
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import android.util.Range
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.SurfaceRequest
@@ -11,7 +12,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.model.camera.CameraRepository
-import com.example.memories.model.media.MediaRepository
 import com.example.memories.model.models.AspectRatio
 import com.example.memories.model.models.CaptureResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -160,7 +160,10 @@ class CameraScreenViewModel() : ViewModel() {
 
 
 
-
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("Cleared", "CameraScreenViewModel : onCleared: ")
+    }
 
 
 }
