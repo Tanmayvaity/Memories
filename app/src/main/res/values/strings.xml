@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Memories</string>
+    <string name="settings">Settings</string>
+    <string name = "dismiss">Dismiss</string>
+    <string name = "camera_icon">Camera Icon</string>
+    <string name="navigate_to_next">Next</string>
+    <string name="download">Download</string>
 </resources>

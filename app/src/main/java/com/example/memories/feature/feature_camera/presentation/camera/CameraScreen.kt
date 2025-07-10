@@ -1,0 +1,338 @@
+package com.example.memories.feature.feature_camera.presentation.camera
+
+import android.Manifest
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.compose.CameraXViewfinder
+import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.geometry.takeOrElse
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.memories.R
+import com.example.memories.core.presentation.RationaleDialog
+import com.example.memories.core.util.PermissionHelper
+import com.example.memories.core.util.createSettingsIntent
+import com.example.memories.core.util.createTempFile
+import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
+import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
+import com.example.memories.navigation.AppScreen
+import kotlinx.coroutines.delay
+import java.util.UUID
+
+private const val TAG = "CameraScreen"
+
+@Composable
+fun CameraRoute(
+    modifier: Modifier = Modifier,
+    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit
+) {
+
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var showRationale by remember { mutableStateOf(false) }
+    var showCameraScreen by remember { mutableStateOf<Boolean?>(null) }
+    val viewModel: CameraViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // check permission
+
+    val cameraRequestLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {
+
+    }
+    PermissionHelper(
+        lifecycleOwner = lifecycleOwner,
+        onGranted = {
+            showRationale = false
+            showCameraScreen = true
+        },
+        onRationale = {
+            showRationale = true
+            showCameraScreen = false
+        },
+        onRequest = { permission ->
+            cameraRequestLauncher.launch(
+                Manifest.permission.CAMERA
+            )
+        },
+        permission = Manifest.permission.CAMERA,
+        context = context
+    )
+
+    if (showRationale) {
+        RationaleDialog(
+            title = "Camera permission has not been granted",
+            body = "You won't be able to access camera features without this permission." +
+                    "Go to settings and grant Camera permission",
+            icon = R.drawable.ic_camera,
+            iconContentDescription = stringResource(R.string.camera_icon),
+            onConfirm = {
+                createSettingsIntent(context)
+                showRationale = false
+            },
+            onDismiss = {
+                showRationale = false
+            }
+        )
+    }
+
+
+
+
+    CameraScreen(
+        modifier = modifier,
+        permissionStatus = showCameraScreen,
+        state = state,
+        onEvent = viewModel::onEvent,
+        viewModel = viewModel,
+        onNavigateToImageEdit = onNavigateToImageEdit
+    )
+
+
+}
+
+
+@Composable
+fun CameraScreen(
+    modifier: Modifier = Modifier,
+    permissionStatus: Boolean?,
+    state: CameraState,
+    onEvent: (CameraEvent) -> Unit = {},
+    viewModel: CameraViewModel = hiltViewModel<CameraViewModel>(),
+    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit
+) {
+    val context = LocalContext.current
+    val app = context.applicationContext
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var showImagePreview by remember { mutableStateOf(false) }
+    val imageUri by viewModel.capturedImageUri.collectAsStateWithLifecycle()
+
+    var co by remember { mutableStateOf(Offset(0f,0f)) }
+
+//    val ratio = if(state.aspectRatio == AspectRatio.RATIO_16_9)
+
+    val mediaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+
+        if (uri!=null){
+            Log.d("CameraScreen", "Camera Screen content uri : ${uri.toString()} ")
+            onNavigateToImageEdit(AppScreen.MediaEdit(uri.toString()))
+        }
+
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorFlow.collect { message ->
+            Log.e(TAG, "CameraScreen: error while capturing $message")
+        }
+
+    }
+    val coordinateTransformer = remember(
+        state.aspectRatio,state.lensFacing
+    ) { MutableCoordinateTransformer() }
+
+    var autofocusRequest by remember { mutableStateOf(UUID.randomUUID() to Offset.Unspecified) }
+
+    val autofocusRequestId = autofocusRequest.first
+    // Show the autofocus indicator if the offset is specified
+    var showAutofocusIndicator = autofocusRequest.second.isSpecified
+    // Cache the initial coords for each autofocus request
+    val autofocusCoords = remember(autofocusRequestId) { autofocusRequest.second }
+
+    // Queue hiding the request for each unique autofocus tap
+    if (showAutofocusIndicator) {
+        LaunchedEffect(autofocusRequestId) {
+            delay(2000)
+            autofocusRequest = autofocusRequestId to Offset.Unspecified
+
+
+//            if (!isUserInteractingWithSlider) {
+//
+            }
+        }
+
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+        ,
+        ) {
+        Log.d(TAG, "CameraScreen: permissionStatus = ${permissionStatus} ")
+        if (permissionStatus != null && !permissionStatus) {
+            Text(
+                text = "Camera permission has not been granted",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+        if (permissionStatus != null && permissionStatus) {
+            Text(
+                text = "Camera",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+
+
+        state.surfaceRequest?.let { surfaceRequest ->
+            CameraXViewfinder(
+                surfaceRequest = surfaceRequest,
+                coordinateTransformer = coordinateTransformer,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+                    .aspectRatio(state.aspectRatio.ratio)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = { tapCoords ->
+                                onEvent(CameraEvent.ChangeLensFacing)
+                            },
+                            onTap = {offset ->
+                                co = offset
+                                with(coordinateTransformer){
+                                    onEvent(CameraEvent.TapToFocus(offset.transform()))
+                                }
+
+
+                                autofocusRequest = UUID.randomUUID() to offset
+                            }
+                        )
+                    }
+                    .pointerInput(Unit) {
+//                        detectTransformGestures { _, _, zoom, _ ->
+//                            val scale = (state.zoomScale + (zoom - 1f)).coerceIn(0f, 1f)
+//                            Log.d(TAG, "zoom scale : $scale")
+//                            onEvent(CameraEvent.Zoom(scale))
+//                        }
+                    }
+            )
+
+            AnimatedVisibility(
+                visible = showAutofocusIndicator,
+                enter = fadeIn(
+                    animationSpec = tween(200)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(200)
+                ),
+                // will change this later
+                modifier = Modifier.offset(y = 155.dp)
+            ) {
+                Spacer(
+                    Modifier
+                        .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
+                        .offset((-24).dp, (-24).dp)
+//                        .offset(y = 150.dp)
+                        .border(1.dp, Color.White, CircleShape)
+                        .size(48.dp)
+
+                )
+            }
+
+        }
+
+        UpperBox(
+            modifier = Modifier.align(Alignment.TopEnd),
+            torchState = state.torchState,
+            onTorchToggle = {
+                onEvent(CameraEvent.TorchToggle)
+            },
+            onAspectRatioChange = {
+                onEvent(CameraEvent.ToggleAspectRatio)
+            }
+        )
+
+        LowerBox(
+            modifier = Modifier
+                .align(Alignment.BottomCenter),
+            onToggleCamera = {
+                onEvent(CameraEvent.ChangeLensFacing)
+            },
+            onChooseFromGallery = {
+                mediaLauncher.launch(
+                    PickVisualMediaRequest(
+                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            },
+            onClick = {
+                val file = createTempFile(
+                    context
+                )
+                onEvent(CameraEvent.TakePicture(file))
+            }
+        )
+
+        // tap indicator for debugging
+//        Surface(
+//            modifier = Modifier
+//                .offset{co.round()}
+//                .offset((-5.dp),(-5.dp))
+//                .height(10.dp).width(10.dp)
+//                .background(Color.White)
+//
+//        ) {
+//
+//        }
+
+    }
+
+    LaunchedEffect(imageUri) {
+        if(imageUri!=null){
+            onNavigateToImageEdit(AppScreen.MediaEdit(imageUri.toString()))
+            onEvent(CameraEvent.Reset)
+        }
+    }
+
+
+    LaunchedEffect(lifecycleOwner, state.lensFacing,state.aspectRatio) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            onEvent(CameraEvent.Preview(app, lifecycleOwner))
+        }
+
+    }
+
+
+}
+
+

@@ -12,6 +12,9 @@ navigation = "2.8.9"
 serialization = "1.6.3"
 camerax = "1.5.0-alpha06"
 coil = "3.2.0"
+ksp = '2.0.21-1.0.27'
+hilt = "2.56.2"
+hilt-navigation="1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,11 +41,18 @@ androidx-camera-compose = { module = "androidx.camera:camera-compose", version.r
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 # The specific camera implementation that renders the preview
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-extensions = {module = "androidx.camera:camera-extensions",version.ref = "camerax"}
 coil-compose = {module = "io.coil-kt.coil3:coil-compose",version.ref = "coil"}
+hilt-compiler = {module = "com.google.dagger:hilt-compiler",version.ref = "hilt"}
+hilt-android = {module = "com.google.dagger:hilt-android",version.ref = "hilt"}
+hilt-navigation-compose = {module = "androidx.hilt:hilt-navigation-compose",version.ref = "hilt-navigation"}
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-ksp = {id = "com.google.devtools.ksp",version.ref = "ksp"}
+dagger-hilt-android = { id ="com.google.dagger.hilt.android",version.ref = "hilt"}
 

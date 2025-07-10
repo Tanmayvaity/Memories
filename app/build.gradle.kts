@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("com.google.devtools.ksp")
+    alias(libs.plugins.dagger.hilt.android)
 }
 
 android {
@@ -65,6 +67,13 @@ dependencies {
     implementation(libs.androidx.camera.compose)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.extensions)
 
     implementation(libs.coil.compose)
+
+    ksp(libs.hilt.compiler)
+    implementation((libs.hilt.android))
+    implementation(libs.hilt.navigation.compose)
+
+
 }
