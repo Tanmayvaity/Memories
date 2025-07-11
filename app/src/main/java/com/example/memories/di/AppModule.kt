@@ -71,6 +71,7 @@ object AppModule {
         return MediaRepositoryImpl(mediaManager)
     }
 
+   
     @Provides
     @Singleton
     fun provideMediaUseCase(repository: MediaRepository): MediaUseCases{

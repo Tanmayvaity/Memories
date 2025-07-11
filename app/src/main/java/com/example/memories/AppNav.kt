@@ -22,7 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -35,6 +39,7 @@ import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TOP_LEVEL_DESTINATIONS
 import com.example.memories.navigation.TopLevelDestination
 import com.example.memories.navigation.TopLevelNavigation
+
 
 @Preview
 @Composable
@@ -93,8 +98,8 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                         onClick = {
                             navController.navigate(AppScreen.Camera)
                         },
-                        contentColor = Color.White,
-                        containerColor = Color.Black
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
 
                 }
@@ -147,7 +152,8 @@ fun BottomNavBar(
 
 
     NavigationBar(
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 10.dp
     ) {
         TOP_LEVEL_DESTINATIONS.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -163,15 +169,24 @@ fun BottomNavBar(
                 },
                 label = {
                     Text(
-                        text = item.name.toString()
+                        text = item.name.toString(),
+                        style = MaterialTheme.typography.titleSmall,
                     )
                 },
+//                colors = NavigationBarItemDefaults.colors(
+//                    indicatorColor = Color.Black,
+//                    selectedIconColor = Color.White,
+//                    selectedTextColor = Color.Black,
+//                    unselectedIconColor = Color.Black,
+//                    unselectedTextColor = Color.Black
+//                )
+
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Black,
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color.Black,
-                    unselectedIconColor = Color.Black,
-                    unselectedTextColor = Color.Black
+                    indicatorColor = MaterialTheme.colorScheme.primary,
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
             )

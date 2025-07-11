@@ -90,7 +90,8 @@ fun EditModalBottomSheet(
                             modifier = Modifier
                                 .border(
                                     width = 1.dp,
-                                    color = Color.LightGray.copy(0.3f),
+//                                    color = Color.LightGray.copy(0.3f),
+                                    color = MaterialTheme.colorScheme.primary,
                                     shape = CircleShape
                                 )
                                 .padding(20.dp),
@@ -99,13 +100,13 @@ fun EditModalBottomSheet(
                             contentDescription = it.first,
                             shape = CircleShape,
                             alpha = 0.1f,
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.primary,
                             backgroundColor = MaterialTheme.colorScheme.background
                         )
                         Text(
                             text = it.first,
                             fontSize = 12.sp,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

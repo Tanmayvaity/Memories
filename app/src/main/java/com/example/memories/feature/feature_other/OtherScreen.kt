@@ -1,7 +1,10 @@
 package com.example.memories.feature.feature_other
 
+import android.R.attr.contentDescription
+import android.R.attr.onClick
 import android.content.Intent
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +20,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,14 +31,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
 
+@PreviewDynamicColors
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,12 +69,14 @@ fun OtherScreen() {
                 .padding(innerPadding)
                 .padding(10.dp)
                 .verticalScroll(state = rememberScrollState())
+                .background(MaterialTheme.colorScheme.background)
         ) {
 
             Text(
                 text = "GENERAL",
-                color = Color.Gray,
-                modifier = Modifier.padding(10.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(10.dp),
 
             )
 
@@ -108,7 +119,8 @@ fun OtherScreen() {
 
             Text(
                 text = "MEMORIES",
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(10.dp)
 
             )
@@ -145,7 +157,8 @@ fun OtherScreen() {
             )
             Text(
                 text = "APP INFO",
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(10.dp)
             )
 
@@ -193,7 +206,9 @@ fun CustomSettingRow(
     contentDescription: String,
     heading: String,
     content: String = "",
-    color: Color = Color.Black,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    iconColor : Color = MaterialTheme.colorScheme.primary,
+    iconBackgroundColor : Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit = {},
 ) {
     Row(
@@ -213,9 +228,10 @@ fun CustomSettingRow(
                 .padding(10.dp)
                 .weight(1f),
             contentDescription = contentDescription,
-            color = Color.Black,
+            color = iconColor,
+            backgroundColor = MaterialTheme.colorScheme.onSurfaceVariant,
             shape = CircleShape,
-            alpha = 0.3f,
+            alpha = 0.1f,
         )
         Column(
             verticalArrangement = Arrangement.Center,
@@ -229,14 +245,15 @@ fun CustomSettingRow(
                 text = heading,
                 modifier = Modifier.padding(start = 5.dp,end = 5.dp),
                 fontSize = 16.sp,
-                color = color
+                color = color,
+                style = MaterialTheme.typography.titleMedium
             )
             if (content.isNotEmpty() || content.isNotEmpty()) {
                 Text(
                     text = content,
                     modifier = Modifier.padding(start = 5.dp,top = 0.dp),
-                    fontSize = 14.sp,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
@@ -245,7 +262,7 @@ fun CustomSettingRow(
         Icon(
             painter = painterResource(R.drawable.ic_right),
             contentDescription = "Open $heading Memories",
-            tint = Color.LightGray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier
                 .weight(1f)
                 .size(24.dp)

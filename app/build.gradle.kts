@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
     alias(libs.plugins.dagger.hilt.android)
+
 }
 
 android {
@@ -31,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -72,7 +73,7 @@ dependencies {
     implementation(libs.coil.compose)
 
     ksp(libs.hilt.compiler)
-    implementation((libs.hilt.android))
+    implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
 
 

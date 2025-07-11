@@ -1,6 +1,8 @@
 package com.example.memories.feature.feature_feed.presentation
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -29,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -49,11 +53,16 @@ fun SearchScreen(
     var expanded by rememberSaveable { mutableStateOf(false) }
     var text by rememberSaveable { mutableStateOf("") }
 
-
     Scaffold(
         topBar = {
             SearchBar(
-                modifier = Modifier.padding(start = 10.dp,end = 10.dp),
+                tonalElevation = 10.dp,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                ,
                 inputField = {
                     SearchBarDefaults.InputField(
                         query = text.toString(),
@@ -101,6 +110,7 @@ fun SearchScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3)

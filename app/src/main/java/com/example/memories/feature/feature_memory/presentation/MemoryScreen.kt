@@ -108,7 +108,7 @@ fun MemoryScreen(
                     ) {
                         Text(
                             text = "Create",
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -178,14 +178,10 @@ fun MemoryScreen(
                         .fillMaxWidth()
                         .padding(10.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .border(
-                            width = 1.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(10.dp)
-                        ),
+                        ,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        contentColor = Color.Gray
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 ) {
                     Row(
@@ -197,6 +193,7 @@ fun MemoryScreen(
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             contentDescription = ""
                         )
                     }
@@ -218,8 +215,8 @@ fun MemoryScreen(
                             viewModel.onEvent(MemoryEvents.TitleFocusChanged(it))
                         },
                     textStyle = TextStyle(
-                        color = if (state.isTitleHintVisible) Color.LightGray.copy(alpha = 0.7f)
-                        else Color.Black,
+                        color = if (state.isTitleHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        else MaterialTheme.colorScheme.onSurface,
                         textMotion = TextMotion.Animated,
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp,
@@ -243,8 +240,8 @@ fun MemoryScreen(
                         keyboardType = KeyboardType.Text
                     ),
                     textStyle = TextStyle(
-                        color = if (state.isContentHintVisible) Color.LightGray
-                        else Color.Black,
+                        color = if (state.isContentHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        else MaterialTheme.colorScheme.onSurface,
                         textMotion = TextMotion.Animated,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
@@ -274,10 +271,6 @@ fun ReminderDatePickerDialog(
     state: DatePickerState = rememberDatePickerState()
 ) {
     DatePickerDialog(
-        colors = DatePickerDefaults.colors(
-            containerColor = Color.White,
-
-            ),
         onDismissRequest = {
             onDismiss()
         },
@@ -289,7 +282,7 @@ fun ReminderDatePickerDialog(
             ) {
                 Text(
                     text = "Confirm",
-                    color = Color.Black
+//                    color = Color.Black
                 )
             }
         },
@@ -301,7 +294,6 @@ fun ReminderDatePickerDialog(
             ) {
                 Text(
                     text = "Cancel",
-                    color = Color.Black
                 )
             }
         }
@@ -309,12 +301,12 @@ fun ReminderDatePickerDialog(
 
     ) {
         DatePicker(
-            colors = DatePickerDefaults.colors(
-                containerColor = Color.White,
-                selectedDayContainerColor = Color.Black,
-                selectedYearContainerColor = Color.Black,
-                dividerColor = Color.Black
-            ),
+//            colors = DatePickerDefaults.colors(
+//                containerColor = Color.White,
+//                selectedDayContainerColor = Color.Black,
+//                selectedYearContainerColor = Color.Black,
+//                dividerColor = Color.Black
+//            ),
             state = state
         )
     }
