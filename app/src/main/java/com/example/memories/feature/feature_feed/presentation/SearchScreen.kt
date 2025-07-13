@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation
 
+import android.R.attr.contentDescription
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImagePainter.State.Empty.painter
 import com.example.memories.R
 import com.example.memories.navigation.AppScreen
 
@@ -134,6 +137,7 @@ fun SearchScreen(
                                 .fillMaxWidth()
                                 .height(250.dp)
                                 .clip(RoundedCornerShape(20.dp))
+
                             ,
                             painter = painterResource(R.drawable.pinned_image),
                             contentDescription = "Shared Image Folder Icon",

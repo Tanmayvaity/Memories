@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -74,7 +75,7 @@ import com.example.memories.navigation.TopLevelScreen
 @Composable
 fun MemoryScreen(
     onBackPress: () -> Unit = {},
-    onCreateClick : (TopLevelScreen.Feed) -> Unit = {},
+    onCreateClick: (TopLevelScreen.Feed) -> Unit = {},
     uri: String = ""
 ) {
     val viewModel: MemoryViewModel = viewModel()
@@ -177,8 +178,7 @@ fun MemoryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        ,
+                        .clip(RoundedCornerShape(10.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -201,11 +201,11 @@ fun MemoryScreen(
 
 
                 BasicTextField(
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     value = if (state.isTitleHintVisible) state.titleHintContent else state.title,
                     onValueChange = { it: String ->
                         viewModel.onEvent(MemoryEvents.TitleChanged(it))
                     },
-
                     interactionSource = titleInteractionSource,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -215,7 +215,9 @@ fun MemoryScreen(
                             viewModel.onEvent(MemoryEvents.TitleFocusChanged(it))
                         },
                     textStyle = TextStyle(
-                        color = if (state.isTitleHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = if (state.isTitleHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        )
                         else MaterialTheme.colorScheme.onSurface,
                         textMotion = TextMotion.Animated,
                         fontWeight = FontWeight.Bold,
@@ -225,6 +227,7 @@ fun MemoryScreen(
                 )
                 BasicTextField(
                     value = if (state.isContentHintVisible) state.contentHintContent else state.content,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     onValueChange = { it: String ->
                         viewModel.onEvent(MemoryEvents.ContentChanged(it))
                     },
@@ -240,7 +243,9 @@ fun MemoryScreen(
                         keyboardType = KeyboardType.Text
                     ),
                     textStyle = TextStyle(
-                        color = if (state.isContentHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = if (state.isContentHintVisible) MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        )
                         else MaterialTheme.colorScheme.onSurface,
                         textMotion = TextMotion.Animated,
                         fontWeight = FontWeight.Normal,

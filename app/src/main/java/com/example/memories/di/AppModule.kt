@@ -15,8 +15,12 @@ import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUse
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
 import com.example.memories.feature.feature_feed.data.repository.MediaFeedRepositoryImpl
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
+import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediaUseCase
+import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediasUseCase
 import com.example.memories.feature.feature_feed.domain.usecaase.FeedUseCases
 import com.example.memories.feature.feature_feed.domain.usecaase.FetchMediaFromSharedUseCase
+import com.example.memories.feature.feature_feed.domain.usecaase.ObserveMediaChangesUseCase
+import com.example.memories.feature.feature_feed.domain.usecaase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmap
@@ -92,7 +96,11 @@ object AppModule {
     @Singleton
     fun provideFeedMediaUseCase(repository: MediaFeedRepository): FeedUseCases{
         return FeedUseCases(
-            fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository)
+            fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository),
+            deleteMediaUseCase = DeleteMediaUseCase(repository),
+            deleteMediasUseCase = DeleteMediasUseCase(repository),
+            sharedUriToInternalUriUseCase = SharedUriToInternalUriUseCase(repository),
+            observeMediaChangesUseCase = ObserveMediaChangesUseCase(repository)
         )
     }
 

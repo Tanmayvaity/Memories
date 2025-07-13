@@ -34,6 +34,11 @@ fun NavGraphBuilder.createFeedGraph(
     composable<AppScreen.Shared> {
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
-        SharedRoute()
+        SharedRoute(
+            onBack = {
+                navController.popBackStack()
+            }
+
+        )
     }
 }

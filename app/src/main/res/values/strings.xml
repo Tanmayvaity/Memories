@@ -5,4 +5,5 @@
     <string name = "camera_icon">Camera Icon</string>
     <string name="navigate_to_next">Next</string>
     <string name="download">Download</string>
+    <string name ="previous">Go back to the previous screen</string>
 </resources>

@@ -3,6 +3,7 @@ package com.example.memories.core.data.data_source
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -15,15 +16,49 @@ import com.example.memories.feature.feature_feed.domain.model.MediaImage
 import com.example.memories.feature.feature_media_edit.domain.model.BitmapResult
 import com.example.memories.feature.feature_media_edit.domain.model.MediaResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class MediaManager(
-    val context : Context
+    val context: Context
 ) {
+
+    companion object {
+        private const val TAG = "MediaManager"
+    }
+
+
+    // reads the list of provided uri, copies them to the generated file and returns the list of File
+    suspend fun sharedUriToInternalUri(
+        uriList: List<Uri>
+    ): List<File> = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+        val internalFiles = mutableListOf<File>()
+        try {
+            uriList.forEach { uri ->
+                val file = createTempFile(context)
+                resolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(file)?.use { output ->
+                        input.copyTo(output)
+                    }
+
+                }
+                internalFiles.add(file)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "sharedUriToInternalUri: ${e.message}")
+            e.printStackTrace()
+        }
+        return@withContext internalFiles
+    }
+
 
     suspend fun uriToBitmap(
         uri: Uri
@@ -79,23 +114,23 @@ class MediaManager(
             resolver.delete(sharedImageUri, null, null)
             return@withContext MediaResult.Error(e)
         }
-        Log.d("MediaManager", "sharedImageUri:${sharedImageUri} ")
+        Log.d(TAG, "sharedImageUri:${sharedImageUri} ")
 
         return@withContext MediaResult.Success("Image Saved Successfully")
 
     }
 
     suspend fun saveBitmapToInternalStorage(
-        bitmap : Bitmap?,
-    ) : CaptureResult =
+        bitmap: Bitmap?,
+    ): CaptureResult =
         withContext(Dispatchers.IO) {
-            if(bitmap == null) throw NullPointerException("Bitmap Null")
+            if (bitmap == null) throw NullPointerException("Bitmap Null")
 
             val file = createTempFile(context = context)
             try {
                 FileOutputStream(file)?.use { output ->
 
-                    bitmap?.let{
+                    bitmap?.let {
                         it.compress(
                             Bitmap.CompressFormat.JPEG,
                             100,
@@ -107,7 +142,7 @@ class MediaManager(
 
 
                 val uri = Uri.fromFile(file)
-                Log.i("MediaManager", "internal bitmap uri : ${uri.toString()}")
+                Log.i(TAG, "internal bitmap uri : ${uri.toString()}")
                 return@withContext CaptureResult.Success(uri)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -158,8 +193,73 @@ class MediaManager(
     }.flowOn(Dispatchers.IO)
 
 
+    private fun getCollection(): Uri {
+        val collection =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Images.Media.getContentUri(
+                    MediaStore.VOLUME_EXTERNAL
+                )
+            } else {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            }
+        return collection
+    }
 
 
+    suspend fun observeMediaChanges() = callbackFlow {
+        val callback = object : ContentObserver(null) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                super.onChange(selfChange, uri)
+                trySend(Unit)
+            }
+
+        }
+
+        context.contentResolver.registerContentObserver(
+            getCollection(),
+            true,
+            callback
+        )
+
+        awaitClose {
+            context.contentResolver.unregisterContentObserver(callback)
+
+        }
+
+    }
+
+
+    suspend fun deleteMedia(
+        uri: Uri
+    ) = withContext(Dispatchers.IO) {
+        Log.d(TAG, "deleteMedia: uri to be delete : ${uri.toString()}")
+        try {
+            val resolver = context.contentResolver
+            resolver.delete(uri, null, null)
+            Log.d(TAG, "deleteMedia: deleted ")
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteMedia: Error : ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun deleteMedias(
+        uriList: List<Uri>
+    ) = withContext(Dispatchers.IO) {
+
+        uriList.forEach { uri ->
+            Log.d(TAG, "deleteMedia: uri to be delete : ${uri.toString()}")
+            try {
+                val resolver = context.contentResolver
+                resolver.delete(uri, null, null)
+                Log.d(TAG, "deleteMedia: deleted ")
+            } catch (e: Exception) {
+                Log.e(TAG, "deleteMedia: Error : ${e.message}")
+                e.printStackTrace()
+            }
+        }
+
+    }
 
 
 }
