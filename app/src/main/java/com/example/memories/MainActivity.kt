@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.navigation.compose.rememberNavController
 import com.example.memories.ui.theme.MemoriesTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,7 +26,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+)
+@PreviewLightDark
 @Composable
 fun AppNavPreview() {
     MemoriesTheme {

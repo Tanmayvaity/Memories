@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,12 +12,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -52,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +67,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -70,7 +81,12 @@ import coil3.request.crossfade
 import com.example.memories.R
 import com.example.memories.navigation.TopLevelScreen
 
-@Preview
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    device = "id:pixel_9_pro_xl"
+)
+@PreviewDynamicColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryScreen(
@@ -127,6 +143,9 @@ fun MemoryScreen(
         val titleInteractionSource = remember { MutableInteractionSource() }
         var showDatePicker by remember { mutableStateOf(false) }
 
+        val pagerState = rememberPagerState(pageCount = {
+            6
+        })
 
 
         Box(
@@ -140,36 +159,53 @@ fun MemoryScreen(
                     .verticalScroll(scrollState),
             ) {
 
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(bottom = 10.dp)
-//                    ,
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.SpaceEvenly
-//                ) {
-//                    ImageContainer(uri = uri.toUri() )
-//                    ImageContainer(uri = uri.toUri())
-//                    ImageContainer(uri = uri.toUri())
-//                }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.SpaceEvenly
-//                ) {
-//                    ImageContainer(uri = uri.toUri())
-//                    ImageContainer(uri = uri.toUri())
-//                    ImageContainer(uri = uri.toUri())
-//                }
+                Box {
+                    HorizontalPager(
+                        state = pagerState,
+                    ) {
+//                        AsyncImage(
+//                            model = uri,
+//                            contentDescription = "",
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                            ,
+//                            contentScale = ContentScale.Crop
+//                        )
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.heightIn(max = (Short.MAX_VALUE).toInt().dp)
-                ) {
-                    items(count = 6) {
-                        ImageContainer(uri = uri.toUri())
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(uri)
+                                .crossfade(true)
+                                .build(),
+                            error = painterResource(R.drawable.ic_launcher_background),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+
+
+
+
                     }
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(10.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    ) {
+                        Text(
+                            text = "${(pagerState.currentPage + 1).toString()}/${pagerState.pageCount}",
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(10.dp)
+                            )
+                    }
+
+
                 }
+
 
                 Button(
                     onClick = {
@@ -266,6 +302,9 @@ fun MemoryScreen(
     }
 }
 
+
+
+
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -339,7 +378,7 @@ fun ImageContainer(
                 .data(uri)
                 .crossfade(true)
                 .build(),
-            placeholder = painterResource(R.drawable.ic_launcher_background),
+            error = painterResource(R.drawable.ic_launcher_background),
             contentDescription = "",
             contentScale = ContentScale.Crop,
             modifier = Modifier
