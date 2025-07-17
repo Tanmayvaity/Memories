@@ -47,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,29 +73,57 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.memories.R
+import com.example.memories.core.presentation.Type
+import com.example.memories.core.presentation.UriType
+import com.example.memories.core.util.isImageFile
+import com.example.memories.core.util.isVideoFile
 import com.example.memories.navigation.TopLevelScreen
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Preview(
     showBackground = true,
     showSystemUi = true,
     device = "id:pixel_9_pro_xl"
 )
-@PreviewDynamicColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryScreen(
     onBackPress: () -> Unit = {},
     onCreateClick: (TopLevelScreen.Feed) -> Unit = {},
-    uri: String = ""
+    uriType: UriType? = null
 ) {
     val viewModel: MemoryViewModel = viewModel()
+    var lifecycle by remember {
+        mutableStateOf(Lifecycle.Event.ON_CREATE)
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            lifecycle = event
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+
+        }
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
@@ -161,7 +190,7 @@ fun MemoryScreen(
 
                 Box {
                     HorizontalPager(
-                        state = pagerState,
+                        state = pagerState
                     ) {
 //                        AsyncImage(
 //                            model = uri,
@@ -172,25 +201,66 @@ fun MemoryScreen(
 //                            contentScale = ContentScale.Crop
 //                        )
 
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(uri)
-                                .crossfade(true)
-                                .build(),
-                            error = painterResource(R.drawable.ic_launcher_background),
-                            contentDescription = "",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        )
+                        if (uriType!!.type == Type.IMAGE) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(uriType.uri)
+                                    .crossfade(true)
+                                    .build(),
+                                error = painterResource(R.drawable.ic_launcher_background),
+                                contentDescription = "",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            )
+                        }
+
+                        if (uriType!!.type == Type.VIDEO) {
+                            val player = ExoPlayer.Builder(LocalContext.current).build().apply {
+                                val mediaItem = MediaItem.fromUri(uriType.uri!!.toUri())
+                                setMediaItem(mediaItem)
+                                playWhenReady = false
+                                prepare()
+                            }
+
+                            AndroidView(
+                                factory = { context ->
+                                    PlayerView(context).also {
+                                        it.player = player
+                                        it.useController = true
+                                        it.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                    }
+                                },
+                                update = {
+                                    when (lifecycle) {
+                                        Lifecycle.Event.ON_PAUSE -> {
+                                            it.onPause()
+                                            it.player?.pause()
+                                        }
+
+                                        Lifecycle.Event.ON_RESUME -> {
+                                            it.onResume()
+                                        }
+
+                                        Lifecycle.Event.ON_DESTROY -> {
+                                            it.player?.release()
+                                        }
+
+                                        else -> Unit
+                                    }
+                                },
+//                                modifier = Modifier.fillMaxWidth()
+//                                    .height(250.dp)
 
 
+                            )
+                        }
 
 
                     }
                     Surface(
                         modifier = Modifier
-                            .align(Alignment.BottomEnd)
+                            .align(Alignment.TopEnd)
                             .padding(10.dp),
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -200,7 +270,7 @@ fun MemoryScreen(
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             fontSize = 18.sp,
                             modifier = Modifier.padding(10.dp)
-                            )
+                        )
                     }
 
 
@@ -301,8 +371,6 @@ fun MemoryScreen(
 
     }
 }
-
-
 
 
 @Preview

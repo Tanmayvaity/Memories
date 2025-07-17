@@ -8,6 +8,8 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import java.io.File
+import java.net.URLConnection
+import kotlin.text.startsWith
 
 fun isPermissionGranted(
     context : Context,
@@ -35,6 +37,19 @@ fun createTempFile(
     return tempImageFile
 }
 
+fun createVideoFile(
+    context: Context,
+    directory : String = "videos"
+): File {
+    val imageDirPath = File(context.cacheDir, directory).apply {
+        if (!exists()) {
+            mkdir()
+        }
+    }
+    val tempImageFile = File.createTempFile("temp_", ".mp4", imageDirPath)
+    return tempImageFile
+}
+
 fun createSettingsIntent(
     context : Context
 ){
@@ -49,4 +64,13 @@ fun isSdkSmallerOrEqualToX(
     sdkVersion : Int
 ): Boolean{
     return android.os.Build.VERSION.SDK_INT <= sdkVersion
+}
+
+fun isVideoFile(path: String?): Boolean {
+    val mimeType = URLConnection.guessContentTypeFromName(path)
+    return mimeType != null && mimeType.startsWith("video")
+}
+fun isImageFile(path: String?): Boolean {
+    val mimeType = URLConnection.guessContentTypeFromName(path)
+    return mimeType != null && mimeType.startsWith("image")
 }

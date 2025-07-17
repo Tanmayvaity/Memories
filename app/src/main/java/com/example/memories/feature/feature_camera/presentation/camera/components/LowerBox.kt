@@ -1,5 +1,11 @@
 package com.example.memories.feature.feature_camera.presentation.camera.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,17 +42,22 @@ import androidx.compose.ui.unit.sp
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
+import com.example.memories.feature.feature_camera.presentation.camera.VideoState
 
+@OptIn(ExperimentalAnimationApi::class)
 @Preview
 @Composable
 fun LowerBox(
     modifier: Modifier = Modifier,
     onToggleCamera: () -> Unit = {},
     onChooseFromGallery: () -> Unit = {},
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onCameraModeClick : (CameraMode) -> Unit = {},
+    cameraMode : CameraMode = CameraMode.PHOTO,
+    isVideoPlaying : Boolean = false
 ) {
     val cameraActionItems: List<CameraMode> = CameraMode.entries.toList()
-    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedIndex by remember { mutableStateOf(cameraMode.mapToIndex()) }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -119,46 +130,70 @@ fun LowerBox(
 
             }
 
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp, top = 10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
+            AnimatedContent(
+                targetState = isVideoPlaying,
+                transitionSpec = {
+                    slideInHorizontally { it } with slideOutHorizontally { -it }
+                },
+            ) { onlyVideo ->
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp, top = 10.dp),
+                    horizontalArrangement = if (onlyVideo) Arrangement.Center else Arrangement.SpaceEvenly,
+                ) {
+                    itemsIndexed(cameraActionItems) { index, item ->
+
+                        if(!isVideoPlaying || item == CameraMode.VIDEO){
+                            TextUnderLinedItem(
+                                modifier = Modifier
+                                    .drawBehind {
+                                        val strokeWidthPx = 1.dp.toPx()
+                                        val verticalOffset = size.height + 1.sp.toPx()
+                                        drawLine(
+                                            color = if (selectedIndex == index) Color.White else Color.Transparent,
+                                            strokeWidth = strokeWidthPx,
+                                            start = Offset(30f, verticalOffset),
+                                            end = Offset(size.width - 30f, verticalOffset)
+                                        )
+                                    }
+                                    .padding(start = 10.dp, end = 10.dp)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = {
+                                            if(isVideoPlaying){
+                                               return@clickable
+                                            }
+                                            selectedIndex = index
+                                            onCameraModeClick(item)
+                                        }
+                                    ),
+                                fontSize = 16,
+                                text = item.toString(),
+                                textColor = if (selectedIndex == index) Color.White else Color.LightGray,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
 
-                itemsIndexed(cameraActionItems) { index, item ->
-                    TextUnderLinedItem(
-                        modifier = Modifier
-                            .drawBehind {
-                                val strokeWidthPx = 1.dp.toPx()
-                                val verticalOffset = size.height + 1.sp.toPx()
-                                drawLine(
-                                    color = if (selectedIndex == index) Color.White else Color.Transparent,
-                                    strokeWidth = strokeWidthPx,
-                                    start = Offset(30f, verticalOffset),
-                                    end = Offset(size.width - 30f, verticalOffset)
-                                )
-                            }
-                            .padding(start = 10.dp, end = 10.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {
-                                    selectedIndex = index
-                                }
-                            ),
-                        fontSize = 16,
-                        text = item.toString(),
-                        textColor = if (selectedIndex == index) Color.White else Color.LightGray,
-                        fontWeight = FontWeight.Bold
-                    )
+                    }
+
 
                 }
-
-
             }
+
+
 
         }
     }
+}
+
+fun CameraMode.mapToIndex():Int{
+    return when(this){
+        CameraMode.PHOTO -> {0}
+        CameraMode.PORTRAIT -> {1}
+        CameraMode.VIDEO -> {2}
+    }
+
 }

@@ -9,5 +9,10 @@ data class CameraUseCases @Inject constructor(
     val zoomRangeUseCase: ZoomUseCase,
     val takePictureUseCase: TakePictureUseCase,
     val setAspectRatioUseCase: SetAspectRatioUseCase,
-    val tapToFocusUseCase: TapToFocusUseCase
+    val tapToFocusUseCase: TapToFocusUseCase,
+    val takeVideoUseCase: TakeVideoUseCase,
+    val resumeRecordingUseCase: ResumeRecordingUseCase,
+    val pauseRecordingUseCase: PauseRecordingUseCase,
+    val stopRecordingUseCase: StopRecordingUseCase,
+    val cancelRecordingUseCase: CancelRecordingUseCase
 )

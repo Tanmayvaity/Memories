@@ -1,7 +1,15 @@
 package com.example.memories.feature.feature_camera.data.data_source
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraMetadata
+import android.net.Uri
 import android.util.Log
+import androidx.annotation.RequiresPermission
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
@@ -19,17 +27,33 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
+import androidx.camera.video.FallbackStrategy
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoCapture.withOutput
+import androidx.camera.video.VideoRecordEvent
 import androidx.compose.ui.geometry.Offset
+import androidx.core.content.ContextCompat
+import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.CaptureResult
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
+import com.example.memories.feature.feature_camera.domain.model.VideoRecordingState
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
+
 
 class CameraManager {
     companion object {
@@ -43,20 +67,25 @@ class CameraManager {
 
     private lateinit var cameraPreviewUseCase: Preview
     private lateinit var imageCaptureUseCase: ImageCapture
+    private lateinit var videoCaptureUseCase: VideoCapture<Recorder>
+    private val cameraExecutor = Executors.newSingleThreadExecutor()
+    private lateinit var recorder: Recorder
+    private var videoAspectRatio: Int = androidx.camera.core.AspectRatio.RATIO_4_3
+    private var cameraRecording: Recording? = null
+    private val _videoRecordingState =
+        MutableStateFlow<VideoRecordingState>(VideoRecordingState.Idle)
+
     private lateinit var processCameraProvider: ProcessCameraProvider
     private lateinit var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory
     private val resolutionSelectorBuilder = ResolutionSelector.Builder()
 
-//    private val cameraPreviewUseCase = Preview.Builder().build().apply {
-//        setSurfaceProvider { surfaceRequest ->
-//            surfaceRequestCallback?.invoke(surfaceRequest)
-//        }
-//
-//    }
-//
-//    private val  imageCaptureUseCase  = ImageCapture.Builder()
-//        .setTargetRotation(cameraPreviewUseCase!!.targetRotation)
-//        .build()
+
+    private val qualitySelector = QualitySelector.fromOrderedList(
+        listOf(
+            Quality.UHD, Quality.FHD, Quality.HD, Quality.SD,
+        ),
+        FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
+    )
 
 
     init {
@@ -66,7 +95,11 @@ class CameraManager {
 
     }
 
+
     fun initUseCases() {
+//        val executor: Executor = Executors.newSingleThreadExecutor()
+
+
         cameraPreviewUseCase = Preview.Builder()
             .setResolutionSelector(resolutionSelectorBuilder.build())
             .build()
@@ -75,7 +108,8 @@ class CameraManager {
             surfaceRequestCallback?.invoke(surfaceRequest)
             surfaceMeteringPointFactory = SurfaceOrientedMeteringPointFactory(
                 surfaceRequest.resolution.width.toFloat(),
-                surfaceRequest.resolution.height.toFloat())
+                surfaceRequest.resolution.height.toFloat()
+            )
         }
 
 
@@ -83,6 +117,14 @@ class CameraManager {
             .setTargetRotation(cameraPreviewUseCase!!.targetRotation)
             .setResolutionSelector(resolutionSelectorBuilder.build())
             .build()
+
+        recorder = Recorder.Builder()
+            .setExecutor(cameraExecutor)
+            .setQualitySelector(qualitySelector)
+            .setAspectRatio(videoAspectRatio)
+            .build()
+        videoCaptureUseCase = VideoCapture.withOutput(recorder)
+//        videoCaptureUseCase = VideoCapture.Builder(recorder).build()
     }
 
 
@@ -95,7 +137,7 @@ class CameraManager {
 
         processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
         unbind(processCameraProvider)
-        try{
+        try {
             val cameraSelector = CameraSelector.Builder()
                 .requireLensFacing(if (lensFacing == LensFacing.BACK) LENS_FACING_BACK else LENS_FACING_FRONT)
                 .build()
@@ -105,6 +147,7 @@ class CameraManager {
                 UseCaseGroup.Builder()
                     .addUseCase(cameraPreviewUseCase)
                     .addUseCase(imageCaptureUseCase)
+                    .addUseCase(videoCaptureUseCase)
                     .build()
             )
 
@@ -121,8 +164,8 @@ class CameraManager {
             } finally {
                 unbind(processCameraProvider)
             }
-        }catch (e : Exception){
-            Log.e(TAG, "bindToCamera: ${e.message}", )
+        } catch (e: Exception) {
+            Log.e(TAG, "bindToCamera: ${e.message}")
             e.printStackTrace()
         }
 
@@ -155,6 +198,9 @@ class CameraManager {
             if (aspectRatio == AspectRatio.RATIO_4_3) AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
             else AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
 
+        videoAspectRatio =
+            if (aspectRatio == AspectRatio.RATIO_4_3) androidx.camera.core.AspectRatio.RATIO_4_3 else
+                androidx.camera.core.AspectRatio.RATIO_16_9
 
         setAspect(aspect)
 
@@ -170,6 +216,7 @@ class CameraManager {
 
     private fun setAspect(aspect: AspectRatioStrategy) {
         resolutionSelectorBuilder.setAspectRatioStrategy(aspect)
+
     }
 
 
@@ -221,6 +268,121 @@ class CameraManager {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    suspend fun takeVideo(
+        context: Context,
+        file: File
+    ): CaptureResult = suspendCancellableCoroutine { continuation ->
+        if (videoCaptureUseCase == null) {
+            val error = IllegalStateException("VideoCaptureUseCase use case not initialized")
+            Log.e(TAG, "${error.message}")
+            return@suspendCancellableCoroutine continuation.resume(CaptureResult.Error(error))
+        }
+        val fileOutputOptions: FileOutputOptions = FileOutputOptions.Builder(file).build()
+        Log.i(TAG, "takeVideo: file : ${fileOutputOptions.file.path}")
+        var videoUri: Uri? = null
+
+        cameraRecording = videoCaptureUseCase.output
+            .prepareRecording(context, fileOutputOptions)
+            .withAudioEnabled()
+            .start(ContextCompat.getMainExecutor(context), object : Consumer<VideoRecordEvent> {
+                override fun accept(value: VideoRecordEvent) {
+                    when (value) {
+                        is VideoRecordEvent.Start -> {
+                            Log.i(TAG, "accept: Recording has started")
+                        }
+
+                        is VideoRecordEvent.Finalize -> {
+
+                            val finalizeEvent =
+
+
+
+
+                            if (!value.hasError()) {
+                                videoUri = value.outputResults.outputUri
+                                Log.i(
+                                    TAG,
+                                    "accept: successful video capture : ${videoUri.toString()}"
+                                )
+                                continuation.resume(CaptureResult.Success(videoUri))
+                            } else {
+                                Log.e(
+                                    TAG,
+                                    "Recording has failed with an exception : ${value.cause?.message}"
+                                )
+
+                                continuation.resume(CaptureResult.Error(value.cause))
+                            }
+                        }
+
+                        is VideoRecordEvent.Pause -> {
+                            Log.i(TAG, "accept: Recording has paused")
+                        }
+
+                        is VideoRecordEvent.Resume -> {
+                            Log.i(TAG, "accept: Recording has resumed")
+                        }
+                    }
+
+                }
+            })
+
+
+    }
+
+    fun pauseRecording() {
+
+
+        if (cameraRecording == null) {
+            Log.e(TAG, "pauseRecording: cameraRecording is null")
+            return
+        }
+
+        cameraRecording?.pause()
+        Log.i(TAG, "pauseRecording")
+
+
+    }
+
+    fun resumeRecording() {
+
+        if (cameraRecording == null) {
+            Log.e(TAG, "resumeRecording: cameraRecording is null")
+            return
+        }
+
+        cameraRecording?.resume()
+        Log.i(TAG, "resume recording")
+
+    }
+
+    fun stopRecording() {
+
+
+        if (cameraRecording == null) {
+            Log.e(TAG, "stopRecording: cameraRecording is null")
+            return
+        }
+
+        cameraRecording?.stop()
+        cameraRecording = null
+        Log.i(TAG, "stop recording")
+
+
+
+    }
+    
+    fun cancelRecording(){
+        if(cameraRecording == null){
+            Log.e(TAG,"cancelRecording : cameraRecording is null")
+            return 
+        }
+        
+        cameraRecording?.close()
+        cameraRecording = null
+        Log.i(TAG, "cancelRecording: cancel recording")
+    }
 
 }
 

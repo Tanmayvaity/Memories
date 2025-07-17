@@ -1,5 +1,7 @@
 package com.example.memories.core.data.data_source
 
+import android.R.attr.bitmap
+import android.R.id.input
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -117,6 +119,47 @@ class MediaManager(
         Log.d(TAG, "sharedImageUri:${sharedImageUri} ")
 
         return@withContext MediaResult.Success("Image Saved Successfully")
+
+    }
+
+    suspend fun downloadVideo(
+        uri : Uri
+    ): MediaResult = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+        val videoCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Video.Media.getContentUri(
+                MediaStore.VOLUME_EXTERNAL_PRIMARY
+            )
+        } else {
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        }
+        val videoDetails = ContentValues().apply {
+            put(MediaStore.Video.Media.DISPLAY_NAME, "video_${System.currentTimeMillis()}")
+            put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+            put(MediaStore.Video.Media.IS_PENDING, 1)
+            put(MediaStore.Video.Media.RELATIVE_PATH, "DCIM/Memories")
+        }
+        val sharedVideoUri =
+            resolver.insert(videoCollection, videoDetails) ?: return@withContext MediaResult.Error(
+                NullPointerException("Destination uri is null")
+            )
+
+        try {
+            resolver.openOutputStream(sharedVideoUri)?.use { output ->
+                resolver.openInputStream(uri)?.use{ input ->
+                    input.copyTo(output)
+                }
+            }
+            videoDetails.put(MediaStore.Video.Media.IS_PENDING, 0)
+            resolver.update(sharedVideoUri, videoDetails, null, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            resolver.delete(sharedVideoUri, null, null)
+            return@withContext MediaResult.Error(e)
+        }
+        Log.d(TAG, "sharedVideoUri:${sharedVideoUri} ")
+
+        return@withContext MediaResult.Success("Video Saved Successfully")
 
     }
 

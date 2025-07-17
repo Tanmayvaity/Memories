@@ -39,6 +39,11 @@ import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TOP_LEVEL_DESTINATIONS
 import com.example.memories.navigation.TopLevelDestination
 import com.example.memories.navigation.TopLevelNavigation
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 
 
 @Preview
@@ -64,7 +69,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                 ) {
                     BottomNavBar(
                         navigateToTopLevelDestination = topLevelNavigation::navigateTo,
-                        currentDestination = currentDestination
+                        currentDestination = currentDestination,
                     )
                 }
             },
@@ -147,7 +152,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
 @Composable
 fun BottomNavBar(
     navigateToTopLevelDestination: (TopLevelDestination) -> Unit = {},
-    currentDestination: NavDestination? = null
+    currentDestination: NavDestination? = null,
 ) {
 
 

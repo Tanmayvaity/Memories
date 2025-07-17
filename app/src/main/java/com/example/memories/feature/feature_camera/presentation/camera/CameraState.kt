@@ -12,6 +12,17 @@ data class CameraState(
     val torchState : Boolean = false,
     val zoomScale : Float = 0f,
 //    val exposureValue : Int = 0,
-    val aspectRatio : AspectRatio = AspectRatio.RATIO_4_3
+    val aspectRatio : AspectRatio = AspectRatio.RATIO_4_3,
+    val videoState : VideoState = VideoState.Idle
 )
+
+
+sealed class VideoState{
+    object Idle : VideoState()
+    object Started : VideoState()
+    object Resume : VideoState()
+    object Pause : VideoState()
+    object Stop : VideoState()
+}
+
 

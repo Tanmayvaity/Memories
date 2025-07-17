@@ -15,6 +15,10 @@ interface MediaRepository {
         bitmap : Bitmap
     ): MediaResult
 
+    suspend fun downloadVideo(
+        uri : Uri
+    ): MediaResult
+
     suspend fun saveBitmapToInternalStorage(
         bitmap: Bitmap?
     ): CaptureResult

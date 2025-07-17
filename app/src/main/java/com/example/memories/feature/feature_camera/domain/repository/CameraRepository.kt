@@ -28,4 +28,15 @@ interface CameraRepository {
     fun setAspectRatio(aspect : AspectRatio)
 
     fun tapToFocus(offset: Offset)
+
+    suspend fun takeVideo(
+        context : Context,
+        file: File
+    ): CaptureResult
+
+    fun pauseRecording()
+    fun resumeRecording()
+    fun stopRecording()
+
+    fun cancelRecording()
 }

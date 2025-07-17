@@ -22,6 +22,10 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.downloadImageWithBitmap(bitmap)
     }
 
+    override suspend fun downloadVideo(uri: Uri): MediaResult {
+        return mediaManager.downloadVideo(uri)
+    }
+
     override suspend fun saveBitmapToInternalStorage(bitmap: Bitmap?): CaptureResult {
         return mediaManager.saveBitmapToInternalStorage(bitmap)
     }

@@ -6,3 +6,5 @@ sealed class CaptureResult {
     data class Success(val uri : Uri?) : CaptureResult()
     data class Error(val error:Throwable) : CaptureResult()
 }
+
+

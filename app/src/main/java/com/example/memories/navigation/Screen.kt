@@ -1,5 +1,6 @@
 package com.example.memories.navigation
 
+import com.example.memories.core.presentation.UriType
 import kotlinx.serialization.Serializable
 
 
@@ -26,12 +27,12 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     data class MediaEdit(
-        val uri: String
+        val uriTypeWrapper : UriType
     ) : AppScreen("MediaEdit")
 
     @Serializable
     data class  Memory(
-        val uri : String
+        val uriTypeWrapper: UriType
     ) : AppScreen("Memory")
 
     @Serializable

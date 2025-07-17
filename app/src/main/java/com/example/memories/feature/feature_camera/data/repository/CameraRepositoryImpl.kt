@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_camera.data.repository
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
@@ -46,5 +47,29 @@ class CameraRepositoryImpl @Inject constructor(
 
     override fun tapToFocus(offset: Offset) {
         cameraManager.tapToFocus(offset)
+    }
+
+    @SuppressLint("MissingPermission")
+    override suspend  fun takeVideo(
+        context: Context,
+        file: File
+    ): CaptureResult {
+        return cameraManager.takeVideo(context,file)
+    }
+
+    override fun pauseRecording() {
+       cameraManager.pauseRecording()
+    }
+
+    override fun resumeRecording() {
+        cameraManager.resumeRecording()
+    }
+
+    override fun stopRecording() {
+        cameraManager.stopRecording()
+    }
+
+    override fun cancelRecording() {
+        cameraManager.cancelRecording()
     }
 }

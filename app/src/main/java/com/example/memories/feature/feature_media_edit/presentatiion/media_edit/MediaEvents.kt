@@ -6,6 +6,7 @@ import android.net.Uri
 
 sealed class MediaEvents {
     data class DownloadBitmap(val bitmap: Bitmap) : MediaEvents()
+    data class DownloadVideo(val uri : Uri) : MediaEvents()
     data class UriToBitmap(
         val uri: Uri
     ) : MediaEvents()

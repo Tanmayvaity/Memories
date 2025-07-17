@@ -21,6 +21,6 @@ fun TextUnderLinedItem(
         color = textColor,
         fontSize = fontSize.sp,
         modifier = modifier,
-        fontWeight = fontWeight
+        fontWeight = fontWeight,
     )
 }

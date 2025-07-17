@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_camera.presentation.camera
 
 import android.Manifest
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -48,13 +50,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.memories.R
 import com.example.memories.core.presentation.RationaleDialog
+import com.example.memories.core.presentation.Type
+import com.example.memories.core.presentation.UriType
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.createTempFile
+import com.example.memories.core.util.createVideoFile
+import com.example.memories.feature.feature_camera.domain.model.CameraMode
+import com.example.memories.core.presentation.UriType.Companion.mapToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
 import com.example.memories.navigation.AppScreen
 import kotlinx.coroutines.delay
+import java.util.Locale
 import java.util.UUID
 
 private const val TAG = "CameraScreen"
@@ -62,12 +70,14 @@ private const val TAG = "CameraScreen"
 @Composable
 fun CameraRoute(
     modifier: Modifier = Modifier,
-    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit
+    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit,
+    onBack : () -> Unit = {}
 ) {
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var showRationale by remember { mutableStateOf(false) }
+    var showAudioRationale by remember { mutableStateOf(false) }
     var showCameraScreen by remember { mutableStateOf<Boolean?>(null) }
     val viewModel: CameraViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -77,7 +87,14 @@ fun CameraRoute(
     val cameraRequestLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) {
-
+        showRationale = false
+        showCameraScreen = true
+    }
+    val audioRequestLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {
+        showAudioRationale = false
+        showCameraScreen = true
     }
     PermissionHelper(
         lifecycleOwner = lifecycleOwner,
@@ -95,6 +112,24 @@ fun CameraRoute(
             )
         },
         permission = Manifest.permission.CAMERA,
+        context = context
+    )
+    PermissionHelper(
+        lifecycleOwner = lifecycleOwner,
+        onGranted = {
+            showAudioRationale = false
+            showCameraScreen = true
+        },
+        onRationale = {
+            showAudioRationale = true
+            showCameraScreen = false
+        },
+        onRequest = { permission ->
+            cameraRequestLauncher.launch(
+                Manifest.permission.RECORD_AUDIO
+            )
+        },
+        permission = Manifest.permission.RECORD_AUDIO,
         context = context
     )
 
@@ -115,6 +150,23 @@ fun CameraRoute(
         )
     }
 
+    if (showAudioRationale) {
+        RationaleDialog(
+            title = "Audio permission has not been granted",
+            body = "You won't be able to record audio features without this permission." +
+                    "Go to settings and grant audio permission",
+            icon = R.drawable.ic_camera,
+            iconContentDescription = stringResource(R.string.camera_icon),
+            onConfirm = {
+                createSettingsIntent(context)
+                showAudioRationale = false
+            },
+            onDismiss = {
+                showAudioRationale = false
+            }
+        )
+    }
+
 
 
 
@@ -124,7 +176,8 @@ fun CameraRoute(
         state = state,
         onEvent = viewModel::onEvent,
         viewModel = viewModel,
-        onNavigateToImageEdit = onNavigateToImageEdit
+        onNavigateToImageEdit = onNavigateToImageEdit,
+        onBack = onBack
     )
 
 
@@ -138,13 +191,15 @@ fun CameraScreen(
     state: CameraState,
     onEvent: (CameraEvent) -> Unit = {},
     viewModel: CameraViewModel = hiltViewModel<CameraViewModel>(),
-    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit
+    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit,
+    onBack: () -> Unit ={}
 ) {
     val context = LocalContext.current
     val app = context.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
     var showImagePreview by remember { mutableStateOf(false) }
-    val imageUri by viewModel.capturedImageUri.collectAsStateWithLifecycle()
+    val mediaUri by viewModel.capturedMediaUri.collectAsStateWithLifecycle()
+    val timer by viewModel.timeElapsed.collectAsStateWithLifecycle()
 
     var co by remember { mutableStateOf(Offset(0f,0f)) }
 
@@ -156,7 +211,16 @@ fun CameraScreen(
 
         if (uri!=null){
             Log.d("CameraScreen", "Camera Screen content uri : ${uri.toString()} ")
-            onNavigateToImageEdit(AppScreen.MediaEdit(uri.toString()))
+            Log.d("CameraScreen", "Camera Screen content uri : ${uri.mapToType()} ")
+            val uriWrapper = UriType(
+                uri = uri.toString(),
+                type = if (context.contentResolver.getType(uri)?.startsWith("video") == true) Type.VIDEO else Type.IMAGE
+            )
+            Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
+            Log.d(TAG, "CameraScreen: ${uriWrapper.type}")
+            onNavigateToImageEdit(AppScreen.MediaEdit(
+                uriWrapper
+            ))
         }
 
     }
@@ -228,9 +292,9 @@ fun CameraScreen(
                             onDoubleTap = { tapCoords ->
                                 onEvent(CameraEvent.ChangeLensFacing)
                             },
-                            onTap = {offset ->
+                            onTap = { offset ->
                                 co = offset
-                                with(coordinateTransformer){
+                                with(coordinateTransformer) {
                                     onEvent(CameraEvent.TapToFocus(offset.transform()))
                                 }
 
@@ -280,7 +344,8 @@ fun CameraScreen(
             },
             onAspectRatioChange = {
                 onEvent(CameraEvent.ToggleAspectRatio)
-            }
+            },
+            isVideoPlaying = state.videoState == VideoState.Started
         )
 
         LowerBox(
@@ -292,7 +357,7 @@ fun CameraScreen(
             onChooseFromGallery = {
                 mediaLauncher.launch(
                     PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                        ActivityResultContracts.PickVisualMedia.ImageAndVideo
                     )
                 )
             },
@@ -300,8 +365,46 @@ fun CameraScreen(
                 val file = createTempFile(
                     context
                 )
-                onEvent(CameraEvent.TakePicture(file))
-            }
+
+                val videoFile = createVideoFile(
+                    context
+                )
+                Log.d(TAG, "CameraScreen: ${videoFile.path}")
+
+                if(viewModel.state.value.mode == CameraMode.VIDEO && viewModel.state.value.videoState == VideoState.Started){
+                    viewModel.onEvent(CameraEvent.Stop)
+                    return@LowerBox
+                }
+
+                if(viewModel.state.value.mode == CameraMode.VIDEO &&
+                    viewModel.state.value.videoState == VideoState.Idle ){
+                    viewModel.onEvent(CameraEvent.Take(context,videoFile))
+                    return@LowerBox
+                }else{
+                    viewModel.onEvent(CameraEvent.Take(context,file))
+                    return@LowerBox
+                }
+            },
+            onCameraModeClick = { mode: CameraMode ->
+                when(mode){
+                    CameraMode.PHOTO -> {
+                        onEvent(CameraEvent.PhotoMode)
+                    }
+
+                    CameraMode.PORTRAIT -> {
+                        onEvent(CameraEvent.PortraitMode)
+                    }
+
+                    CameraMode.VIDEO -> {
+                        onEvent(CameraEvent.VideoMode)
+                    }
+                }
+
+
+            },
+            cameraMode = state.mode,
+            isVideoPlaying = state.videoState == VideoState.Started
+
         )
 
         // tap indicator for debugging
@@ -316,11 +419,28 @@ fun CameraScreen(
 //
 //        }
 
+        if(state.videoState == VideoState.Started){
+            Text(
+                text = String.format(Locale.ENGLISH,"%02d:%02d", timer/60, timer % 60),
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(10.dp),
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
     }
 
-    LaunchedEffect(imageUri) {
-        if(imageUri!=null){
-            onNavigateToImageEdit(AppScreen.MediaEdit(imageUri.toString()))
+    LaunchedEffect(mediaUri) {
+        if(mediaUri.uri!=null && mediaUri.type == Type.IMAGE){
+            onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
+            onEvent(CameraEvent.Reset)
+        }
+    }
+
+    LaunchedEffect(mediaUri) {
+        if(mediaUri.uri!=null && mediaUri.type == Type.VIDEO){
+            onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
             onEvent(CameraEvent.Reset)
         }
     }
@@ -332,6 +452,38 @@ fun CameraScreen(
         }
 
     }
+
+    LaunchedEffect(state.videoState) {
+        if(state.videoState == VideoState.Started){
+            Log.d(TAG,"started")
+//            Toast.makeText(context,"Video Started",Toast.LENGTH_SHORT).show()
+        }
+
+        if(state.videoState == VideoState.Idle){
+            Log.d(TAG,"idle")
+//            Toast.makeText(context,"Video idle",Toast.LENGTH_SHORT).show()
+        }
+
+        if(state.videoState == VideoState.Stop){
+            Log.d(TAG,"Stop")
+//            Toast.makeText(context,"Video Stop",Toast.LENGTH_SHORT).show()
+        }
+    }
+
+//    BackHandler(
+//        enabled = true
+//    ){
+//        if(state.videoState == VideoState.Started){
+//            onEvent(CameraEvent.Cancel)
+//            return@BackHandler
+//        }
+//
+//        onBack()
+//
+//
+//    }
+
+
 
 
 }

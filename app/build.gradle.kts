@@ -69,12 +69,21 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.extensions)
+    implementation(libs.androidx.camera.video)
 
     implementation(libs.coil.compose)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.dash)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.compose)
+
+    implementation(libs.dev.haze)
+    implementation(libs.dev.haze.materials)
 
 
 }

@@ -7,9 +7,14 @@ import com.example.memories.feature.feature_camera.data.repository.CameraReposit
 import com.example.memories.feature.feature_camera.domain.repository.CameraRepository
 import com.example.memories.feature.feature_camera.domain.usecase.BindToCameraUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.CameraUseCases
+import com.example.memories.feature.feature_camera.domain.usecase.CancelRecordingUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.PauseRecordingUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.ResumeRecordingUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.SetAspectRatioUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.SetSurfaceCallbackUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.StopRecordingUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TakePictureUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.TakeVideoUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TapToFocusUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
@@ -23,6 +28,7 @@ import com.example.memories.feature.feature_feed.domain.usecaase.ObserveMediaCha
 import com.example.memories.feature.feature_feed.domain.usecaase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
+import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmap
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
@@ -59,7 +65,12 @@ object AppModule {
             ZoomUseCase(repository),
             TakePictureUseCase(repository),
             SetAspectRatioUseCase(repository),
-            TapToFocusUseCase(repository)
+            TapToFocusUseCase(repository),
+            TakeVideoUseCase(repository),
+            ResumeRecordingUseCase(repository),
+            PauseRecordingUseCase(repository),
+            StopRecordingUseCase(repository),
+            CancelRecordingUseCase(repository)
         )
     }
 
@@ -82,7 +93,8 @@ object AppModule {
         return MediaUseCases(
             uriToBitmapUseCase = UriToBitmapUseCase(repository),
             downloadWithBitmap = DownloadWithBitmap(repository),
-            saveBitmapToInternalStorageUseCase = SaveBitmapToInternalStorageUseCase(repository)
+            saveBitmapToInternalStorageUseCase = SaveBitmapToInternalStorageUseCase(repository),
+            downloadVideoUseCase = DownloadVideoUseCase(repository)
         )
     }
 

@@ -34,8 +34,6 @@ class MediaViewModel @Inject constructor(
     private val _downloadSuccess = Channel<String>()
     val downloadSuccessFlow = _downloadSuccess.receiveAsFlow()
 
-//    private val _saveBitmapToInternalError = Channel<String>()
-//    val saveBitmapToInternalError = _saveBitmapToInternalError.receiveAsFlow()
 
     private val _saveBitmapToInternalSuccess = Channel<Uri?>()
     val saveBitmapToInternalSuccessFlow = _saveBitmapToInternalSuccess.receiveAsFlow()
@@ -92,6 +90,22 @@ class MediaViewModel @Inject constructor(
                     }
                 }
             }
+
+            is MediaEvents.DownloadVideo -> {
+                viewModelScope.launch {
+                    val result = mediaUseCases.downloadVideoUseCase(event.uri)
+                    when(result){
+                        is MediaResult.Error -> {
+                            _downloadError.send(result.error.message.toString())
+                        }
+
+                        is MediaResult.Success -> {
+                            _downloadError.send(result.successMessage)
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

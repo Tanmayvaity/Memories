@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -42,10 +44,17 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 
 
 @Preview
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun OtherScreen() {
 
@@ -60,10 +69,13 @@ fun OtherScreen() {
                         fontWeight = FontWeight.Bold,
                     )
                 },
+                modifier = Modifier
+                    .fillMaxWidth()
             )
         },
 
         ) { innerPadding ->
+
 
         Column(
             modifier = Modifier
