@@ -134,7 +134,11 @@ class CameraManager {
         lensFacing: LensFacing = LensFacing.BACK,
         torch: Boolean = false
     ) {
+        Log.d(TAG, "bindToCamera: lensFacing : ${lensFacing.toString()}")
 
+        if(cameraRecording!=null){
+            pauseRecording()
+        }
         processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
         unbind(processCameraProvider)
         try {
@@ -153,8 +157,11 @@ class CameraManager {
 
             cameraControl = camera.cameraControl
             cameraInfo = camera.cameraInfo
-
             cameraControl?.enableTorch(torch)
+            if(cameraRecording!=null){
+                resumeRecording()
+            }
+
 
             Log.d(TAG, "Torch Value : ${torch}")
 
@@ -284,6 +291,7 @@ class CameraManager {
 
         cameraRecording = videoCaptureUseCase.output
             .prepareRecording(context, fileOutputOptions)
+            .asPersistentRecording()
             .withAudioEnabled()
             .start(ContextCompat.getMainExecutor(context), object : Consumer<VideoRecordEvent> {
                 override fun accept(value: VideoRecordEvent) {
@@ -293,10 +301,6 @@ class CameraManager {
                         }
 
                         is VideoRecordEvent.Finalize -> {
-
-                            val finalizeEvent =
-
-
 
 
                             if (!value.hasError()) {
@@ -312,7 +316,8 @@ class CameraManager {
                                     "Recording has failed with an exception : ${value.cause?.message}"
                                 )
 
-                                continuation.resume(CaptureResult.Error(value.cause))
+
+                                continuation.resume(CaptureResult.Error(value.cause ?: Throwable("Cause is Null")))
                             }
                         }
 
