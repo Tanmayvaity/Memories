@@ -17,6 +17,8 @@ hilt = "2.56.1"
 hilt-navigation="1.2.0"
 media3 = "1.7.1"
 haze = "1.6.8"
+paging = "3.3.6"
+paging-compose = "3.4.0-alpha01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +57,8 @@ androidx-media3-ui = {module = "androidx.media3:media3-ui",version.ref = "media3
 androidx-media3-compose = {module = "androidx.media3:media3-ui-compose",version.ref = "media3"}
 dev-haze = {module = "dev.chrisbanes.haze:haze-android",version.ref = "haze"}
 dev-haze-materials = {module = "dev.chrisbanes.haze:haze-materials-android",version.ref = "haze"}
+androidx-paging-runtime = {module ="androidx.paging:paging-runtime",version.ref = "paging"}
+androidx-paging-compose = {module ="androidx.paging:paging-compose",version.ref = "paging-compose"}
 
 
 [plugins]

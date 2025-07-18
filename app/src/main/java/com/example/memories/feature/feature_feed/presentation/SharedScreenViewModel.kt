@@ -1,17 +1,24 @@
 package com.example.memories.feature.feature_feed.presentation
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.filter
 import com.example.memories.feature.feature_feed.domain.model.MediaImage
 import com.example.memories.feature.feature_feed.domain.usecaase.FeedUseCases
+import com.example.memories.feature.feature_media_edit.domain.model.BitmapResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.cache
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -33,11 +40,17 @@ class SharedScreenViewModel @Inject constructor(
         const val TAG ="SharedViewModel"
     }
 
-    private val _mediaState = MutableStateFlow<UiState>(UiState())
-    val mediaState: StateFlow<UiState> = _mediaState.asStateFlow()
+    private val _pagingState = MutableStateFlow<PagingData<MediaImage>>(PagingData.empty())
+    val pagingState = _pagingState.asStateFlow()
+
+//    private val _mediaState = MutableStateFlow<UiState>(UiState())
+//    val mediaState: StateFlow<UiState> = _mediaState.asStateFlow()
 
     private val _selectedMediaUri = MutableStateFlow<List<Uri>>(emptyList())
     val selectedMediaUri: StateFlow<List<Uri>> = _selectedMediaUri.asStateFlow()
+
+    private val _bitmapThumbnail = MutableStateFlow<Bitmap?>(null)
+    val bitmapThumbnail = _bitmapThumbnail.asStateFlow()
 
 
     private val _internalFileList = MutableStateFlow<List<File>>(emptyList())
@@ -73,17 +86,22 @@ class SharedScreenViewModel @Inject constructor(
             is FeedEvent.Delete -> {
                 viewModelScope.launch {
                     feedUseCases.deleteMediaUseCase(event.uri)
-                    _mediaState.update {
-                        mediaState.value.copy(data = mediaState.value.data.filter { it.uri != event.uri })
-                    }
+//                    _mediaState.update {
+//                        mediaState.value.copy(data = mediaState.value.data.filter { it.uri != event.uri })
+//                    }
+
                 }
             }
 
             is FeedEvent.DeleteMultiple ->{
                 val selectedList = _selectedMediaUri.value.toSet()
-                _mediaState.update {
-                    mediaState.value.copy(data = mediaState.value.data.filterNot {it.uri in selectedList })
+//                _mediaState.update {
+//                    mediaState.value.copy(data = mediaState.value.data.filterNot {it.uri in selectedList })
+//                }
+                _pagingState.update {it->
+                    it.filter{it.uri !in selectedList}
                 }
+
             }
 
             is FeedEvent.MediaSelect -> {
@@ -123,6 +141,24 @@ class SharedScreenViewModel @Inject constructor(
                 }
             }
 
+            is FeedEvent.FetchThumbnail ->{
+                viewModelScope.launch {
+                    val result = feedUseCases.getMediaThumbnailUseCase(event.uri,event.size)
+                    when(result){
+                        is BitmapResult.Success ->{
+                            _bitmapThumbnail.update {
+                                result.bitmap
+                            }
+                        }
+                        is BitmapResult.Error -> {
+                            Log.e(TAG, "onEvent: ${result.error.message}")
+                        }
+
+                    }
+
+                }
+            }
+
 
 
         }
@@ -136,28 +172,33 @@ class SharedScreenViewModel @Inject constructor(
 //        }
 
 
-        _mediaState.update { _mediaState.value.copy(isLoading = true) }
+//        _mediaState.update { _mediaState.value.copy(isLoading = true) }
         feedUseCases
             .fetchMediaFromSharedUseCase()
-            .collect { image ->
-                _mediaState.update {
-//                    delay(5000)
-                    val alreadyExists = it.data.any { it.uri == image.uri }
-                    if (alreadyExists) {
-                        it
-                    }else{
-                        it.copy(data = it.data + image, isLoading = false)
+            .cachedIn(viewModelScope)
+            .collect { value ->
 
-                    }
-
+//                _mediaState.update {
+////                    delay(5000)
+//                    val alreadyExists = it.data.any { it.uri == image.uri }
+//                    if (alreadyExists) {
+//                        it
+//                    }else{
+//                        it.copy(data = it.data + image, isLoading = false)
+//
+//                    }
+//
+//                }
+                _pagingState.update {
+                    value
                 }
             }
 
-        _mediaState.update {
-            it.copy(
-                isLoading = false
-            )
-        }
+//        _mediaState.update {
+//            it.copy(
+//                isLoading = false
+//            )
+//        }
 
 
     }
@@ -166,6 +207,11 @@ class SharedScreenViewModel @Inject constructor(
     data class UiState(
         var isLoading: Boolean = false,
         var data: List<MediaImage> = emptyList<MediaImage>()
+    )
+
+    data class PagingUiState(
+        var isLoading : Boolean = false,
+        var data : PagingData<MediaImage> = PagingData.empty()
     )
 
 }

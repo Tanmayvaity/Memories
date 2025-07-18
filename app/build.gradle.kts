@@ -85,5 +85,8 @@ dependencies {
     implementation(libs.dev.haze)
     implementation(libs.dev.haze.materials)
 
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+
 
 }

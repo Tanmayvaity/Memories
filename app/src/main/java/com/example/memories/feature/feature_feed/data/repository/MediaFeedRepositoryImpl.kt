@@ -1,9 +1,16 @@
 package com.example.memories.feature.feature_feed.data.repository
 
 import android.net.Uri
+import android.os.Build
+import android.util.Size
+import androidx.annotation.RequiresApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.example.memories.core.data.data_source.MediaManager
 import com.example.memories.feature.feature_feed.domain.model.MediaImage
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
+import com.example.memories.feature.feature_media_edit.domain.model.BitmapResult
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 import javax.inject.Inject
@@ -11,8 +18,13 @@ import javax.inject.Inject
 class MediaFeedRepositoryImpl @Inject constructor(
     val mediaManager: MediaManager
 ) : MediaFeedRepository {
-    override suspend fun fetchMediaFromShared(): Flow<MediaImage> {
-        return mediaManager.fetchMediaFromShared()
+    @RequiresApi(Build.VERSION_CODES.O)
+    override suspend fun fetchMediaFromShared(): Flow<PagingData<MediaImage>> {
+        return Pager(
+            config = PagingConfig(pageSize = 100, enablePlaceholders = true),
+            pagingSourceFactory = { SharedPagingSource(mediaManager) }
+        ).flow
+
     }
 
     override suspend fun delete(uri: Uri) {
@@ -29,6 +41,14 @@ class MediaFeedRepositoryImpl @Inject constructor(
 
     override suspend  fun observeChanges(): Flow<Unit> {
         return mediaManager.observeMediaChanges()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override suspend fun getMediaThumbnail(
+        uri: Uri,
+        size: Size
+    ): BitmapResult {
+        return mediaManager.getMediaThumbnail(uri,size)
     }
 
 }

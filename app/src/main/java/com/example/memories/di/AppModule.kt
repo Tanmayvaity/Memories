@@ -24,6 +24,7 @@ import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediaUseC
 import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediasUseCase
 import com.example.memories.feature.feature_feed.domain.usecaase.FeedUseCases
 import com.example.memories.feature.feature_feed.domain.usecaase.FetchMediaFromSharedUseCase
+import com.example.memories.feature.feature_feed.domain.usecaase.GetMediaThumbnailUseCase
 import com.example.memories.feature.feature_feed.domain.usecaase.ObserveMediaChangesUseCase
 import com.example.memories.feature.feature_feed.domain.usecaase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
@@ -112,7 +113,8 @@ object AppModule {
             deleteMediaUseCase = DeleteMediaUseCase(repository),
             deleteMediasUseCase = DeleteMediasUseCase(repository),
             sharedUriToInternalUriUseCase = SharedUriToInternalUriUseCase(repository),
-            observeMediaChangesUseCase = ObserveMediaChangesUseCase(repository)
+            observeMediaChangesUseCase = ObserveMediaChangesUseCase(repository),
+            getMediaThumbnailUseCase = GetMediaThumbnailUseCase(repository)
         )
     }
 

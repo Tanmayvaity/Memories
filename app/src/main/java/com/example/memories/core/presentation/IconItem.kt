@@ -40,7 +40,7 @@ fun IconItem(
             contentDescription = contentDescription,
             tint = color,
             modifier = Modifier
-                .size(iconSize)
+                .size(iconSize),
         )
     }
 }

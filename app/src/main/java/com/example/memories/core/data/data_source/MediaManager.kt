@@ -2,6 +2,7 @@ package com.example.memories.core.data.data_source
 
 import android.R.attr.bitmap
 import android.R.id.input
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -10,8 +11,11 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
+import androidx.annotation.RequiresApi
 import com.example.memories.core.util.createTempFile
 import com.example.memories.feature.feature_camera.domain.model.CaptureResult
 import com.example.memories.feature.feature_feed.domain.model.MediaImage
@@ -193,7 +197,11 @@ class MediaManager(
             }
         }
 
-    suspend fun fetchMediaFromShared(): Flow<MediaImage> = flow {
+    @RequiresApi(Build.VERSION_CODES.Q)
+    suspend fun fetchMediaFromShared(
+        offset : Int = 0,
+        limit : Int = 10
+    ): List<MediaImage> = withContext(Dispatchers.IO) {
         val images = mutableListOf<MediaImage>()
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -211,16 +219,29 @@ class MediaManager(
         )
 //        val selection = if (fromApp) "${MediaStore.Images.Media.RELATIVE_PATH} = ?" else
 //            "${MediaStore.Images.Media.RELATIVE_PATH} != ?"
-//        val selectionArgs = arrayOf("Pictures/Memories/")
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC "
 
+        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf("Pictures/Memories/")
+        val sortOrder = MediaStore.Images.Media.DATE_ADDED
+
+        val queryArgs = Bundle()
+
+        queryArgs.also {
+//            it.putString(ContentResolver.QUERY_ARG_SQL_SELECTION,selection)
+//            it.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,selectionArgs)
+            it.putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS,arrayOf(sortOrder))
+            it.putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION, ContentResolver.QUERY_SORT_DIRECTION_DESCENDING)
+            it.putInt(ContentResolver.QUERY_ARG_LIMIT,limit)
+            it.putInt(ContentResolver.QUERY_ARG_OFFSET,offset)
+
+        }
+        var count = 0;
 
         context.contentResolver.query(
             collection,
             projection,
-            null,
-            null,
-            sortOrder
+            queryArgs,
+            null
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
@@ -228,12 +249,15 @@ class MediaManager(
                 val id = cursor.getLong(idColumn)
                 val name = cursor.getString(nameColumn)
                 val contentUri = ContentUris.withAppendedId(collection, id)
-                val media = MediaImage(uri = contentUri, displayName = name)
+                val bitmap = context.contentResolver.loadThumbnail(contentUri, Size(640,480),null)
+                val media = MediaImage(uri = contentUri, displayName = name,bitmap = bitmap)
                 images.add(media)
-                emit(media)
+                count  = count + 1
             }
         }
-    }.flowOn(Dispatchers.IO)
+        Log.d(TAG, "fetchMediaFromShared: rows : ${count}")
+        return@withContext images
+    }
 
 
     private fun getCollection(): Uri {
@@ -300,6 +324,24 @@ class MediaManager(
                 Log.e(TAG, "deleteMedia: Error : ${e.message}")
                 e.printStackTrace()
             }
+        }
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    suspend fun getMediaThumbnail(
+        uri : Uri,
+        size : Size
+    ): BitmapResult = withContext(Dispatchers.IO){
+        try{
+            val bitmap = context.contentResolver.loadThumbnail(
+                uri,size,null
+            )
+
+            return@withContext BitmapResult.Success(bitmap)
+        }catch (e : Exception){
+            e.printStackTrace()
+            return@withContext BitmapResult.Error(e)
         }
 
     }

@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.domain.usecaase
 
+import androidx.paging.PagingData
 import com.example.memories.feature.feature_feed.domain.model.MediaImage
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,7 @@ import javax.inject.Inject
 class FetchMediaFromSharedUseCase @Inject constructor(
     val repository: MediaFeedRepository
 ) {
-    suspend operator fun invoke(): Flow<MediaImage>{
+    suspend operator fun invoke(): Flow<PagingData<MediaImage>>{
         return repository.fetchMediaFromShared()
     }
 }

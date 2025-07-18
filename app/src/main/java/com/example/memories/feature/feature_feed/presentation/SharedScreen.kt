@@ -1,9 +1,12 @@
 package com.example.memories.feature.feature_feed.presentation
 
 import android.Manifest
+import android.R.attr.bitmap
+import android.R.attr.bottom
 import android.R.attr.checked
 import android.R.attr.contentDescription
 import android.R.attr.onClick
+import android.R.attr.strokeWidth
 import android.R.attr.text
 import android.R.string.no
 import android.app.Activity
@@ -38,12 +41,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -86,6 +91,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -103,9 +109,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.Uri
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter.State.Empty.painter
+import coil3.request.ImageRequest
+import coil3.request.ImageResult
+import coil3.request.crossfade
+import coil3.size.Size
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
 import com.example.memories.core.presentation.RationaleDialog
@@ -222,7 +234,7 @@ fun SharedScreen(
     viewModel: SharedScreenViewModel = hiltViewModel<SharedScreenViewModel>(),
     onBack: () -> Unit = {}
 ) {
-    val uiState by viewModel.mediaState.collectAsStateWithLifecycle()
+
     var checked by rememberSaveable { mutableStateOf(false) }
     var showCheckBox by rememberSaveable { mutableStateOf(false) }
     var noOfItemsSelected by rememberSaveable { mutableStateOf(0) }
@@ -234,16 +246,18 @@ fun SharedScreen(
     var selectedImage by rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
     var showImage by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
+    val pagingResponse = viewModel.pagingState.collectAsLazyPagingItems()
+    val bitmapThumbnail by viewModel.bitmapThumbnail.collectAsStateWithLifecycle()
 
     val deleteRequestLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
-        if(result.resultCode == Activity.RESULT_OK){
+        if (result.resultCode == Activity.RESULT_OK) {
             Log.d(TAG, "SharedScreen: images deleted successfully")
             viewModel.onEvent(FeedEvent.DeleteMultiple)
             viewModel.onEvent(FeedEvent.MediaSelectedEmpty)
             showCheckBox = false
-        }else{
+        } else {
             Log.d(TAG, "SharedScreen: not ok")
         }
 
@@ -255,7 +269,7 @@ fun SharedScreen(
                 title = {
 
                     AnimatedVisibility(
-                        visible = showCheckBox,
+                        visible = showCheckBox && !showImage,
                     ) {
                         Text(
                             text = "$noOfItemsSelected Selected",
@@ -280,10 +294,14 @@ fun SharedScreen(
                         IconButton(
                             onClick = {
                                 if (noOfItemsSelected > 0) {
-                                    val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, mediaItems)
+                                    val pendingIntent = MediaStore.createDeleteRequest(
+                                        context.contentResolver,
+                                        mediaItems
+                                    )
 
                                     deleteRequestLauncher.launch(
-                                        IntentSenderRequest.Builder(pendingIntent.intentSender).build(),
+                                        IntentSenderRequest.Builder(pendingIntent.intentSender)
+                                            .build(),
                                     )
                                 } else {
                                     Toast.makeText(
@@ -320,20 +338,20 @@ fun SharedScreen(
 
                 },
                 actions = {
-                    AnimatedVisibility(
-                        visible = !showCheckBox && !showImage
-                    ) {
-                        IconButton(
-                            onClick={
-                                viewModel.onEvent(FeedEvent.Feed)
+                    pagingResponse.apply {
+                        when{
+                            loadState.refresh is LoadState.Loading || loadState.append is LoadState.Loading ->{
+                                CircularProgressIndicator(
+                                    modifier = Modifier.padding(10.dp).size(24.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
+                            loadState.refresh is LoadState.Error ->{
 
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Load Again"
-                            )
+                            }
                         }
+
                     }
 
 
@@ -365,6 +383,9 @@ fun SharedScreen(
             )
         }
     ) { innerPadding ->
+
+
+
         Box(
             modifier = Modifier
                 .padding(innerPadding)
@@ -372,29 +393,22 @@ fun SharedScreen(
                 .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(32.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
 
-            if(uiState.data.isEmpty()){
-                Text(
-                    text = "No Media in the shared storage",
-
-                )
-            }
+            val gridState = rememberLazyGridState()
 
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+                state = gridState,
+                columns = GridCells.Adaptive(200.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .padding(10.dp)
                     .align(Alignment.TopCenter)
             ) {
-                items(uiState.data) { media ->
+
+                items(
+                    count = pagingResponse.itemCount,
+                    key = { it -> pagingResponse[it]!!.uri }
+                ) { it ->
 //                AsyncImage(
 //                    model = media.uri,
 //                    contentScale = ContentScale.Crop,
@@ -410,29 +424,34 @@ fun SharedScreen(
                     Box(
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))
                     ) {
+                        val mediaUri = pagingResponse.get(it)!!.uri
 
-                        AsyncImage(
-                            model = media.uri,
-                            contentScale = ContentScale.Crop,
+                        val mediaBitmap = pagingResponse.get(it)!!.bitmap.asImageBitmap()
+
+
+                        Image(
+                            bitmap = mediaBitmap,
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .padding(bottom = 10.dp)
-                                .clip(RoundedCornerShape(10.dp))
                                 .fillMaxWidth()
                                 .wrapContentHeight()
+//                                .size(width = 200.dp, height = 250.dp)
+                                .padding(bottom = 10.dp)
+                                .clip(RoundedCornerShape(10.dp))
 
                                 .combinedClickable(
                                     onClick = {
 //                                        viewModel.onEvent(FeedEvent.Delete(media.uri))
-                                        Log.d(TAG, "item uri : ${media.uri}")
+                                        Log.d(TAG, "item uri : ${mediaUri}")
 
                                         if (showCheckBox && !showImage) {
-                                            if (mediaItems.contains(media.uri)) {
-                                                viewModel.onEvent(FeedEvent.MediaUnSelect(media.uri))
+                                            if (mediaItems.contains(mediaUri)) {
+                                                viewModel.onEvent(FeedEvent.MediaUnSelect(mediaUri))
                                                 noOfItemsSelected--
 
                                             } else {
-                                                viewModel.onEvent(FeedEvent.MediaSelect(media.uri))
+                                                viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
                                                 noOfItemsSelected++
                                             }
 
@@ -445,27 +464,73 @@ fun SharedScreen(
                                         }
 
                                         showCheckBox = true
-                                        viewModel.onEvent(FeedEvent.MediaSelect(media.uri))
+                                        viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
                                         noOfItemsSelected++
                                     }
                                 )
-
                         )
-//                        var itemList by remember {  mutableStateOf(emptyList<android.net.Uri>())}
 
 
+//                        AsyncImage(
+//                            model = ImageRequest.Builder(context)
+//                                .data(
+//                                    bitmap
+//                                )
+//                                .crossfade(true)
+//                                .build()
+//                            ,
+//                            contentScale = ContentScale.Crop,
+//                            contentDescription = null,
+//                            placeholder = painterResource(R.drawable.ic_launcher_background),
+//                            error = painterResource(R.drawable.ic_launcher_background),
+//
+//                            modifier = Modifier
+//                                .padding(bottom = 10.dp)
+//                                .clip(RoundedCornerShape(10.dp))
+//                                .fillMaxWidth()
+//                                .wrapContentHeight()
+//                                .combinedClickable(
+//                                    onClick = {
+////                                        viewModel.onEvent(FeedEvent.Delete(media.uri))
+//                                        Log.d(TAG, "item uri : ${mediaUri}")
+//
+//                                        if (showCheckBox && !showImage) {
+//                                            if (mediaItems.contains(mediaUri)) {
+//                                                viewModel.onEvent(FeedEvent.MediaUnSelect(mediaUri))
+//                                                noOfItemsSelected--
+//
+//                                            } else {
+//                                                viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
+//                                                noOfItemsSelected++
+//                                            }
+//
+//
+//                                        }
+//                                    },
+//                                    onLongClick = {
+//                                        if (showCheckBox) {
+//                                            return@combinedClickable
+//                                        }
+//
+//                                        showCheckBox = true
+//                                        viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
+//                                        noOfItemsSelected++
+//                                    }
+//                                )
+////
+//                        )
                         if (showCheckBox) {
                             Checkbox(
-                                checked = mediaItems.contains(media.uri),
+                                checked = mediaItems.contains(mediaUri),
                                 onCheckedChange = { it ->
                                     checked = it
                                     Log.d(TAG, "onCheckedChange : ${it}")
                                     if (it) {
-                                        viewModel.onEvent(FeedEvent.MediaSelect(media.uri))
+                                        viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
                                         noOfItemsSelected++
                                     }
                                     if (!it) {
-                                        viewModel.onEvent(FeedEvent.MediaUnSelect(media.uri))
+                                        viewModel.onEvent(FeedEvent.MediaUnSelect(mediaUri))
                                         noOfItemsSelected--
                                     }
                                 },
@@ -478,34 +543,17 @@ fun SharedScreen(
                                 drawableRes = R.drawable.ic_expand,
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .padding(5.dp),
+                                    .padding(end = 10.dp,bottom = 20.dp),
                                 contentDescription = "Expand selected Image",
                                 color = MaterialTheme.colorScheme.inverseOnSurface,
                                 shape = CircleShape,
                                 alpha = 0.3f,
                                 onClick = {
                                     showImage = true
-                                    selectedImage = media.uri
+                                    selectedImage = mediaUri
                                 }
 
                             )
-
-//                            IconButton(
-//                                onClick = {
-//                                    showImage = true
-//                                    selectedImage = media.uri
-//                                },
-//                                modifier = Modifier
-//                                    .align(Alignment.BottomEnd)
-//                                    .padding(5.dp)
-//
-//                            ) {
-//                                Icon(
-//                                    painter = painterResource(R.drawable.ic_expand),
-//                                    contentDescription = "Expand selected image",
-//                                    tint = Color.White
-//                                )
-//                            }
                         }
                     }
 
@@ -548,11 +596,11 @@ fun SharedScreen(
                 showBottomSheet = false
             },
             onConfirm = {
-                if(showImage){
+                if (showImage) {
 //                    viewModel.onEvent(FeedEvent.Delete(selectedImage!!))
 
 
-                }else{
+                } else {
 //                    viewModel.onEvent(FeedEvent.DeleteMultiple)
 
 //                    deleteMedia(mediaItems)
@@ -626,15 +674,6 @@ fun SharedScreen(
 
 
 }
-
-@RequiresApi(Build.VERSION_CODES.R)
-fun deleteMedia(
-    uriList : List<android.net.Uri>,
-    context : Context
-){
-    val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uriList)
-}
-
 
 
 
