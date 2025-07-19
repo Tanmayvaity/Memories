@@ -7,8 +7,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEditScreen
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.CustomNavType

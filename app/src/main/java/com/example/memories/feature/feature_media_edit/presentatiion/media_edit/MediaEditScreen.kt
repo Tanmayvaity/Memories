@@ -23,10 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.toUri
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
-import com.example.memories.core.presentation.UriType.Companion.mapToType
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.domain.model.UriType.Companion.mapToType
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.EditModalBottomSheet
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.MediaPreview
 import com.example.memories.navigation.AppScreen

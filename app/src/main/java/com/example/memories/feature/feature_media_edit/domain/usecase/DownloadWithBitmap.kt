@@ -1,7 +1,7 @@
 package com.example.memories.feature.feature_media_edit.domain.usecase
 
 import android.graphics.Bitmap
-import com.example.memories.feature.feature_media_edit.domain.model.MediaResult
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 
 class DownloadWithBitmap(
@@ -9,7 +9,7 @@ class DownloadWithBitmap(
 ) {
     suspend operator fun invoke(
         bitmap : Bitmap
-    ): MediaResult {
+    ): Result<String> {
         return mediaRepository.downloadWithBitmap(bitmap)
     }
 }

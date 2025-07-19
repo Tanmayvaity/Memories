@@ -4,9 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.memories.feature.feature_camera.domain.model.CaptureResult
-import com.example.memories.feature.feature_media_edit.domain.model.BitmapResult
-import com.example.memories.feature.feature_media_edit.domain.model.MediaResult
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -47,13 +45,13 @@ class MediaViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result =  mediaUseCases.uriToBitmapUseCase(event.uri)
                     when(result){
-                        is BitmapResult.Error -> {
+                        is Result.Error -> {
                             Log.e(TAG, "UriToBitmap error : ${result.error.message.toString()}", )
                         }
-                        is BitmapResult.Success -> {
-                            Log.i(TAG, "UriToBitmap Successful ${result.bitmap}")
+                        is Result.Success -> {
+                            Log.i(TAG, "UriToBitmap Successful ${result.data}")
                             _bitmapState.update { _bitmapState.value.copy(
-                                bitmap = result.bitmap
+                                bitmap = result.data
                             ) }
                         }
                     }
@@ -65,12 +63,12 @@ class MediaViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result = mediaUseCases.downloadWithBitmap(event.bitmap)
                     when(result){
-                        is MediaResult.Error -> {
+                        is Result.Error -> {
                             _downloadError.send(result.error.message.toString())
                         }
 
-                        is MediaResult.Success -> {
-                            _downloadError.send(result.successMessage)
+                        is Result.Success -> {
+                            _downloadError.send(result.data!!)
                         }
                     }
                 }
@@ -80,12 +78,12 @@ class MediaViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result = mediaUseCases.saveBitmapToInternalStorageUseCase(_bitmapState.value.bitmap)
                     when(result){
-                        is CaptureResult.Error -> {
+                        is Result.Error -> {
                             Log.e(TAG, "onEvent: BitmapToUri error : ${result.error.message}", )
                         }
-                        is CaptureResult.Success -> {
-                            Log.d(TAG, "bitmap Uri : ${result.uri.toString()}")
-                            _saveBitmapToInternalSuccess.send(result.uri)
+                        is Result.Success -> {
+                            Log.d(TAG, "bitmap Uri : ${result.data.toString()}")
+                            _saveBitmapToInternalSuccess.send(result.data)
                         }
                     }
                 }
@@ -95,12 +93,12 @@ class MediaViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result = mediaUseCases.downloadVideoUseCase(event.uri)
                     when(result){
-                        is MediaResult.Error -> {
+                        is Result.Error -> {
                             _downloadError.send(result.error.message.toString())
                         }
 
-                        is MediaResult.Success -> {
-                            _downloadError.send(result.successMessage)
+                        is Result.Success -> {
+                            _downloadError.send(result.data!!)
                         }
                     }
                 }

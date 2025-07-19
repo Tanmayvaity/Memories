@@ -3,8 +3,8 @@ package com.example.memories.navigation
 import android.net.Uri
 import android.os.Bundle
 import androidx.navigation.NavType
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

@@ -1,19 +1,16 @@
 package com.example.memories.feature.feature_camera.presentation.camera
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
-import com.example.memories.feature.feature_camera.domain.model.CaptureResult
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 import com.example.memories.feature.feature_camera.domain.usecase.CameraUseCases
-import com.example.memories.core.presentation.UriType.Companion.mapToType
+import com.example.memories.core.domain.model.UriType.Companion.mapToType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -53,13 +50,12 @@ class CameraViewModel @Inject constructor(
     }
 
     private fun bindToCamera(
-        app: Context,
         lifecycleOwner: LifecycleOwner,
         lensFacing: LensFacing,
         torch : Boolean
     ) {
         viewModelScope.launch {
-            cameraUseCase.bindToCameraUseCase(app, lifecycleOwner,lensFacing,torch)
+            cameraUseCase.bindToCameraUseCase( lifecycleOwner,lensFacing,torch)
         }
     }
 
@@ -69,7 +65,7 @@ class CameraViewModel @Inject constructor(
             is CameraEvent.Preview -> {
                 val lensFacing = _state.value.lensFacing
                 val torch = _state.value.torchState
-                bindToCamera(event.app, event.lifecycleOwner,lensFacing,torch)
+                bindToCamera( event.lifecycleOwner,lensFacing,torch)
             }
 
             is CameraEvent.SurfaceCallback -> {
@@ -129,25 +125,6 @@ class CameraViewModel @Inject constructor(
 
             }
 
-            is CameraEvent.TakePicture ->{
-                viewModelScope.launch {
-                    val result = cameraUseCase.takePictureUseCase(event.file)
-                    when(result){
-                        is CaptureResult.Error -> {
-                            _errorChannel.send(result.error.message.toString())
-                        }
-
-                        is CaptureResult.Success -> {
-                            val uriType = UriType(
-                                uri = result.uri.toString(),
-                                type = if (UriType.isImageFile(result.uri.toString())) Type.IMAGE else Type.VIDEO
-                            )
-                            _capturedMediaUri.update { uriType }
-
-                        }
-                    }
-                }
-            }
 
             CameraEvent.Reset -> {
                 reset()
@@ -167,61 +144,40 @@ class CameraViewModel @Inject constructor(
             }
 
             is CameraEvent.Take ->{
-                if(_state.value.mode == CameraMode.VIDEO){
+                if(_state.value.mode == CameraMode.VIDEO) {
                     _state.update {
                         it.copy(videoState = VideoState.Started)
                     }
-                    viewModelScope.launch {
-                        val result = cameraUseCase.takeVideoUseCase(event.context,event.file)
-                        when(result){
-                            is CaptureResult.Error -> {
-                                Log.e(TAG, "onEvent: error : ${result.error.message} ", )
-                            }
-                            is CaptureResult.Success -> {
-                                val uriType = UriType(
-                                    uri = result.uri.toString(),
-                                    type = result.uri.mapToType()
-                                )
-                                _capturedMediaUri.update { uriType }
-                                Log.d(TAG, "onEvent: success ${_capturedMediaUri.value.uri.toString()}")
-                            }
+                }
 
+                viewModelScope.launch {
+                    val result = cameraUseCase.takeMediaUseCase(_state.value.mode)
+                    when(result){
+                        is Result.Error -> {
+                            Log.e(TAG, "onEvent: error : ${result.error.message} ", )
                         }
-                        Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
-                    }
+                        is Result.Success -> {
+                            val uriType = UriType(
+                                uri = result.data.toString(),
+                                type = result.data.mapToType()
+                            )
+                            _capturedMediaUri.update { uriType }
+                            Log.d(TAG, "onEvent: success ${_capturedMediaUri.value.uri.toString()}")
+                        }
 
+                    }
+                    Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
+                }
+
+                if(_state.value.videoState == VideoState.Started){
                     timerJob = viewModelScope.launch {
                         while(isActive){
                             delay(1000)
                             _timeElapsed.update { it +1 }
                         }
                     }
-
-
-
                 }
-                if(_state.value.mode == CameraMode.PHOTO || _state.value.mode == CameraMode.PORTRAIT){
-                    viewModelScope.launch {
-                        val result = cameraUseCase.takePictureUseCase(event.file)
-                        when(result){
-                            is CaptureResult.Error -> {
-                                _errorChannel.send(result.error.message.toString())
-                            }
-
-                            is CaptureResult.Success -> {
-                                val uriType = UriType(
-                                    uri = result.uri.toString(),
-                                    type = result.uri.mapToType()
-                                )
-                                _capturedMediaUri.update { uriType }
-
-                            }
-                        }
-                    }
-                }
-
-
-            }
+        }
 
             is CameraEvent.Pause ->{
                 _state.update {

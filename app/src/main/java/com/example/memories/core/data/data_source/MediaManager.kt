@@ -1,7 +1,5 @@
 package com.example.memories.core.data.data_source
 
-import android.R.attr.bitmap
-import android.R.id.input
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -16,20 +14,15 @@ import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import androidx.annotation.RequiresApi
+import com.example.memories.core.domain.model.Result
 import com.example.memories.core.util.createTempFile
-import com.example.memories.feature.feature_camera.domain.model.CaptureResult
-import com.example.memories.feature.feature_feed.domain.model.MediaImage
-import com.example.memories.feature.feature_media_edit.domain.model.BitmapResult
-import com.example.memories.feature.feature_media_edit.domain.model.MediaResult
+import com.example.memories.core.util.createVideoFile
+import com.example.memories.feature.feature_feed.domain.model.MediaObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class MediaManager(
@@ -49,7 +42,11 @@ class MediaManager(
         val internalFiles = mutableListOf<File>()
         try {
             uriList.forEach { uri ->
-                val file = createTempFile(context)
+                val file = if (context.contentResolver.getType(uri)?.startsWith("video") == true){
+                    createVideoFile(context)
+                }else{
+                    createTempFile(context)
+                }
                 resolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(file)?.use { output ->
                         input.copyTo(output)
@@ -68,7 +65,7 @@ class MediaManager(
 
     suspend fun uriToBitmap(
         uri: Uri
-    ): BitmapResult = withContext(Dispatchers.IO) {
+    ): Result<Bitmap> = withContext(Dispatchers.IO) {
         try {
             val bitmap = if (Build.VERSION.SDK_INT < 28) {
                 MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
@@ -76,16 +73,16 @@ class MediaManager(
                 val source = ImageDecoder.createSource(context.contentResolver, uri)
                 ImageDecoder.decodeBitmap(source)
             }
-            return@withContext BitmapResult.Success(bitmap)
+            return@withContext Result.Success(bitmap)
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext BitmapResult.Error(e)
+            return@withContext Result.Error(e)
         }
     }
 
     suspend fun downloadImageWithBitmap(
         bitmap: Bitmap
-    ): MediaResult = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
         val imageCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Images.Media.getContentUri(
@@ -101,7 +98,7 @@ class MediaManager(
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Memories")
         }
         val sharedImageUri =
-            resolver.insert(imageCollection, imageDetails) ?: return@withContext MediaResult.Error(
+            resolver.insert(imageCollection, imageDetails) ?: return@withContext Result.Error(
                 NullPointerException("Destination uri is null")
             )
 
@@ -118,17 +115,17 @@ class MediaManager(
         } catch (e: Exception) {
             e.printStackTrace()
             resolver.delete(sharedImageUri, null, null)
-            return@withContext MediaResult.Error(e)
+            return@withContext Result.Error(e)
         }
         Log.d(TAG, "sharedImageUri:${sharedImageUri} ")
 
-        return@withContext MediaResult.Success("Image Saved Successfully")
+        return@withContext Result.Success("Image Saved Successfully")
 
     }
 
     suspend fun downloadVideo(
         uri : Uri
-    ): MediaResult = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
         val videoCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Video.Media.getContentUri(
@@ -144,7 +141,7 @@ class MediaManager(
             put(MediaStore.Video.Media.RELATIVE_PATH, "DCIM/Memories")
         }
         val sharedVideoUri =
-            resolver.insert(videoCollection, videoDetails) ?: return@withContext MediaResult.Error(
+            resolver.insert(videoCollection, videoDetails) ?: return@withContext Result.Error(
                 NullPointerException("Destination uri is null")
             )
 
@@ -159,19 +156,21 @@ class MediaManager(
         } catch (e: Exception) {
             e.printStackTrace()
             resolver.delete(sharedVideoUri, null, null)
-            return@withContext MediaResult.Error(e)
+            return@withContext Result.Error(e)
         }
         Log.d(TAG, "sharedVideoUri:${sharedVideoUri} ")
 
-        return@withContext MediaResult.Success("Video Saved Successfully")
+        return@withContext Result.Success("Video Saved Successfully")
 
     }
 
     suspend fun saveBitmapToInternalStorage(
         bitmap: Bitmap?,
-    ): CaptureResult =
+    ): Result<Uri> =
         withContext(Dispatchers.IO) {
-            if (bitmap == null) throw NullPointerException("Bitmap Null")
+            if (bitmap == null){
+                return@withContext Result.Error(Throwable("Bitmap is Null"))
+            }
 
             val file = createTempFile(context = context)
             try {
@@ -190,10 +189,10 @@ class MediaManager(
 
                 val uri = Uri.fromFile(file)
                 Log.i(TAG, "internal bitmap uri : ${uri.toString()}")
-                return@withContext CaptureResult.Success(uri)
+                return@withContext Result.Success(uri)
             } catch (e: Exception) {
                 e.printStackTrace()
-                return@withContext CaptureResult.Error(e)
+                return@withContext Result.Error(e)
             }
         }
 
@@ -201,8 +200,8 @@ class MediaManager(
     suspend fun fetchMediaFromShared(
         offset : Int = 0,
         limit : Int = 10
-    ): List<MediaImage> = withContext(Dispatchers.IO) {
-        val images = mutableListOf<MediaImage>()
+    ): List<MediaObject> = withContext(Dispatchers.IO) {
+        val images = mutableListOf<MediaObject>()
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Images.Media.getContentUri(
@@ -219,6 +218,8 @@ class MediaManager(
         )
 //        val selection = if (fromApp) "${MediaStore.Images.Media.RELATIVE_PATH} = ?" else
 //            "${MediaStore.Images.Media.RELATIVE_PATH} != ?"
+
+
 
         val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
         val selectionArgs = arrayOf("Pictures/Memories/")
@@ -250,7 +251,7 @@ class MediaManager(
                 val name = cursor.getString(nameColumn)
                 val contentUri = ContentUris.withAppendedId(collection, id)
                 val bitmap = context.contentResolver.loadThumbnail(contentUri, Size(640,480),null)
-                val media = MediaImage(uri = contentUri, displayName = name,bitmap = bitmap)
+                val media = MediaObject(uri = contentUri, displayName = name,bitmap = bitmap)
                 images.add(media)
                 count  = count + 1
             }
@@ -332,16 +333,16 @@ class MediaManager(
     suspend fun getMediaThumbnail(
         uri : Uri,
         size : Size
-    ): BitmapResult = withContext(Dispatchers.IO){
+    ): Result<Bitmap> = withContext(Dispatchers.IO){
         try{
             val bitmap = context.contentResolver.loadThumbnail(
                 uri,size,null
             )
 
-            return@withContext BitmapResult.Success(bitmap)
+            return@withContext Result.Success(bitmap)
         }catch (e : Exception){
             e.printStackTrace()
-            return@withContext BitmapResult.Error(e)
+            return@withContext Result.Error(e)
         }
 
     }

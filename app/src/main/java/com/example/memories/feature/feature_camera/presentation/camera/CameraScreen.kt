@@ -1,11 +1,12 @@
 package com.example.memories.feature.feature_camera.presentation.camera
 
 import android.Manifest
+import android.os.Build
 import android.util.Log
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
@@ -50,14 +51,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.memories.R
 import com.example.memories.core.presentation.RationaleDialog
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
-import com.example.memories.core.presentation.UriType.Companion.mapToType
+import com.example.memories.core.domain.model.UriType.Companion.mapToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
 import com.example.memories.navigation.AppScreen
@@ -67,6 +68,7 @@ import java.util.UUID
 
 private const val TAG = "CameraScreen"
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun CameraRoute(
     modifier: Modifier = Modifier,
@@ -184,6 +186,7 @@ fun CameraRoute(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun CameraScreen(
     modifier: Modifier = Modifier,
@@ -378,10 +381,10 @@ fun CameraScreen(
 
                 if(viewModel.state.value.mode == CameraMode.VIDEO &&
                     viewModel.state.value.videoState == VideoState.Idle ){
-                    viewModel.onEvent(CameraEvent.Take(context,videoFile))
+                    viewModel.onEvent(CameraEvent.Take)
                     return@LowerBox
                 }else{
-                    viewModel.onEvent(CameraEvent.Take(context,file))
+                    viewModel.onEvent(CameraEvent.Take)
                     return@LowerBox
                 }
             },
@@ -448,7 +451,7 @@ fun CameraScreen(
 
     LaunchedEffect(lifecycleOwner, state.lensFacing,state.aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            onEvent(CameraEvent.Preview(app, lifecycleOwner))
+            onEvent(CameraEvent.Preview(lifecycleOwner))
         }
 
     }

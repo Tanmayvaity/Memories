@@ -1,15 +1,9 @@
 package com.example.memories.feature.feature_camera.data.data_source
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraMetadata
 import android.net.Uri
 import android.util.Log
-import androidx.annotation.RequiresPermission
-import androidx.camera.camera2.interop.Camera2CameraInfo
-import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
@@ -17,8 +11,6 @@ import androidx.camera.core.CameraSelector.LENS_FACING_BACK
 import androidx.camera.core.CameraSelector.LENS_FACING_FRONT
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
-import androidx.camera.core.ImageCapture.FLASH_MODE_AUTO
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.MeteringPoint
 import androidx.camera.core.Preview
@@ -36,28 +28,26 @@ import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
-import androidx.camera.video.VideoCapture.withOutput
 import androidx.camera.video.VideoRecordEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.core.domain.model.Result
+import com.example.memories.core.util.createTempFile
+import com.example.memories.core.util.createVideoFile
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
-import com.example.memories.feature.feature_camera.domain.model.CaptureResult
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
-import com.example.memories.feature.feature_camera.domain.model.VideoRecordingState
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
 
-class CameraManager {
+class CameraManager(
+    val context: Context
+) {
     companion object {
         private const val TAG = "CameraManager"
     }
@@ -74,8 +64,6 @@ class CameraManager {
     private lateinit var recorder: Recorder
     private var videoAspectRatio: Int = androidx.camera.core.AspectRatio.RATIO_4_3
     private var cameraRecording: Recording? = null
-    private val _videoRecordingState =
-        MutableStateFlow<VideoRecordingState>(VideoRecordingState.Idle)
 
     private lateinit var processCameraProvider: ProcessCameraProvider
     private lateinit var surfaceMeteringPointFactory: SurfaceOrientedMeteringPointFactory
@@ -131,17 +119,16 @@ class CameraManager {
 
 
     suspend fun bindToCamera(
-        appContext: Context,
         lifecycleOwner: LifecycleOwner,
         lensFacing: LensFacing = LensFacing.BACK,
         torch: Boolean = false
     ) {
         Log.d(TAG, "bindToCamera: lensFacing : ${lensFacing.toString()}")
 
-        if(cameraRecording!=null){
+        if (cameraRecording != null) {
             pauseRecording()
         }
-        processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
+        processCameraProvider = ProcessCameraProvider.awaitInstance(context)
         unbind(processCameraProvider)
         try {
             val cameraSelector = CameraSelector.Builder()
@@ -160,7 +147,7 @@ class CameraManager {
             cameraControl = camera.cameraControl
             cameraInfo = camera.cameraInfo
             cameraControl?.enableTorch(torch)
-            if(cameraRecording!=null){
+            if (cameraRecording != null) {
                 resumeRecording()
             }
 
@@ -240,13 +227,12 @@ class CameraManager {
         cameraControl?.setLinearZoom(scale)
     }
 
-    suspend fun takePicture(
-        file: File
-    ): CaptureResult {
+    suspend fun takePicture(): Result<Uri> {
+        val file = createTempFile(context)
         if (imageCaptureUseCase == null) {
             val error = IllegalStateException("ImageCapture use case not initialized")
             Log.e(TAG, "${error.message}")
-            return CaptureResult.Error(error)
+            return Result.Error(error)
         }
 
         return suspendCancellableCoroutine { continuation ->
@@ -256,13 +242,14 @@ class CameraManager {
                     Log.d(TAG, "${outputFileResults.savedUri}")
                     if (outputFileResults.savedUri == null) {
                         Log.e(TAG, "onImageSaved: savedUri is null")
+                        return
                     }
-                    continuation.resume(CaptureResult.Success(outputFileResults.savedUri))
+                    continuation.resume(Result.Success(outputFileResults.savedUri))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
                     Log.e(TAG, "${exception.message}")
-                    continuation.resume(CaptureResult.Error(exception))
+                    continuation.resume(Result.Error(exception))
                 }
             }
 
@@ -278,14 +265,12 @@ class CameraManager {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun takeVideo(
-        context: Context,
-        file: File
-    ): CaptureResult = suspendCancellableCoroutine { continuation ->
+    suspend fun takeVideo(): Result<Uri> = suspendCancellableCoroutine { continuation ->
+        val file = createVideoFile(context)
         if (videoCaptureUseCase == null) {
             val error = IllegalStateException("VideoCaptureUseCase use case not initialized")
             Log.e(TAG, "${error.message}")
-            return@suspendCancellableCoroutine continuation.resume(CaptureResult.Error(error))
+            return@suspendCancellableCoroutine continuation.resume(Result.Error(error))
         }
         val fileOutputOptions: FileOutputOptions = FileOutputOptions.Builder(file).build()
         Log.i(TAG, "takeVideo: file : ${fileOutputOptions.file.path}")
@@ -311,7 +296,11 @@ class CameraManager {
                                     TAG,
                                     "accept: successful video capture : ${videoUri.toString()}"
                                 )
-                                continuation.resume(CaptureResult.Success(videoUri))
+                                if (videoUri == null) {
+                                    return continuation.resume(Result.Error(Throwable("Uri is null")))
+
+                                }
+                                continuation.resume(Result.Success(videoUri))
                             } else {
                                 Log.e(
                                     TAG,
@@ -319,7 +308,11 @@ class CameraManager {
                                 )
 
 
-                                continuation.resume(CaptureResult.Error(value.cause ?: Throwable("Cause is Null")))
+                                continuation.resume(
+                                    Result.Error(
+                                        value.cause ?: Throwable("Cause is Null")
+                                    )
+                                )
                             }
                         }
 
@@ -377,15 +370,14 @@ class CameraManager {
         Log.i(TAG, "stop recording")
 
 
-
     }
-    
-    fun cancelRecording(){
-        if(cameraRecording == null){
-            Log.e(TAG,"cancelRecording : cameraRecording is null")
-            return 
+
+    fun cancelRecording() {
+        if (cameraRecording == null) {
+            Log.e(TAG, "cancelRecording : cameraRecording is null")
+            return
         }
-        
+
         cameraRecording?.close()
         cameraRecording = null
         Log.i(TAG, "cancelRecording: cancel recording")

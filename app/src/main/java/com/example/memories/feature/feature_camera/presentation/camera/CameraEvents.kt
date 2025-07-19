@@ -8,7 +8,6 @@ import java.io.File
 sealed class CameraEvent {
     object SurfaceCallback : CameraEvent()
     data class Preview(
-        val app: Context,
         val lifecycleOwner: LifecycleOwner,
     ) : CameraEvent()
     object TorchToggle : CameraEvent()
@@ -17,14 +16,8 @@ sealed class CameraEvent {
     object PortraitMode : CameraEvent()
     object VideoMode : CameraEvent()
     data class Zoom(val scale: Float) : CameraEvent()
-    data class TakePicture(
-        val file : File
-    ): CameraEvent()
 
-    data class Take(
-        val context : Context,
-        val file : File
-    ): CameraEvent()
+    object  Take: CameraEvent()
     object Reset : CameraEvent()
     object ToggleAspectRatio : CameraEvent()
     data class TapToFocus(val offset: Offset): CameraEvent()

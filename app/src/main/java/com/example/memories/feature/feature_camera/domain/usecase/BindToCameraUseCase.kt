@@ -10,11 +10,10 @@ class BindToCameraUseCase @Inject constructor(
     private val repository: CameraRepository
 ) {
     suspend operator fun invoke(
-        appContext: Context,
         lifecycleOwner: LifecycleOwner,
         lensFacing: LensFacing,
         torch: Boolean
     ){
-        repository.bindToCamera(appContext,lifecycleOwner,lensFacing,torch)
+        repository.bindToCamera(lifecycleOwner,lensFacing,torch)
     }
 }

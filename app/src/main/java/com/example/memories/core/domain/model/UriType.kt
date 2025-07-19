@@ -1,7 +1,6 @@
-package com.example.memories.core.presentation
+package com.example.memories.core.domain.model
 
 import android.net.Uri
-import android.util.Log
 import kotlinx.serialization.Serializable
 import java.net.URLConnection
 import kotlin.text.startsWith

@@ -53,8 +53,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
-import com.example.memories.core.presentation.Type
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 
 const val TAG = "ImagePreview"
 

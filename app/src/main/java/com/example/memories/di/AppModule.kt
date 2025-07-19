@@ -13,8 +13,7 @@ import com.example.memories.feature.feature_camera.domain.usecase.ResumeRecordin
 import com.example.memories.feature.feature_camera.domain.usecase.SetAspectRatioUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.SetSurfaceCallbackUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.StopRecordingUseCase
-import com.example.memories.feature.feature_camera.domain.usecase.TakePictureUseCase
-import com.example.memories.feature.feature_camera.domain.usecase.TakeVideoUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.TakeMediaUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TapToFocusUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
@@ -48,7 +47,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCameraManager() = CameraManager()
+    fun provideCameraManager(
+        @ApplicationContext context : Context
+    ) = CameraManager(context)
 
     @Provides
     @Singleton
@@ -64,10 +65,9 @@ object AppModule {
             BindToCameraUseCase(repository),
             TorchToggleUseCase(repository),
             ZoomUseCase(repository),
-            TakePictureUseCase(repository),
+            TakeMediaUseCase(repository),
             SetAspectRatioUseCase(repository),
             TapToFocusUseCase(repository),
-            TakeVideoUseCase(repository),
             ResumeRecordingUseCase(repository),
             PauseRecordingUseCase(repository),
             StopRecordingUseCase(repository),

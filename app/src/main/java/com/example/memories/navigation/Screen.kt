@@ -1,6 +1,6 @@
 package com.example.memories.navigation
 
-import com.example.memories.core.presentation.UriType
+import com.example.memories.core.domain.model.UriType
 import kotlinx.serialization.Serializable
 
 

@@ -1,16 +1,15 @@
 package com.example.memories.feature.feature_camera.data.repository
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.net.Uri
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_camera.data.data_source.CameraManager
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
-import com.example.memories.feature.feature_camera.domain.model.CaptureResult
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 import com.example.memories.feature.feature_camera.domain.repository.CameraRepository
-import java.io.File
 import javax.inject.Inject
 
 class CameraRepositoryImpl @Inject constructor(
@@ -21,12 +20,11 @@ class CameraRepositoryImpl @Inject constructor(
     }
 
     override suspend fun bindToCamera(
-        appContext: Context,
         lifecycleOwner: LifecycleOwner,
         lensFacing: LensFacing,
         torch : Boolean
     ) {
-        cameraManager.bindToCamera(appContext,lifecycleOwner,lensFacing)
+        cameraManager.bindToCamera(lifecycleOwner,lensFacing)
     }
 
     override fun torchToggle(torch: Boolean) {
@@ -37,8 +35,8 @@ class CameraRepositoryImpl @Inject constructor(
         return cameraManager.zoom(scale)
     }
 
-    override suspend  fun takePicture(file: File): CaptureResult {
-        return cameraManager.takePicture(file)
+    override suspend  fun takePicture(): Result<Uri> {
+        return cameraManager.takePicture()
     }
 
     override fun setAspectRatio(aspect: AspectRatio) {
@@ -50,11 +48,8 @@ class CameraRepositoryImpl @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend  fun takeVideo(
-        context: Context,
-        file: File
-    ): CaptureResult {
-        return cameraManager.takeVideo(context,file)
+    override suspend  fun takeVideo(): Result<Uri> {
+        return cameraManager.takeVideo()
     }
 
     override fun pauseRecording() {
