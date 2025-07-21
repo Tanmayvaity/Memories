@@ -38,5 +38,8 @@ sealed class AppScreen(val route: String) {
     @Serializable
     object Shared : AppScreen("Shared")
 
+    @Serializable
+    object CameraSettings : AppScreen("CameraSettings")
+
 }
 

@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_other
+package com.example.memories.feature.feature_other.presentation.screens
 
 import android.R.attr.contentDescription
 import android.R.attr.onClick
@@ -23,9 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,30 +30,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewDynamicColors
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
-import dev.chrisbanes.haze.HazeDefaults
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
+import com.example.memories.navigation.AppScreen
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
-import dev.chrisbanes.haze.rememberHazeState
 
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
-fun OtherScreen() {
+fun OtherScreen(
+    onCameraSettingsClick: (AppScreen.CameraSettings) -> Unit = {}
+) {
 
     val context = LocalContext.current
     Scaffold(
@@ -91,7 +81,7 @@ fun OtherScreen() {
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(10.dp),
 
-            )
+                )
 
             CustomSettingRow(
                 drawableRes = R.drawable.ic_notification,
@@ -127,8 +117,11 @@ fun OtherScreen() {
                 drawableRes = R.drawable.ic_camera,
                 contentDescription = "Camera Icon",
                 heading = "Camera Settings",
-                content = "View and Edit your camera settings"
-            )
+                content = "View and Edit your camera settings",
+            ) {
+                onCameraSettingsClick(AppScreen.CameraSettings)
+            }
+
 
             Text(
                 text = "MEMORIES",
@@ -200,12 +193,13 @@ fun OtherScreen() {
                 contentDescription = "Developer Info Icon",
                 heading = "Developer Info",
                 content = "View developer info",
-            ) {
-                val developerUri = "https://github.com/Tanmayvaity"
-                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-                context.startActivity(intent)
+                onClick = {
+                    val developerUri = "https://github.com/Tanmayvaity"
+                    val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
+                    context.startActivity(intent)
 
-            }
+                },
+                )
 
         }
 
@@ -220,8 +214,8 @@ fun CustomSettingRow(
     heading: String,
     content: String = "",
     color: Color = MaterialTheme.colorScheme.onSurface,
-    iconColor : Color = MaterialTheme.colorScheme.primary,
-    iconBackgroundColor : Color = MaterialTheme.colorScheme.primary,
+    iconColor: Color = MaterialTheme.colorScheme.primary,
+    iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit = {},
 ) {
     Row(
@@ -256,7 +250,7 @@ fun CustomSettingRow(
         ) {
             Text(
                 text = heading,
-                modifier = Modifier.padding(start = 5.dp,end = 5.dp),
+                modifier = Modifier.padding(start = 5.dp, end = 5.dp),
                 fontSize = 16.sp,
                 color = color,
                 style = MaterialTheme.typography.titleMedium
@@ -264,7 +258,7 @@ fun CustomSettingRow(
             if (content.isNotEmpty() || content.isNotEmpty()) {
                 Text(
                     text = content,
-                    modifier = Modifier.padding(start = 5.dp,top = 0.dp),
+                    modifier = Modifier.padding(start = 5.dp, top = 0.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -282,6 +276,7 @@ fun CustomSettingRow(
 
 
         )
+
 
     }
 

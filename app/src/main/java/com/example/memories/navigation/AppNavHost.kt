@@ -9,7 +9,7 @@ import com.example.memories.feature.feature_camera.presentation.camera.navigatio
 import com.example.memories.feature.feature_feed.presentation.navigation.createFeedGraph
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.navigation.createMediaEditGraph
 import com.example.memories.feature.feature_memory.presentation.navigation.createMemoryGraph
-import com.example.memories.feature.feature_other.navigation.createOtherGraph
+import com.example.memories.feature.feature_other.presentation.navigation.createOtherGraph
 
 
 @Composable
@@ -33,7 +33,8 @@ fun AppNavHost(
 
         createOtherGraph(
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
+            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange,
+            navController = navController
         )
 
         createCameraGraph(

@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -46,7 +47,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 
 
-@Preview
+@Preview()
 @Composable
 fun AppNav(navController: NavHostController = rememberNavController()) {
 
@@ -147,7 +148,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
         }
     }
 }
-
+@PreviewLightDark
 @Preview
 @Composable
 fun BottomNavBar(
