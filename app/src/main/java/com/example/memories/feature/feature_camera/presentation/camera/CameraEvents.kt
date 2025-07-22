@@ -27,4 +27,5 @@ sealed class CameraEvent {
     object Stop : CameraEvent()
 
     object Cancel : CameraEvent()
+    object Fetch : CameraEvent()
 }

@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.memories.R
+import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.presentation.RationaleDialog
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
@@ -179,7 +180,8 @@ fun CameraRoute(
         onEvent = viewModel::onEvent,
         viewModel = viewModel,
         onNavigateToImageEdit = onNavigateToImageEdit,
-        onBack = onBack
+        onBack = onBack,
+        cameraSettingsState = state.cameraSettingsState
     )
 
 
@@ -195,8 +197,17 @@ fun CameraScreen(
     onEvent: (CameraEvent) -> Unit = {},
     viewModel: CameraViewModel = hiltViewModel<CameraViewModel>(),
     onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit,
-    onBack: () -> Unit ={}
+    onBack: () -> Unit ={},
+    cameraSettingsState : CameraSettingsState? = null
 ) {
+    
+    LaunchedEffect(cameraSettingsState) { 
+        if(cameraSettingsState!=null){
+            Log.d(TAG, "CameraScreen: ${cameraSettingsState.toString()}")
+        }
+    }
+    
+    
     val context = LocalContext.current
     val app = context.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current

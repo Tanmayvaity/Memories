@@ -11,12 +11,14 @@ import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 import com.example.memories.feature.feature_camera.domain.usecase.CameraUseCases
 import com.example.memories.core.domain.model.UriType.Companion.mapToType
+import com.example.memories.feature.feature_other.domain.usecase.CameraSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -25,7 +27,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(
-    private val cameraUseCase: CameraUseCases
+    private val cameraUseCase: CameraUseCases,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<CameraState>(CameraState())
@@ -42,7 +44,10 @@ class CameraViewModel @Inject constructor(
     private var timerJob : Job? = null
 
     init {
+        onEvent(CameraEvent.Fetch)
         onEvent(CameraEvent.SurfaceCallback)
+
+//        Log.d(TAG, "${_state.value.cameraSettingsState.toString()}")
     }
 
     companion object{
@@ -214,9 +219,17 @@ class CameraViewModel @Inject constructor(
                 reset()
             }
 
+            CameraEvent.Fetch -> {
+                viewModelScope.launch {
+                    Log.d(TAG, "onEvent: called")
 
+                    val state = cameraUseCase.cameraSettingsUseCase()
+                    _state.update { it.copy(cameraSettingsState = state) }
 
+                    Log.d(TAG, "onEvent: ${_state.value.cameraSettingsState.toString()}")
 
+                }
+            }
         }
     }
 

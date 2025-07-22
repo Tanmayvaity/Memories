@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
@@ -34,4 +35,6 @@ interface CameraRepository {
     fun stopRecording()
 
     fun cancelRecording()
+
+    suspend fun getCameraSettingsState(): CameraSettingsState
 }

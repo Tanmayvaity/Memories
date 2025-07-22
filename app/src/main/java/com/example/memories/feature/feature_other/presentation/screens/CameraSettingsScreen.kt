@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_other.presentation.screens
 import android.R.attr.contentDescription
 import android.R.attr.onClick
 import androidx.annotation.DrawableRes
+import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -46,8 +47,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
 import com.example.memories.core.presentation.IconItem
+import com.example.memories.feature.feature_other.presentation.viewmodels.CameraSettingsEvents
+import com.example.memories.feature.feature_other.presentation.viewmodels.CameraSettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -56,6 +61,8 @@ fun CameraSettingsScreen(
     modifier: Modifier = Modifier,
     onBack : () -> Unit = {},
 ) {
+    val cameraSettingsViewModel : CameraSettingsViewModel = hiltViewModel<CameraSettingsViewModel>()
+    val cameraSetingsState by cameraSettingsViewModel.state.collectAsStateWithLifecycle()
     Scaffold(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar ={
@@ -82,6 +89,7 @@ fun CameraSettingsScreen(
         }
 
     ) { innerPadding ->
+        
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -100,13 +108,21 @@ fun CameraSettingsScreen(
                 drawableRes = R.drawable.ic_volume_on,
                 contentDescription = "Shutter sound toggle",
                 heading = "Shutter Sound",
-                content = "Create a shutter sound when a photo is captured."
+                content = "Create a shutter sound when a photo is captured.",
+                checked = cameraSetingsState.shutterSound,
+                onSwitchStateChange = {it->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.ShutterSoundToggle(it))
+                }
             )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_location,
                 contentDescription = "Save location toggle",
                 heading = "Save Location",
-                content = "Add location to your pictures and videos"
+                content = "Add location to your pictures and videos",
+                checked = cameraSetingsState.saveLocation,
+                onSwitchStateChange = {it->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.SaveLocationToggle(it))
+                }
             )
 
             Text(
@@ -119,19 +135,31 @@ fun CameraSettingsScreen(
                 drawableRes = R.drawable.ic_camera_flip,
                 contentDescription = "Mirror image toggle",
                 heading = "Save selfies as previewed",
-                content = "Save selfies as they appear on the screen"
+                content = "Save selfies as they appear on the screen",
+                checked = cameraSetingsState.mirrorImage,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.MirrorImageToggle(it))
+                }
             )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_grid,
                 contentDescription = "Grid toggle",
                 heading = "Show grid lines",
-                content = "Show grid lines on the camera preview"
+                content = "Show grid lines on the camera preview",
+                checked = cameraSetingsState.gridLines,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.GridImageToggle(it))
+                }
             )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_flip,
                 contentDescription = "Toggle flip input",
                 heading = "Toggle between front/back camera",
-                content = "Toggle between front/back camera using upward flip."
+                content = "Toggle between front/back camera using upward flip.",
+                checked = cameraSetingsState.flipCameraUsingSwipe,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.FlipCameraToggle(it))
+                }
             )
 
             Text(
@@ -144,19 +172,31 @@ fun CameraSettingsScreen(
                 drawableRes = R.drawable.ic_watermark,
                 contentDescription = "Set watermark",
                 heading = "Watermark",
-                content = "Set watermark while capturing photos and videos"
+                content = "Set watermark while capturing photos and videos",
+                checked = cameraSetingsState.watermark,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.WatermarkToggle(it))
+                }
             )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_aperture,
                 contentDescription = "Set high efficiency pictures",
                 heading = "High efficiency pictures",
-                content = "Save space by capturing pictures in HEIF image format."
+                content = "Save space by capturing pictures in HEIF image format.",
+                checked = cameraSetingsState.heifPictures,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.HighEfficiencyPicturesToggle(it))
+                }
             )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_video,
                 contentDescription = "Set high efficiency Videos",
                 heading = "High efficiency videos",
-                content = "Save space by capturing videos in HEVC video format."
+                content = "Save space by capturing videos in HEVC video format.",
+                checked = cameraSetingsState.hevcVideos,
+                onSwitchStateChange = {it ->
+                    cameraSettingsViewModel.onEvent(CameraSettingsEvents.HighEfficiencyVideosToggle(it))
+                }
             )
 
 
@@ -181,21 +221,15 @@ fun CustomCameraSettingsRow(
     color: Color = MaterialTheme.colorScheme.onSurface,
     iconColor: Color = MaterialTheme.colorScheme.primary,
     iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit = {},
-    onSwitchStateChange : (Boolean) -> Unit = {}
+    onSwitchStateChange : (Boolean) -> Unit = {},
+    checked : Boolean = false
 ) {
 
-    var checked by remember { mutableStateOf(true) }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 15.dp)
-            .clickable(
-                onClick = onClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
             .background(MaterialTheme.colorScheme.surface)
         ,
         verticalAlignment = Alignment.CenterVertically,
@@ -236,17 +270,13 @@ fun CustomCameraSettingsRow(
             }
 
         }
-
         Switch(
             checked = checked,
             onCheckedChange = {
-                checked = it
                 onSwitchStateChange(it)
             },
             modifier = Modifier
                 .weight(1f)
-
-
         )
 
 

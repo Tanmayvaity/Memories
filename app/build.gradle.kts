@@ -61,9 +61,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // Serialization
     implementation(libs.kotlinx.serialization.json)
+    // Compose navigation
     implementation(libs.androidx.navigation)
 
+    // camerax
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.compose)
     implementation(libs.androidx.camera.lifecycle)
@@ -71,22 +74,33 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.video)
 
+    // coil
     implementation(libs.coil.compose)
 
+    // hilt
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
+    // hilt-navigation compose
     implementation(libs.hilt.navigation.compose)
 
+    // exoplayer
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.dash)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.compose)
 
+    // haze
     implementation(libs.dev.haze)
     implementation(libs.dev.haze.materials)
 
+    // paging 3
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
+
+    // datastore
+    implementation(libs.androidx.datastore.preferences)
+
+
 
 
 }

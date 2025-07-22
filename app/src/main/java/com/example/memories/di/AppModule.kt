@@ -1,13 +1,18 @@
 package com.example.memories.di
 
 import android.content.Context
+import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.feature.feature_other.data.repository.CameraSettingsRepositoryImpl
+import com.example.memories.feature.feature_other.domain.repository.CameraSettingsRepository
+import com.example.memories.feature.feature_other.domain.usecase.CameraSettingsUseCase
 import com.example.memories.feature.feature_camera.data.data_source.CameraManager
 import com.example.memories.feature.feature_camera.data.repository.CameraRepositoryImpl
 import com.example.memories.feature.feature_camera.domain.repository.CameraRepository
 import com.example.memories.feature.feature_camera.domain.usecase.BindToCameraUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.CameraUseCases
 import com.example.memories.feature.feature_camera.domain.usecase.CancelRecordingUseCase
+import com.example.memories.feature.feature_camera.domain.usecase.GetCameraSettingsUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.PauseRecordingUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ResumeRecordingUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.SetAspectRatioUseCase
@@ -53,8 +58,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCameraRepository(cameraManager: CameraManager) : CameraRepository {
-        return CameraRepositoryImpl(cameraManager)
+    fun provideCameraRepository(
+        cameraManager: CameraManager,
+        cameraSettingsDatastore: CameraSettingsDatastore
+    ) : CameraRepository {
+        return CameraRepositoryImpl(cameraManager,cameraSettingsDatastore)
     }
 
     @Provides
@@ -71,7 +79,8 @@ object AppModule {
             ResumeRecordingUseCase(repository),
             PauseRecordingUseCase(repository),
             StopRecordingUseCase(repository),
-            CancelRecordingUseCase(repository)
+            CancelRecordingUseCase(repository),
+            GetCameraSettingsUseCase(repository)
         )
     }
 
@@ -117,6 +126,25 @@ object AppModule {
             getMediaThumbnailUseCase = GetMediaThumbnailUseCase(repository)
         )
     }
+
+    @Provides
+    @Singleton
+    fun providesCameraSettingsDatastore(
+        @ApplicationContext context : Context
+    ): CameraSettingsDatastore{
+        return CameraSettingsDatastore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCameraSettingsRepository(cameraSettingsDatastore: CameraSettingsDatastore) : CameraSettingsRepository{
+        return CameraSettingsRepositoryImpl(cameraSettingsDatastore)
+    }
+
+    fun providesShutterSoundUseCase(repository : CameraSettingsRepository): CameraSettingsUseCase{
+        return CameraSettingsUseCase(repository)
+    }
+
 
 
 }

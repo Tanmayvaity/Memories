@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_camera.domain.usecase
 
+import com.example.memories.feature.feature_other.domain.usecase.CameraSettingsUseCase
 import javax.inject.Inject
 
 data class CameraUseCases @Inject constructor(
@@ -13,5 +14,6 @@ data class CameraUseCases @Inject constructor(
     val resumeRecordingUseCase: ResumeRecordingUseCase,
     val pauseRecordingUseCase: PauseRecordingUseCase,
     val stopRecordingUseCase: StopRecordingUseCase,
-    val cancelRecordingUseCase: CancelRecordingUseCase
+    val cancelRecordingUseCase: CancelRecordingUseCase,
+    val cameraSettingsUseCase: GetCameraSettingsUseCase
 )
