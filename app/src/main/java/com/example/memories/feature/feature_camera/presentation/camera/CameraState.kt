@@ -15,8 +15,15 @@ data class CameraState(
 //    val exposureValue : Int = 0,
     val aspectRatio : AspectRatio = AspectRatio.RATIO_4_3,
     val videoState : VideoState = VideoState.Idle,
-    val cameraSettingsState : CameraSettingsState? = null
+    val cameraSettingsState : CameraSettingsState? = null,
+    val timerMode : TimerMode = TimerMode.Idle
 )
+
+sealed class TimerMode{
+    object Idle : TimerMode()
+    object Started : TimerMode()
+    object Running : TimerMode()
+}
 
 
 sealed class VideoState{
@@ -26,5 +33,6 @@ sealed class VideoState{
     object Pause : VideoState()
     object Stop : VideoState()
 }
+
 
 

@@ -3,6 +3,8 @@ package com.example.memories.feature.feature_camera.presentation.camera.componen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -52,18 +55,23 @@ fun LowerBox(
     onToggleCamera: () -> Unit = {},
     onChooseFromGallery: () -> Unit = {},
     onClick: () -> Unit = {},
-    onCameraModeClick : (CameraMode) -> Unit = {},
-    cameraMode : CameraMode = CameraMode.PHOTO,
-    isVideoPlaying : Boolean = false
+    onCameraModeClick: (CameraMode) -> Unit = {},
+    cameraMode: CameraMode = CameraMode.PHOTO,
+    isVideoPlaying: Boolean = false,
+    isPictureTimerRunning: Boolean = false
 ) {
     val cameraActionItems: List<CameraMode> = CameraMode.entries.toList()
     var selectedIndex by remember { mutableStateOf(cameraMode.mapToIndex()) }
+    val animateColor by animateColorAsState(
+        if (isVideoPlaying) Color.Red else Color.White,
+        label = "inside color"
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(150.dp)
 //            .background(Color.LightGray.copy(alpha = 0.2f))
-            .pointerInput(Unit) {},
+            .pointerInput(Unit) {}
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceEvenly,
@@ -76,19 +84,24 @@ fun LowerBox(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                AnimatedVisibility(
+                    visible = !isPictureTimerRunning
+                ) {
+                    IconItem(
+                        drawableRes = R.drawable.ic_feed,
+                        contentDescription = "Choose from gallery",
+                        color = Color.White,
+                        alpha = 0.5f,
+                        onClick = {
+                            onChooseFromGallery()
+                        },
+                    )
+                }
 
-                IconItem(
-                    drawableRes = R.drawable.ic_feed,
-                    contentDescription = "Choose from gallery",
-                    color = Color.White,
-                    alpha = 0.5f,
-                    onClick = {
-                        onChooseFromGallery()
-                    },
-                )
+
 
 
                 //external circle
@@ -101,29 +114,38 @@ fun LowerBox(
                             color = Color.White,
                             shape = CircleShape
                         )
-                        .clickable {
-                            onClick()
-                        },
+                        .clickable(
+//                            enabled = if (isPictureTimerRunning) false else true,
+                            onClick = {
+                                onClick()
+                            }
+                        ),
                 ) {
                     //internal circle with icon
                     Icon(
                         painter = painterResource(R.drawable.ic_take_photo),
                         contentDescription = "Capture Photo",
                         modifier = Modifier
-                            .size(58.dp)
-                            .background(Color.White, CircleShape)
+                            .animateContentSize()
+                            .size(if(isPictureTimerRunning && !isVideoPlaying) 32.dp else 58.dp)
+                            .background(animateColor, CircleShape)
                             .padding(2.dp),
-                        tint = Color.White
+                        tint = animateColor
                     )
                 }
 
-                IconItem(
-                    drawableRes = R.drawable.ic_camera_flip,
-                    contentDescription = "Toggle camera lens",
-                    color = Color.White,
-                    alpha = 0.5f,
-                    onClick = { onToggleCamera() },
-                )
+                AnimatedVisibility(
+                    visible = !isPictureTimerRunning
+                ) {
+                    IconItem(
+                        drawableRes = R.drawable.ic_camera_flip,
+                        contentDescription = "Toggle camera lens",
+                        color = Color.White,
+                        alpha = 0.5f,
+                        onClick = { onToggleCamera() },
+                    )
+                }
+
 
 
                 // Camera Action Items
@@ -145,7 +167,7 @@ fun LowerBox(
                 ) {
                     itemsIndexed(cameraActionItems) { index, item ->
 
-                        if(!isVideoPlaying || item == CameraMode.VIDEO){
+                        if (!isVideoPlaying || item == CameraMode.VIDEO) {
                             TextUnderLinedItem(
                                 modifier = Modifier
                                     .drawBehind {
@@ -160,11 +182,12 @@ fun LowerBox(
                                     }
                                     .padding(start = 10.dp, end = 10.dp)
                                     .clickable(
+                                        enabled = if(isPictureTimerRunning)false else true,
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null,
                                         onClick = {
-                                            if(isVideoPlaying){
-                                               return@clickable
+                                            if (isVideoPlaying) {
+                                                return@clickable
                                             }
                                             selectedIndex = index
                                             onCameraModeClick(item)
@@ -185,16 +208,23 @@ fun LowerBox(
             }
 
 
-
         }
     }
 }
 
-fun CameraMode.mapToIndex():Int{
-    return when(this){
-        CameraMode.PHOTO -> {0}
-        CameraMode.PORTRAIT -> {1}
-        CameraMode.VIDEO -> {2}
+fun CameraMode.mapToIndex(): Int {
+    return when (this) {
+        CameraMode.PHOTO -> {
+            0
+        }
+
+        CameraMode.PORTRAIT -> {
+            1
+        }
+
+        CameraMode.VIDEO -> {
+            2
+        }
     }
 
 }

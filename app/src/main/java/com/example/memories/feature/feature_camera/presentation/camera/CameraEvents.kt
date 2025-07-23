@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_camera.presentation.camera
 import android.content.Context
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
+import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import java.io.File
 
 sealed class CameraEvent {
@@ -28,4 +29,8 @@ sealed class CameraEvent {
 
     object Cancel : CameraEvent()
     object Fetch : CameraEvent()
+    object Timer : CameraEvent()
+    object CancelTimer : CameraEvent()
+
+    object ToggleTimerMode : CameraEvent()
 }

@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -41,7 +42,11 @@ class CameraViewModel @Inject constructor(
     private val _timeElapsed = MutableStateFlow<Long>(0)
     val timeElapsed = _timeElapsed.asStateFlow()
 
+    private val _takePictureTimerTimeElapsed = MutableStateFlow<Int>(3)
+    val takePictureTimerTimeElapsed = _takePictureTimerTimeElapsed.asStateFlow()
+
     private var timerJob : Job? = null
+    private var pictureTimerJob : Job? = null
 
     init {
         onEvent(CameraEvent.Fetch)
@@ -230,6 +235,43 @@ class CameraViewModel @Inject constructor(
 
                 }
             }
+
+            CameraEvent.Timer -> {
+                cancelTimer()
+                pictureTimerJob = viewModelScope.launch {
+                    _state.update { it.copy(timerMode = TimerMode.Running) }
+                    if(_state.value.timerMode == TimerMode.Running){
+                        while(isActive && _takePictureTimerTimeElapsed.value >=1){
+                            delay(1000)
+                            _takePictureTimerTimeElapsed.update { it - 1 }
+                        }
+                        onEvent(CameraEvent.Take)
+                    }
+
+
+                    onEvent(CameraEvent.ToggleTimerMode)
+                }
+            }
+
+            CameraEvent.CancelTimer -> {
+                cancelTimer()
+                Log.d(TAG, "onEvent: CancelTimer called")
+            }
+
+            CameraEvent.ToggleTimerMode -> {
+                if(_state.value.timerMode == TimerMode.Idle){
+                    _state.update { it.copy(timerMode = TimerMode.Started) }
+                    return
+                }
+                if(_state.value.timerMode == TimerMode.Started || _state.value.timerMode == TimerMode.Running){
+                    _state.update { it.copy(timerMode = TimerMode.Idle) }
+                    return
+                }
+
+                Log.d(TAG, "onEvent: isTimerModeActive ${_state.value.timerMode}")
+
+            }
+
         }
     }
 
@@ -237,6 +279,15 @@ class CameraViewModel @Inject constructor(
         _capturedMediaUri.update { it.copy(uri = null,type = null) }
         _timeElapsed.update { 0 }
     }
+
+    private fun cancelTimer(){
+        _state.update {it.copy(timerMode = TimerMode.Idle) }
+        pictureTimerJob?.cancel()
+        pictureTimerJob = null
+        _takePictureTimerTimeElapsed.update { 3 }
+        Log.d(TAG, "onEvent: picture timer job cancelled")
+    }
+
 
 
 

@@ -141,7 +141,9 @@ object AppModule {
         return CameraSettingsRepositoryImpl(cameraSettingsDatastore)
     }
 
-    fun providesShutterSoundUseCase(repository : CameraSettingsRepository): CameraSettingsUseCase{
+    @Provides
+    @Singleton
+    fun providesCameraSettingsUseCase(repository : CameraSettingsRepository): CameraSettingsUseCase{
         return CameraSettingsUseCase(repository)
     }
 

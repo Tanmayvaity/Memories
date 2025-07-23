@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -37,8 +41,10 @@ fun UpperBox(
     onTorchToggle: () -> Unit = {},
     onTimerSet: () -> Unit = {},
     onAspectRatioChange: () -> Unit = {},
-    isVideoPlaying : Boolean = false
+    isVideoPlaying: Boolean = false,
+    isPictureTimerRunning : Boolean = false
 ) {
+
 
     Box(
         modifier = modifier
@@ -51,8 +57,7 @@ fun UpperBox(
     ) {
         Column(
             modifier = Modifier
-                .padding(5.dp)
-            ,
+                .padding(5.dp),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -71,20 +76,21 @@ fun UpperBox(
 
             AnimatedVisibility(
                 visible = !isVideoPlaying,
-
-            ){
-                Column(
-
                 ) {
-                    IconItem(
-                        modifier = Modifier.padding(5.dp),
-                        drawableRes = R.drawable.ic_timer,
-                        contentDescription = "Photo capture timer",
-                        alpha = 0.1f,
-                        onClick = {
-                            onTimerSet()
-                        }
-                    )
+                Column{
+                    AnimatedVisibility (visible = !isPictureTimerRunning){
+                        IconItem(
+                            modifier = Modifier.padding(5.dp),
+                            drawableRes = R.drawable.ic_timer,
+                            contentDescription = "Photo capture timer",
+                            alpha = 0.1f,
+                            onClick = {
+                                onTimerSet()
+                            },
+                            onSelectedIconColorToggleColor = Color.Yellow
+                        )
+                    }
+
                     IconItem(
                         modifier = Modifier.padding(5.dp),
                         drawableRes = R.drawable.ic_night_mode,
@@ -96,10 +102,10 @@ fun UpperBox(
                         modifier = Modifier.padding(5.dp),
                         drawableRes = R.drawable.ic_aspect,
                         contentDescription = "Change Aspect Ratio",
-                        alpha = 0.1f
-                    ) {
-                        onAspectRatioChange()
-                    }
+                        alpha = 0.1f,
+                        onClick = {
+                            onAspectRatioChange()
+                        })
                 }
 
             }

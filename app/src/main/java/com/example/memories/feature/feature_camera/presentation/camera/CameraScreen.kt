@@ -3,6 +3,8 @@ package com.example.memories.feature.feature_camera.presentation.camera
 import android.Manifest
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,13 +28,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +50,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -63,6 +73,7 @@ import com.example.memories.core.domain.model.UriType.Companion.mapToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
 import com.example.memories.navigation.AppScreen
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import java.util.Locale
 import java.util.UUID
@@ -73,8 +84,8 @@ private const val TAG = "CameraScreen"
 @Composable
 fun CameraRoute(
     modifier: Modifier = Modifier,
-    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit,
-    onBack : () -> Unit = {}
+    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
+    onBack: () -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -196,26 +207,48 @@ fun CameraScreen(
     state: CameraState,
     onEvent: (CameraEvent) -> Unit = {},
     viewModel: CameraViewModel = hiltViewModel<CameraViewModel>(),
-    onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit,
-    onBack: () -> Unit ={},
-    cameraSettingsState : CameraSettingsState? = null
+    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
+    onBack: () -> Unit = {},
+    cameraSettingsState: CameraSettingsState? = null
 ) {
-    
-    LaunchedEffect(cameraSettingsState) { 
-        if(cameraSettingsState!=null){
+
+    LaunchedEffect(cameraSettingsState) {
+        if (cameraSettingsState != null) {
             Log.d(TAG, "CameraScreen: ${cameraSettingsState.toString()}")
         }
     }
-    
-    
+
+
     val context = LocalContext.current
     val app = context.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
     var showImagePreview by remember { mutableStateOf(false) }
     val mediaUri by viewModel.capturedMediaUri.collectAsStateWithLifecycle()
     val timer by viewModel.timeElapsed.collectAsStateWithLifecycle()
+    var showTimerPopUpMenu by remember { mutableStateOf(false) }
+    var co by remember { mutableStateOf(Offset(0f, 0f)) }
+    val pictureTimer by viewModel.takePictureTimerTimeElapsed.collectAsStateWithLifecycle()
+    var showTimer by remember { mutableStateOf(false) }
 
-    var co by remember { mutableStateOf(Offset(0f,0f)) }
+    DisposableEffect(Unit) {
+        val observer = object : LifecycleEventObserver {
+            override fun onStateChanged(
+                source: LifecycleOwner,
+                event: Lifecycle.Event
+            ) {
+                if (event == Lifecycle.Event.ON_PAUSE) {
+                    Log.d(TAG, "onStateChanged: on Pause called")
+                    onEvent(CameraEvent.CancelTimer)
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
 //    val ratio = if(state.aspectRatio == AspectRatio.RATIO_16_9)
 
@@ -223,18 +256,22 @@ fun CameraScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
 
-        if (uri!=null){
+        if (uri != null) {
             Log.d("CameraScreen", "Camera Screen content uri : ${uri.toString()} ")
             Log.d("CameraScreen", "Camera Screen content uri : ${uri.mapToType()} ")
             val uriWrapper = UriType(
                 uri = uri.toString(),
-                type = if (context.contentResolver.getType(uri)?.startsWith("video") == true) Type.VIDEO else Type.IMAGE
+                type = if (context.contentResolver.getType(uri)
+                        ?.startsWith("video") == true
+                ) Type.VIDEO else Type.IMAGE
             )
             Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
             Log.d(TAG, "CameraScreen: ${uriWrapper.type}")
-            onNavigateToImageEdit(AppScreen.MediaEdit(
-                uriWrapper
-            ))
+            onNavigateToImageEdit(
+                AppScreen.MediaEdit(
+                    uriWrapper
+                )
+            )
         }
 
     }
@@ -246,7 +283,7 @@ fun CameraScreen(
 
     }
     val coordinateTransformer = remember(
-        state.aspectRatio,state.lensFacing
+        state.aspectRatio, state.lensFacing
     ) { MutableCoordinateTransformer() }
 
     var autofocusRequest by remember { mutableStateOf(UUID.randomUUID() to Offset.Unspecified) }
@@ -266,17 +303,16 @@ fun CameraScreen(
 
 //            if (!isUserInteractingWithSlider) {
 //
-            }
         }
+    }
 
 
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
-        ,
-        ) {
+            .background(Color.Black),
+    ) {
         Log.d(TAG, "CameraScreen: permissionStatus = ${permissionStatus} ")
         if (permissionStatus != null && !permissionStatus) {
             Text(
@@ -359,12 +395,18 @@ fun CameraScreen(
             onAspectRatioChange = {
                 onEvent(CameraEvent.ToggleAspectRatio)
             },
-            isVideoPlaying = state.videoState == VideoState.Started
+            onTimerSet = {
+                onEvent(CameraEvent.ToggleTimerMode)
+                showTimerPopUpMenu = true
+            },
+            isVideoPlaying = state.videoState == VideoState.Started,
+            isPictureTimerRunning = state.timerMode == TimerMode.Running,
         )
 
         LowerBox(
             modifier = Modifier
                 .align(Alignment.BottomCenter),
+            isPictureTimerRunning = state.timerMode == TimerMode.Running,
             onToggleCamera = {
                 onEvent(CameraEvent.ChangeLensFacing)
             },
@@ -376,31 +418,43 @@ fun CameraScreen(
                 )
             },
             onClick = {
-                val file = createTempFile(
-                    context
-                )
+//                val file = createTempFile(
+//                    context
+//                )
+//
+//                val videoFile = createVideoFile(
+//                    context
+//                )
+//                Log.d(TAG, "CameraScreen: ${videoFile.path}")
 
-                val videoFile = createVideoFile(
-                    context
-                )
-                Log.d(TAG, "CameraScreen: ${videoFile.path}")
 
-                if(viewModel.state.value.mode == CameraMode.VIDEO && viewModel.state.value.videoState == VideoState.Started){
+                if (viewModel.state.value.timerMode == TimerMode.Started) {
+                    viewModel.onEvent(CameraEvent.Timer)
+                    return@LowerBox
+                }
+
+                if (state.timerMode == TimerMode.Running) {
+                    onEvent(CameraEvent.CancelTimer)
+                    return@LowerBox
+                }
+
+                if (viewModel.state.value.mode == CameraMode.VIDEO && viewModel.state.value.videoState == VideoState.Started) {
                     viewModel.onEvent(CameraEvent.Stop)
                     return@LowerBox
                 }
 
-                if(viewModel.state.value.mode == CameraMode.VIDEO &&
-                    viewModel.state.value.videoState == VideoState.Idle ){
+                if (viewModel.state.value.mode == CameraMode.VIDEO &&
+                    viewModel.state.value.videoState == VideoState.Idle
+                ) {
                     viewModel.onEvent(CameraEvent.Take)
                     return@LowerBox
-                }else{
+                } else {
                     viewModel.onEvent(CameraEvent.Take)
                     return@LowerBox
                 }
             },
             onCameraModeClick = { mode: CameraMode ->
-                when(mode){
+                when (mode) {
                     CameraMode.PHOTO -> {
                         onEvent(CameraEvent.PhotoMode)
                     }
@@ -433,9 +487,9 @@ fun CameraScreen(
 //
 //        }
 
-        if(state.videoState == VideoState.Started){
+        if (state.videoState == VideoState.Started) {
             Text(
-                text = String.format(Locale.ENGLISH,"%02d:%02d", timer/60, timer % 60),
+                text = String.format(Locale.ENGLISH, "%02d:%02d", timer / 60, timer % 60),
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -443,24 +497,52 @@ fun CameraScreen(
                 style = MaterialTheme.typography.titleLarge
             )
         }
+
+
+        LaunchedEffect(state.timerMode) {
+            if (state.timerMode == TimerMode.Running) {
+                showTimer = true
+                return@LaunchedEffect
+            }
+
+            if (state.timerMode == TimerMode.Idle) {
+                showTimer = false
+                return@LaunchedEffect
+            }
+            Log.d(TAG, "CameraScreen: showTimer : ${showTimer}")
+
+        }
+
+        if (showTimer) {
+            Text(
+                text = pictureTimer.toString(),
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(10.dp),
+                fontSize = 128.sp
+            )
+        }
+
+
     }
 
     LaunchedEffect(mediaUri) {
-        if(mediaUri.uri!=null && mediaUri.type == Type.IMAGE){
+        if (mediaUri.uri != null && mediaUri.type == Type.IMAGE) {
             onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
             onEvent(CameraEvent.Reset)
         }
     }
 
     LaunchedEffect(mediaUri) {
-        if(mediaUri.uri!=null && mediaUri.type == Type.VIDEO){
+        if (mediaUri.uri != null && mediaUri.type == Type.VIDEO) {
             onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
             onEvent(CameraEvent.Reset)
         }
     }
 
 
-    LaunchedEffect(lifecycleOwner, state.lensFacing,state.aspectRatio) {
+    LaunchedEffect(lifecycleOwner, state.lensFacing, state.aspectRatio) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             onEvent(CameraEvent.Preview(lifecycleOwner))
         }
@@ -468,34 +550,31 @@ fun CameraScreen(
     }
 
     LaunchedEffect(state.videoState) {
-        if(state.videoState == VideoState.Started){
-            Log.d(TAG,"started")
+        if (state.videoState == VideoState.Started) {
+            Log.d(TAG, "started")
 //            Toast.makeText(context,"Video Started",Toast.LENGTH_SHORT).show()
         }
 
-        if(state.videoState == VideoState.Idle){
-            Log.d(TAG,"idle")
+        if (state.videoState == VideoState.Idle) {
+            Log.d(TAG, "idle")
 //            Toast.makeText(context,"Video idle",Toast.LENGTH_SHORT).show()
         }
 
-        if(state.videoState == VideoState.Stop){
-            Log.d(TAG,"Stop")
+        if (state.videoState == VideoState.Stop) {
+            Log.d(TAG, "Stop")
 //            Toast.makeText(context,"Video Stop",Toast.LENGTH_SHORT).show()
         }
     }
 
-//    BackHandler(
-//        enabled = true
-//    ){
-//        if(state.videoState == VideoState.Started){
-//            onEvent(CameraEvent.Cancel)
-//            return@BackHandler
-//        }
-//
-//        onBack()
-//
-//
-//    }
+    BackHandler(
+        enabled = true
+    ){
+        if(state.timerMode == TimerMode.Running){
+            onEvent(CameraEvent.CancelTimer)
+        }else{
+            onBack()
+        }
+    }
 
 
 
