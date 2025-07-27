@@ -3,6 +3,12 @@ package com.example.memories.di
 import android.content.Context
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.OtherSettingsDatastore
+import com.example.memories.core.data.repository.ThemeRepositoryImpl
+import com.example.memories.core.domain.repository.ThemeRespository
+import com.example.memories.core.domain.usecase.GetThemeUseCase
+import com.example.memories.core.domain.usecase.SetThemeUseCase
+import com.example.memories.core.domain.usecase.ThemeUseCase
 import com.example.memories.feature.feature_other.data.repository.CameraSettingsRepositoryImpl
 import com.example.memories.feature.feature_other.domain.repository.CameraSettingsRepository
 import com.example.memories.feature.feature_other.domain.usecase.CameraSettingsUseCase
@@ -146,6 +152,34 @@ object AppModule {
     fun providesCameraSettingsUseCase(repository : CameraSettingsRepository): CameraSettingsUseCase{
         return CameraSettingsUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    fun providesOtherSettingsDatastore(
+        @ApplicationContext context : Context
+    ): OtherSettingsDatastore{
+        return OtherSettingsDatastore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun providesThemeRepository(
+        otherSettingsDatastore: OtherSettingsDatastore
+    ): ThemeRespository {
+        return ThemeRepositoryImpl(otherSettingsDatastore)
+    }
+
+    @Provides
+    @Singleton
+    fun providesThemeUseCase(repository : ThemeRespository): ThemeUseCase{
+        return ThemeUseCase(
+            getThemeUseCase = GetThemeUseCase(repository),
+            setThemeUseCase = SetThemeUseCase(repository)
+        )
+    }
+
+
+
 
 
 

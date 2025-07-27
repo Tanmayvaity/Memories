@@ -38,10 +38,14 @@ private val customLightScheme = lightColorScheme(
     primary = Color.Black,
     onPrimary = Color.White,
     primaryContainer = Color.White,
+    onPrimaryContainer = Color.Black,
     background = Color.White,
     onBackground = Color.Black,
     surface = Color.White,
-    onSurface = Color.Black
+    onSurface = Color.Black,
+    onSurfaceVariant = Color.Gray,
+    inverseOnSurface = Color.White,
+    inverseSurface = Color.Black
 )
 
 
@@ -50,7 +54,7 @@ fun MemoriesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -67,4 +71,6 @@ fun MemoriesTheme(
         typography = Typography,
         content = content
     )
+
+
 }

@@ -158,7 +158,7 @@ fun MemoryScreen(
         var showDatePicker by remember { mutableStateOf(false) }
 
         val pagerState = rememberPagerState(pageCount = {
-            6
+            1
         })
 
 

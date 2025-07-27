@@ -5,6 +5,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,12 +24,12 @@ fun RationaleDialog(
     title: String = "",
     body: String = "",
     icon: Int? = null,
-    iconColor : Color = Color.Black,
+    iconColor : Color = MaterialTheme.colorScheme.primary,
     iconContentDescription: String = "",
     onDismiss: () -> Unit = {},
     onConfirm: () -> Unit = {},
-    containerColor: Color = Color.White,
-    btnColor: Color = Color.Black
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    btnColor: Color = MaterialTheme.colorScheme.primary
 ) {
     AlertDialog(
         containerColor = containerColor,
@@ -47,12 +48,13 @@ fun RationaleDialog(
         title = {
             Text(
                 text = title,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         },
         text = {
             Text(
                 text = body,
-
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
 
         },

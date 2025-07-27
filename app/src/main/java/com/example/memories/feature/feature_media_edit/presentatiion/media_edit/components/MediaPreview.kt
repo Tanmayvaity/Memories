@@ -195,7 +195,7 @@ fun MediaPreview(
                 Row(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.background)
-//                        .padding(10.dp)
+                        .padding(10.dp)
                     ,
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceAround
@@ -222,7 +222,7 @@ fun MediaPreview(
                     }
                     IconItem(
                         drawableRes = R.drawable.ic_edit,
-                        contentDescription = "",
+                        contentDescription = "Edit Media",
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
