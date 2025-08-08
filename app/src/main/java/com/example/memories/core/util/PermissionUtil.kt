@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 
-private const val TAG = "PermissionUtil"
+
 
 private class PermissionUtil {
 
@@ -23,6 +23,7 @@ private class PermissionUtil {
 
 
     companion object{
+        private const val TAG = "PermissionUtil"
 
         private fun showPermissionState(
             permission: String,

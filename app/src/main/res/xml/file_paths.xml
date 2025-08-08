@@ -11,4 +11,7 @@
     <external-path
         name="permanent_images"
         path="images/"/>
+    <external-path
+        name="permanent_videos"
+        path="videos"/>
 </paths>

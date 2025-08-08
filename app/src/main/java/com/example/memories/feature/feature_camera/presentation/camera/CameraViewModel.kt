@@ -6,11 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 import com.example.memories.feature.feature_camera.domain.usecase.CameraUseCases
-import com.example.memories.core.domain.model.UriType.Companion.mapToType
 import com.example.memories.feature.feature_other.domain.usecase.CameraSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -167,11 +167,11 @@ class CameraViewModel @Inject constructor(
                             Log.e(TAG, "onEvent: error : ${result.error.message} ", )
                         }
                         is Result.Success -> {
-                            val uriType = UriType(
-                                uri = result.data.toString(),
-                                type = result.data.mapToType()
-                            )
-                            _capturedMediaUri.update { uriType }
+//                            val uriType = UriType(
+//                                uri = result.data.toString(),
+//                                type = result.data.mapToType()
+//                            )
+                            _capturedMediaUri.update { result.data!! }
                             Log.d(TAG, "onEvent: success ${_capturedMediaUri.value.uri.toString()}")
                         }
 

@@ -7,10 +7,12 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.example.memories.core.domain.model.Type
 import java.io.File
 import java.net.URLConnection
 import kotlin.text.startsWith
 
+const val TAG = "CoreUtil"
 fun isPermissionGranted(
     context : Context,
     permission: String
@@ -26,27 +28,38 @@ fun isPermissionGranted(
 
 fun createTempFile(
     context: Context,
-    directory : String = "images"
-): File {
-    val imageDirPath = File(context.cacheDir, directory).apply {
-        if (!exists()) {
-            mkdir()
+    directory : String = "images",
+    parent : File = context.cacheDir,
+    prefix : String = "temp_",
+): File? {
+    return try {
+        val imageDirPath = File(parent, directory).apply {
+            if (!exists()) {
+                mkdirs()
+            }
         }
+        val tempImageFile = File.createTempFile(prefix, ".jpg", imageDirPath)
+        Log.d(TAG, "createTempFile: $tempImageFile")
+        tempImageFile
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to create temp file", e)
+        null
     }
-    val tempImageFile = File.createTempFile("temp_", ".jpg", imageDirPath)
-    return tempImageFile
 }
 
 fun createVideoFile(
     context: Context,
-    directory : String = "videos"
+    directory : String = "videos",
+    parent : File = context.cacheDir,
+    prefix : String = "temp_",
+
 ): File {
-    val imageDirPath = File(context.cacheDir, directory).apply {
+    val imageDirPath = File(parent, directory).apply {
         if (!exists()) {
             mkdir()
         }
     }
-    val tempImageFile = File.createTempFile("temp_", ".mp4", imageDirPath)
+    val tempImageFile = File.createTempFile(prefix, ".mp4", imageDirPath)
     return tempImageFile
 }
 
@@ -73,4 +86,26 @@ fun isVideoFile(path: String?): Boolean {
 fun isImageFile(path: String?): Boolean {
     val mimeType = URLConnection.guessContentTypeFromName(path)
     return mimeType != null && mimeType.startsWith("image")
+}
+
+fun Uri?.mapToType(): Type{
+    if(this == null) {
+        throw NullPointerException("Uri is null")
+    }
+
+    return if(isVideoFile(this.toString())){
+        Type.VIDEO
+    }else{
+        Type.IMAGE
+    }
+}
+
+fun Uri?.mapContentUriToType(context : Context): Type {
+    if(this == null) {
+        throw NullPointerException("Uri is null")
+    }
+
+    return if (context.contentResolver.getType(this)
+            ?.startsWith("video") == true
+    ) Type.VIDEO else Type.IMAGE
 }

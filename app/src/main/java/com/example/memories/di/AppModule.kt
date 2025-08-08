@@ -1,9 +1,14 @@
 package com.example.memories.di
 
 import android.content.Context
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
+import com.example.memories.core.data.data_source.room.dao.MediaDao
+import com.example.memories.core.data.data_source.room.dao.MemoryDao
+import com.example.memories.core.data.data_source.room.database.MemoryDatabase
 import com.example.memories.core.data.repository.ThemeRepositoryImpl
 import com.example.memories.core.domain.repository.ThemeRespository
 import com.example.memories.core.domain.usecase.GetThemeUseCase
@@ -44,6 +49,10 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWi
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
+import com.example.memories.feature.feature_memory.data.repository.MemoryRepositoryImpl
+import com.example.memories.feature.feature_memory.domain.repository.MemoryRepository
+import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
+import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,7 +68,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCameraManager(
-        @ApplicationContext context : Context
+        @ApplicationContext context: Context
     ) = CameraManager(context)
 
     @Provides
@@ -67,13 +76,13 @@ object AppModule {
     fun provideCameraRepository(
         cameraManager: CameraManager,
         cameraSettingsDatastore: CameraSettingsDatastore
-    ) : CameraRepository {
-        return CameraRepositoryImpl(cameraManager,cameraSettingsDatastore)
+    ): CameraRepository {
+        return CameraRepositoryImpl(cameraManager, cameraSettingsDatastore)
     }
 
     @Provides
     @Singleton
-    fun provideUseCase(repository: CameraRepository) : CameraUseCases{
+    fun provideUseCase(repository: CameraRepository): CameraUseCases {
         return CameraUseCases(
             SetSurfaceCallbackUseCase(repository),
             BindToCameraUseCase(repository),
@@ -93,19 +102,19 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMediaManager(
-        @ApplicationContext context : Context
+        @ApplicationContext context: Context
     ) = MediaManager(context)
 
     @Provides
     @Singleton
-    fun provideMediaRepository(mediaManager : MediaManager) : MediaRepository{
+    fun provideMediaRepository(mediaManager: MediaManager): MediaRepository {
         return MediaRepositoryImpl(mediaManager)
     }
 
-   
+
     @Provides
     @Singleton
-    fun provideMediaUseCase(repository: MediaRepository): MediaUseCases{
+    fun provideMediaUseCase(repository: MediaRepository): MediaUseCases {
         return MediaUseCases(
             uriToBitmapUseCase = UriToBitmapUseCase(repository),
             downloadWithBitmap = DownloadWithBitmap(repository),
@@ -116,13 +125,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaFeedRepository(mediaManager: MediaManager): MediaFeedRepository{
+    fun provideMediaFeedRepository(mediaManager: MediaManager): MediaFeedRepository {
         return MediaFeedRepositoryImpl(mediaManager)
     }
 
     @Provides
     @Singleton
-    fun provideFeedMediaUseCase(repository: MediaFeedRepository): FeedUseCases{
+    fun provideFeedMediaUseCase(repository: MediaFeedRepository): FeedUseCases {
         return FeedUseCases(
             fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository),
             deleteMediaUseCase = DeleteMediaUseCase(repository),
@@ -136,28 +145,28 @@ object AppModule {
     @Provides
     @Singleton
     fun providesCameraSettingsDatastore(
-        @ApplicationContext context : Context
-    ): CameraSettingsDatastore{
+        @ApplicationContext context: Context
+    ): CameraSettingsDatastore {
         return CameraSettingsDatastore(context)
     }
 
     @Provides
     @Singleton
-    fun provideCameraSettingsRepository(cameraSettingsDatastore: CameraSettingsDatastore) : CameraSettingsRepository{
+    fun provideCameraSettingsRepository(cameraSettingsDatastore: CameraSettingsDatastore): CameraSettingsRepository {
         return CameraSettingsRepositoryImpl(cameraSettingsDatastore)
     }
 
     @Provides
     @Singleton
-    fun providesCameraSettingsUseCase(repository : CameraSettingsRepository): CameraSettingsUseCase{
+    fun providesCameraSettingsUseCase(repository: CameraSettingsRepository): CameraSettingsUseCase {
         return CameraSettingsUseCase(repository)
     }
 
     @Provides
     @Singleton
     fun providesOtherSettingsDatastore(
-        @ApplicationContext context : Context
-    ): OtherSettingsDatastore{
+        @ApplicationContext context: Context
+    ): OtherSettingsDatastore {
         return OtherSettingsDatastore(context)
     }
 
@@ -171,16 +180,60 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesThemeUseCase(repository : ThemeRespository): ThemeUseCase{
+    fun providesThemeUseCase(repository: ThemeRespository): ThemeUseCase {
         return ThemeUseCase(
             getThemeUseCase = GetThemeUseCase(repository),
             setThemeUseCase = SetThemeUseCase(repository)
         )
     }
 
+    @Provides
+    @Singleton
+    fun providesMemoryDatabase(
+        @ApplicationContext context: Context
+    ): MemoryDatabase {
+        return Room.databaseBuilder(
+            context,
+            MemoryDatabase::class.java,
+            "memory-db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesMemoryDao(
+        database: MemoryDatabase
+    ): MemoryDao = database.memoryDao
 
 
+    @Provides
+    @Singleton
+    fun providesMediaDao(
+        database: MemoryDatabase
+    ): MediaDao = database.mediaDao
+
+    @Provides
+    @Singleton
+    fun providesMemoryRepository(
+         mediaManager : MediaManager,
+         mediaDao: MediaDao,
+         memoryDao: MemoryDao
+    ): MemoryRepository {
+        return MemoryRepositoryImpl(
+            mediaManager = mediaManager,
+            mediaDao = mediaDao,
+            memoryDao = memoryDao
+        )
+    }
 
 
-
+    @Provides
+    @Singleton
+    fun providesMemoryUseCase(
+        memoryRepository: MemoryRepository
+    ): MemoryUseCase{
+        return MemoryUseCase(
+            createMemoryUseCase = MemoryCreateUseCase(memoryRepository)
+        )
+    }
 }

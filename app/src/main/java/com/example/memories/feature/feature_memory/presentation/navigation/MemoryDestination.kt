@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.feature.feature_memory.presentation.MemoryRoot
 import com.example.memories.feature.feature_memory.presentation.MemoryScreen
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.CustomNavType
@@ -25,11 +26,11 @@ fun NavGraphBuilder.createMemoryGraph(
         val args = it.toRoute<AppScreen.Memory>()
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
-        MemoryScreen(
+        MemoryRoot(
             onBackPress = {
                 navController.popBackStack()
             },
-            onCreateClick = { route ->
+            onGoToHomeScreen = {route ->
                 navController.navigate(route){
                     popUpTo(navController.graph.startDestinationId){
                         inclusive = false
@@ -38,7 +39,6 @@ fun NavGraphBuilder.createMemoryGraph(
                 }
             },
             uriType = args.uriTypeWrapper
-
         )
     }
 }

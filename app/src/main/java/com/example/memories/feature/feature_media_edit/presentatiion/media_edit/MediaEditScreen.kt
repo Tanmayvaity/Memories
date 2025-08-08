@@ -25,7 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.domain.model.UriType.Companion.mapToType
+import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.EditModalBottomSheet
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.MediaPreview
 import com.example.memories.navigation.AppScreen

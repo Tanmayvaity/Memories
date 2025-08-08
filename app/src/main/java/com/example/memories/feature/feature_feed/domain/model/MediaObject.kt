@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.example.memories.core.domain.model.Type
-import com.example.memories.core.domain.model.UriType.Companion.mapToType
+import com.example.memories.core.util.mapToType
 
 @Immutable
 data class MediaObject(

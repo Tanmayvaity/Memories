@@ -69,7 +69,8 @@ import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
-import com.example.memories.core.domain.model.UriType.Companion.mapToType
+import com.example.memories.core.util.mapContentUriToType
+import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
 import com.example.memories.navigation.AppScreen
@@ -139,7 +140,7 @@ fun CameraRoute(
             showCameraScreen = false
         },
         onRequest = { permission ->
-            cameraRequestLauncher.launch(
+            audioRequestLauncher.launch(
                 Manifest.permission.RECORD_AUDIO
             )
         },
@@ -177,6 +178,7 @@ fun CameraRoute(
             },
             onDismiss = {
                 showAudioRationale = false
+                onBack()
             }
         )
     }
@@ -257,13 +259,10 @@ fun CameraScreen(
     ) { uri ->
 
         if (uri != null) {
-            Log.d("CameraScreen", "Camera Screen content uri : ${uri.toString()} ")
-            Log.d("CameraScreen", "Camera Screen content uri : ${uri.mapToType()} ")
+
             val uriWrapper = UriType(
                 uri = uri.toString(),
-                type = if (context.contentResolver.getType(uri)
-                        ?.startsWith("video") == true
-                ) Type.VIDEO else Type.IMAGE
+                type = uri.mapContentUriToType(context)
             )
             Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
             Log.d(TAG, "CameraScreen: ${uriWrapper.type}")

@@ -20,6 +20,7 @@ haze = "1.6.8"
 paging = "3.3.6"
 paging-compose = "3.4.0-alpha01"
 datastore = "1.1.7"
+room = "2.7.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,7 +62,10 @@ dev-haze-materials = {module = "dev.chrisbanes.haze:haze-materials-android",vers
 androidx-paging-runtime = {module ="androidx.paging:paging-runtime",version.ref = "paging"}
 androidx-paging-compose = {module ="androidx.paging:paging-compose",version.ref = "paging-compose"}
 androidx-datastore-preferences = {module = "androidx.datastore:datastore-preferences",version.ref = "datastore"}
-
+androidx-room-runtime = {module = "androidx.room:room-runtime",version.ref = "room"}
+androidx-room-compiler = {module = "androidx.room:room-compiler",version.ref = "room"}
+androidx-room-ktx = {module = "androidx.room:room-ktx",version.ref = "room"}
+androidx-room-paging = {module = "androidx.room:room-paging",version.ref = "room"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

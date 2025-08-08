@@ -1,5 +1,6 @@
 package com.example.memories.core.data.data_source
 
+import android.R.attr.type
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -10,13 +11,18 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
+import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_feed.domain.model.MediaObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -24,6 +30,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.log
 
 class MediaManager(
     val context: Context
@@ -53,7 +60,10 @@ class MediaManager(
                     }
 
                 }
-                internalFiles.add(file)
+                if(file!=null){
+                    internalFiles.add(file)
+                }
+
             }
         } catch (e: Exception) {
             Log.e(TAG, "sharedUriToInternalUri: ${e.message}")
@@ -61,6 +71,61 @@ class MediaManager(
         }
         return@withContext internalFiles
     }
+
+    // takes list of uri in cache directory and copies them to external storage
+    suspend fun saveToInternalStorage(uriList : List<Uri>): Result<List<Uri>> =
+        withContext(Dispatchers.IO){
+            val resultUriList = mutableListOf<Uri>()
+            val resolver = context.contentResolver
+            try {
+                Log.d(TAG, "saveToInternalStorage: ${uriList == null}")
+                uriList.forEach { uri ->
+                    Log.d(TAG, "saveToInternalStorage: ${uri} ${type}")
+                    val type = uri.mapToType()
+                    val file = if(type  == Type.IMAGE){
+                        createTempFile(
+                            context,
+                            "images",
+                            context.getExternalFilesDir(null)!!,
+                            "IMG_"
+                        )
+                    }else{
+                        createVideoFile(
+                            context,
+                            "videos",
+                            context.getExternalFilesDir(null)!!,
+                            "VID_"
+                        )
+                    }
+                    Log.d(TAG, "saveToInternalStorage: file : ${file!!.path}")
+
+                    resolver.openInputStream(uri)?.use {input ->
+                        FileOutputStream(file)?.use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    file?.let{
+//                        val uriType = UriType(
+//                            uri = file.toUri().toString(),
+//                            type = type
+//                        )
+                        resultUriList.add(file.toUri())
+                        Log.d(TAG, "saveToInternalStorage: ${uri.path}")
+                        Log.i(TAG, "uri saved successfully")
+                    }
+                    
+
+
+                }
+            }catch (e : Exception){
+                e.printStackTrace()
+                Log.e(TAG, "saveToInternalStorage: ${e.message}", )
+                return@withContext Result.Error(e)
+            }
+
+            return@withContext Result.Success(resultUriList)
+        }
+
 
 
     suspend fun uriToBitmap(
