@@ -3,9 +3,9 @@ package com.example.memories.feature.feature_feed.presentation.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.memories.feature.feature_feed.presentation.FeedScreen
-import com.example.memories.feature.feature_feed.presentation.SearchScreen
-import com.example.memories.feature.feature_feed.presentation.SharedRoute
+import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
+import com.example.memories.feature.feature_feed.presentation.search.SearchScreen
+import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 
@@ -17,9 +17,7 @@ fun NavGraphBuilder.createFeedGraph(
     composable<TopLevelScreen.Feed> {
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(true)
-        FeedScreen(
-
-        )
+        FeedRoot()
     }
     composable<TopLevelScreen.Search> {
         onFloatingActionBtnVisibilityChange(false)

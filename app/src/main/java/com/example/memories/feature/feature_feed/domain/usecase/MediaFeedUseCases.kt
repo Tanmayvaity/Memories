@@ -1,6 +1,6 @@
-package com.example.memories.feature.feature_feed.domain.usecaase
+package com.example.memories.feature.feature_feed.domain.usecase
 
-data class FeedUseCases (
+data class MediaFeedUseCases (
     val fetchMediaFromSharedUseCase: FetchMediaFromSharedUseCase,
     val deleteMediaUseCase: DeleteMediaUseCase,
     val deleteMediasUseCase: DeleteMediasUseCase,

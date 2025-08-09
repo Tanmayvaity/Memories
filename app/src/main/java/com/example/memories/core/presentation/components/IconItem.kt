@@ -1,4 +1,4 @@
-package com.example.memories.core.presentation
+package com.example.memories.core.presentation.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background

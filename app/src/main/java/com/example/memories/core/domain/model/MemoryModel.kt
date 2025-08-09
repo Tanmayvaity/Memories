@@ -10,3 +10,9 @@ data class MemoryModel(
     val favourite : Boolean = false,
     val timeStamp : Long = System.currentTimeMillis()
 )
+
+
+data class MemoryWithMediaModel(
+    val memory : MemoryModel = MemoryModel(title = "Just A Title", content = "Content about a title"),
+    val mediaList : List<MediaModel> = emptyList()
+)

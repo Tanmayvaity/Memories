@@ -2,7 +2,6 @@ package com.example.memories.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
@@ -33,15 +32,19 @@ import com.example.memories.feature.feature_camera.domain.usecase.TakeMediaUseCa
 import com.example.memories.feature.feature_camera.domain.usecase.TapToFocusUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
+import com.example.memories.feature.feature_feed.data.repository.FeedRepositoryImpl
 import com.example.memories.feature.feature_feed.data.repository.MediaFeedRepositoryImpl
+import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
-import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediaUseCase
-import com.example.memories.feature.feature_feed.domain.usecaase.DeleteMediasUseCase
-import com.example.memories.feature.feature_feed.domain.usecaase.FeedUseCases
-import com.example.memories.feature.feature_feed.domain.usecaase.FetchMediaFromSharedUseCase
-import com.example.memories.feature.feature_feed.domain.usecaase.GetMediaThumbnailUseCase
-import com.example.memories.feature.feature_feed.domain.usecaase.ObserveMediaChangesUseCase
-import com.example.memories.feature.feature_feed.domain.usecaase.SharedUriToInternalUriUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediasUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.FeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.MediaFeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.FetchMediaFromSharedUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.GetFeedUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.GetMediaThumbnailUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.ObserveMediaChangesUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
@@ -131,8 +134,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFeedMediaUseCase(repository: MediaFeedRepository): FeedUseCases {
-        return FeedUseCases(
+    fun provideFeedMediaUseCase(repository: MediaFeedRepository): MediaFeedUseCases {
+        return MediaFeedUseCases(
             fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository),
             deleteMediaUseCase = DeleteMediaUseCase(repository),
             deleteMediasUseCase = DeleteMediasUseCase(repository),
@@ -226,7 +229,6 @@ object AppModule {
         )
     }
 
-
     @Provides
     @Singleton
     fun providesMemoryUseCase(
@@ -235,5 +237,24 @@ object AppModule {
         return MemoryUseCase(
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository)
         )
+    }
+
+    @Provides
+    @Singleton
+    fun providesFeedRepository(
+        memoryDao: MemoryDao
+    ): FeedRepository{
+        return FeedRepositoryImpl(memoryDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providesFeedUseCases(
+        repository : FeedRepository
+    ): FeedUseCases{
+        return FeedUseCases(
+            getFeedUseCase = GetFeedUseCase(repository)
+        )
+
     }
 }

@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_feed.domain.usecaase
+package com.example.memories.feature.feature_feed.domain.usecase
 
 import androidx.paging.PagingData
 import com.example.memories.feature.feature_feed.domain.model.MediaObject

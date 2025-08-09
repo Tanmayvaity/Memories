@@ -10,7 +10,7 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.MediaObject
-import com.example.memories.feature.feature_feed.domain.usecaase.FeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.MediaFeedUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedScreenViewModel @Inject constructor(
-    val feedUseCases: FeedUseCases
+    val feedUseCases: MediaFeedUseCases
 ) : ViewModel() {
 
     companion object{
@@ -49,32 +49,32 @@ class SharedScreenViewModel @Inject constructor(
 
 
     init {
-        onEvent(FeedEvent.Feed)
+        onEvent(MediaFeedEvent.Feed)
     }
 
-    fun onEvent(event: FeedEvent) {
+    fun onEvent(event: MediaFeedEvent) {
         when (event) {
 
-            is FeedEvent.ObserveMediaChanges->{
+            is MediaFeedEvent.ObserveMediaChanges->{
                 viewModelScope.launch {
                     feedUseCases.observeMediaChangesUseCase()
                         .onStart { emit(Unit) }
                         .collectLatest {it ->
                             Log.d(TAG, "onEvent: ${it}")
-                            onEvent(FeedEvent.Feed)
+                            onEvent(MediaFeedEvent.Feed)
                         }
                 }
             }
 
 
-            is FeedEvent.Feed -> {
+            is MediaFeedEvent.Feed -> {
                 viewModelScope.launch {
                     fetch()
                 }
             }
 
 
-            is FeedEvent.Delete -> {
+            is MediaFeedEvent.Delete -> {
                 viewModelScope.launch {
                     feedUseCases.deleteMediaUseCase(event.uri)
 //                    _mediaState.update {
@@ -84,7 +84,7 @@ class SharedScreenViewModel @Inject constructor(
                 }
             }
 
-            is FeedEvent.DeleteMultiple ->{
+            is MediaFeedEvent.DeleteMultiple ->{
                 val selectedList = _selectedMediaUri.value.toSet()
 //                _mediaState.update {
 //                    mediaState.value.copy(data = mediaState.value.data.filterNot {it.uri in selectedList })
@@ -95,24 +95,24 @@ class SharedScreenViewModel @Inject constructor(
 
             }
 
-            is FeedEvent.MediaSelect -> {
+            is MediaFeedEvent.MediaSelect -> {
                 _selectedMediaUri.update {
                     _selectedMediaUri.value + event.uri
                 }
             }
 
-            is FeedEvent.MediaUnSelect -> {
+            is MediaFeedEvent.MediaUnSelect -> {
                 _selectedMediaUri.update {
                     _selectedMediaUri.value - event.uri
                 }
             }
-            is FeedEvent.MediaSelectedEmpty ->{
+            is MediaFeedEvent.MediaSelectedEmpty ->{
                 _selectedMediaUri.update {
                     emptyList<Uri>()
                 }
             }
 
-            is FeedEvent.Share -> {
+            is MediaFeedEvent.Share -> {
                 viewModelScope.launch {
                     val list = feedUseCases.sharedUriToInternalUriUseCase(listOf<Uri>(_selectedMediaUri.value.last()))
 
@@ -122,7 +122,7 @@ class SharedScreenViewModel @Inject constructor(
                 }
             }
 
-            is FeedEvent.ShareMultiple->{
+            is MediaFeedEvent.ShareMultiple->{
                 viewModelScope.launch {
                     val list = feedUseCases.sharedUriToInternalUriUseCase(_selectedMediaUri.value)
 
@@ -132,7 +132,7 @@ class SharedScreenViewModel @Inject constructor(
                 }
             }
 
-            is FeedEvent.FetchThumbnail ->{
+            is MediaFeedEvent.FetchThumbnail ->{
                 viewModelScope.launch {
                     val result = feedUseCases.getMediaThumbnailUseCase(event.uri,event.size)
                     when(result){

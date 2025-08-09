@@ -23,7 +23,8 @@ import com.example.memories.ui.theme.MemoriesTheme
 @Composable
 fun ImageContainer(
     modifier: Modifier = Modifier,
-    uri: Uri? = null
+    uri: Uri? = null,
+    size : Int = 125
 ) {
     Box(
         modifier = modifier
@@ -39,7 +40,7 @@ fun ImageContainer(
             contentDescription = "",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(125.dp)
+                .size(size.dp)
                 .clip(RoundedCornerShape(8.dp))
         )
 

@@ -52,7 +52,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.example.memories.R
-import com.example.memories.core.presentation.IconItem
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 

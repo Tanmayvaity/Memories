@@ -10,6 +10,9 @@ import androidx.core.content.ContextCompat
 import com.example.memories.core.domain.model.Type
 import java.io.File
 import java.net.URLConnection
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.text.startsWith
 
 const val TAG = "CoreUtil"
@@ -109,3 +112,10 @@ fun Uri?.mapContentUriToType(context : Context): Type {
             ?.startsWith("video") == true
     ) Type.VIDEO else Type.IMAGE
 }
+
+fun Long.formatTime():String{
+    val date = Date(this)
+    val format = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    return format.format(date)
+}
+

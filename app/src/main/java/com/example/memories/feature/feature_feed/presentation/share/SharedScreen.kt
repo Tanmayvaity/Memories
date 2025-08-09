@@ -1,23 +1,13 @@
-package com.example.memories.feature.feature_feed.presentation
+package com.example.memories.feature.feature_feed.presentation.share
 
 import android.Manifest
-import android.R.attr.bitmap
-import android.R.attr.bottom
-import android.R.attr.checked
-import android.R.attr.contentDescription
-import android.R.attr.onClick
-import android.R.attr.strokeWidth
-import android.R.attr.text
-import android.R.string.no
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
-import android.os.Parcelable
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -26,14 +16,8 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,25 +25,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -79,7 +54,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -87,10 +61,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -101,7 +72,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -109,22 +79,16 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import coil3.Uri
 import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter.State.Empty.painter
-import coil3.request.ImageRequest
-import coil3.request.ImageResult
-import coil3.request.crossfade
-import coil3.size.Size
 import com.example.memories.R
-import com.example.memories.core.presentation.IconItem
-import com.example.memories.core.presentation.RationaleDialog
+import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.RationaleDialog
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.isPermissionGranted
-import kotlinx.coroutines.launch
+import com.example.memories.feature.feature_feed.presentation.MediaFeedEvent
+import com.example.memories.feature.feature_feed.presentation.SharedScreenViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -244,7 +208,7 @@ fun SharedScreen(
 
     val mediaItems by viewModel.selectedMediaUri.collectAsStateWithLifecycle()
     val internalCacheFileList by viewModel.internalFileList.collectAsStateWithLifecycle()
-    var selectedImage by rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
+    var selectedImage by rememberSaveable { mutableStateOf<Uri?>(null) }
     var showImage by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val pagingResponse = viewModel.pagingState.collectAsLazyPagingItems()
@@ -255,8 +219,8 @@ fun SharedScreen(
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             Log.d(TAG, "SharedScreen: images deleted successfully")
-            viewModel.onEvent(FeedEvent.DeleteMultiple)
-            viewModel.onEvent(FeedEvent.MediaSelectedEmpty)
+            viewModel.onEvent(MediaFeedEvent.DeleteMultiple)
+            viewModel.onEvent(MediaFeedEvent.MediaSelectedEmpty)
             showCheckBox = false
         } else {
             Log.d(TAG, "SharedScreen: not ok")
@@ -368,7 +332,7 @@ fun SharedScreen(
                                         .show()
                                     return@IconButton
                                 }
-                                viewModel.onEvent(FeedEvent.ShareMultiple)
+                                viewModel.onEvent(MediaFeedEvent.ShareMultiple)
 
                             }
                         ) {
@@ -455,11 +419,11 @@ fun SharedScreen(
 
                                         if (showCheckBox && !showImage) {
                                             if (mediaItems.contains(mediaUri)) {
-                                                viewModel.onEvent(FeedEvent.MediaUnSelect(mediaUri))
+                                                viewModel.onEvent(MediaFeedEvent.MediaUnSelect(mediaUri))
                                                 noOfItemsSelected--
 
                                             } else {
-                                                viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
+                                                viewModel.onEvent(MediaFeedEvent.MediaSelect(mediaUri))
                                                 noOfItemsSelected++
                                             }
 
@@ -472,7 +436,7 @@ fun SharedScreen(
                                         }
 
                                         showCheckBox = true
-                                        viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
+                                        viewModel.onEvent(MediaFeedEvent.MediaSelect(mediaUri))
                                         noOfItemsSelected++
                                     }
                                 )
@@ -534,11 +498,11 @@ fun SharedScreen(
                                     checked = it
                                     Log.d(TAG, "onCheckedChange : ${it}")
                                     if (it) {
-                                        viewModel.onEvent(FeedEvent.MediaSelect(mediaUri))
+                                        viewModel.onEvent(MediaFeedEvent.MediaSelect(mediaUri))
                                         noOfItemsSelected++
                                     }
                                     if (!it) {
-                                        viewModel.onEvent(FeedEvent.MediaUnSelect(mediaUri))
+                                        viewModel.onEvent(MediaFeedEvent.MediaUnSelect(mediaUri))
                                         noOfItemsSelected--
                                     }
                                 },
@@ -641,14 +605,14 @@ fun SharedScreen(
         if (showCheckBox) {
             showCheckBox = false
             noOfItemsSelected = 0
-            viewModel.onEvent(FeedEvent.MediaSelectedEmpty)
+            viewModel.onEvent(MediaFeedEvent.MediaSelectedEmpty)
             return@BackHandler
         }
 
     }
 
     LaunchedEffect(internalCacheFileList) {
-        val list = arrayListOf<android.net.Uri>()
+        val list = arrayListOf<Uri>()
         if (internalCacheFileList.isNotEmpty()) {
             internalCacheFileList.forEach { file ->
 
@@ -666,9 +630,9 @@ fun SharedScreen(
 
 
             val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND_MULTIPLE
+                setAction(Intent.ACTION_SEND_MULTIPLE)
                 putParcelableArrayListExtra(Intent.EXTRA_STREAM, list)
-                type = "image/*"
+                setType("image/*")
 
             }
 

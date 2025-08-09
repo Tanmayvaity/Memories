@@ -4,7 +4,6 @@ import android.Manifest
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,7 +26,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +47,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -61,20 +56,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.memories.R
 import com.example.memories.core.domain.model.CameraSettingsState
-import com.example.memories.core.presentation.RationaleDialog
+import com.example.memories.core.presentation.components.RationaleDialog
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.createSettingsIntent
-import com.example.memories.core.util.createTempFile
-import com.example.memories.core.util.createVideoFile
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import com.example.memories.core.util.mapContentUriToType
-import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
 import com.example.memories.navigation.AppScreen
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import java.util.Locale
 import java.util.UUID
