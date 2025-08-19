@@ -339,28 +339,6 @@ class MediaManager(
     }
 
 
-    suspend fun observeMediaChanges() = callbackFlow {
-        val callback = object : ContentObserver(null) {
-            override fun onChange(selfChange: Boolean, uri: Uri?) {
-                super.onChange(selfChange, uri)
-                trySend(Unit)
-            }
-
-        }
-
-        context.contentResolver.registerContentObserver(
-            getCollection(),
-            true,
-            callback
-        )
-
-        awaitClose {
-            context.contentResolver.unregisterContentObserver(callback)
-
-        }
-
-    }
-
 
     suspend fun deleteMedia(
         uri: Uri

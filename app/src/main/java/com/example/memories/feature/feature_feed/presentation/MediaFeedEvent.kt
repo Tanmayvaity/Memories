@@ -13,7 +13,6 @@ sealed class MediaFeedEvent{
 
     object Share : MediaFeedEvent()
     object ShareMultiple : MediaFeedEvent()
-    object ObserveMediaChanges:MediaFeedEvent()
 
     data class FetchThumbnail(val uri: Uri, val size : Size): MediaFeedEvent()
 }

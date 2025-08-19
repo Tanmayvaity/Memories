@@ -5,6 +5,5 @@ data class MediaFeedUseCases (
     val deleteMediaUseCase: DeleteMediaUseCase,
     val deleteMediasUseCase: DeleteMediasUseCase,
     val sharedUriToInternalUriUseCase: SharedUriToInternalUriUseCase,
-    val observeMediaChangesUseCase: ObserveMediaChangesUseCase,
     val getMediaThumbnailUseCase: GetMediaThumbnailUseCase
 )

@@ -20,7 +20,6 @@ interface MediaFeedRepository {
         uriList : List<Uri>
     ): List<File>
 
-    suspend fun observeChanges() : Flow<Unit>
 
     suspend fun getMediaThumbnail(uri : Uri,size: Size) : Result<Bitmap>
 }

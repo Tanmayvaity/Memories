@@ -38,13 +38,14 @@ import com.example.memories.feature.feature_feed.domain.repository.FeedRepositor
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediasUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.FeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCases
 import com.example.memories.feature.feature_feed.domain.usecase.MediaFeedUseCases
 import com.example.memories.feature.feature_feed.domain.usecase.FetchMediaFromSharedUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.GetFeedUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.GetMediaThumbnailUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.ObserveMediaChangesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.SharedUriToInternalUriUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
@@ -140,7 +141,6 @@ object AppModule {
             deleteMediaUseCase = DeleteMediaUseCase(repository),
             deleteMediasUseCase = DeleteMediasUseCase(repository),
             sharedUriToInternalUriUseCase = SharedUriToInternalUriUseCase(repository),
-            observeMediaChangesUseCase = ObserveMediaChangesUseCase(repository),
             getMediaThumbnailUseCase = GetMediaThumbnailUseCase(repository)
         )
     }
@@ -253,7 +253,9 @@ object AppModule {
         repository : FeedRepository
     ): FeedUseCases{
         return FeedUseCases(
-            getFeedUseCase = GetFeedUseCase(repository)
+            getFeedUseCase = GetFeedUseCase(repository),
+            toggleFavouriteUseCase = ToggleFavouriteUseCase(repository),
+            toggleHiddenUseCase = ToggleHiddenUseCase(repository)
         )
 
     }

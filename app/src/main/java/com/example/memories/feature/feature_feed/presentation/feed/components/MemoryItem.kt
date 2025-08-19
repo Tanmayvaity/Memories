@@ -1,8 +1,10 @@
 package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import android.R
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,17 +37,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.toUri
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.presentation.components.ImageContainer
 import com.example.memories.ui.theme.MemoriesTheme
-import kotlin.math.exp
+
+
 
 @Composable
 fun MemoryItem(
     modifier: Modifier = Modifier,
     memoryItem: MemoryWithMediaModel = MemoryWithMediaModel(),
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onOverflowButtonClick : ()-> Unit = {},
+    onFavouriteButtonClick : () -> Unit = {}
 ) {
     val imageUri = memoryItem.mediaList.firstOrNull()?.uri
     var showMenu by remember { mutableStateOf(false) }
@@ -62,14 +68,38 @@ fun MemoryItem(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ImageContainer(
-                uri = imageUri?.toUri(),
-                size = 75
-            )
+            Box{
+                ImageContainer(
+                    uri = imageUri?.toUri(),
+                    size = 75
+                )
+                IconButton(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    onClick = {
+                        onFavouriteButtonClick()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if(memoryItem.memory.favourite){
+                                com.example.memories.R.drawable.ic_favourite_filled
+                            }else{
+                                com.example.memories.R.drawable.ic_favourite
+                            }
+
+                        ),
+                        contentDescription = "Favourite icon",
+                        tint = MaterialTheme.colorScheme.inverseOnSurface
+                    )
+                }
+            }
+
+
             Column(
                 modifier = Modifier
                     .padding(start = 5.dp)
-                    .weight(1f)
+                    .weight(1f),
+
             ) {
 
                 Text(
@@ -97,7 +127,7 @@ fun MemoryItem(
             IconButton(
                 modifier = Modifier.align(Alignment.Top),
                 onClick = {
-                    showMenu = !showMenu
+                    onOverflowButtonClick()
                 }
 
             ) {

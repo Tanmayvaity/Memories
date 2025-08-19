@@ -55,16 +55,7 @@ class SharedScreenViewModel @Inject constructor(
     fun onEvent(event: MediaFeedEvent) {
         when (event) {
 
-            is MediaFeedEvent.ObserveMediaChanges->{
-                viewModelScope.launch {
-                    feedUseCases.observeMediaChangesUseCase()
-                        .onStart { emit(Unit) }
-                        .collectLatest {it ->
-                            Log.d(TAG, "onEvent: ${it}")
-                            onEvent(MediaFeedEvent.Feed)
-                        }
-                }
-            }
+
 
 
             is MediaFeedEvent.Feed -> {

@@ -40,9 +40,6 @@ class MediaFeedRepositoryImpl @Inject constructor(
         return mediaManager.sharedUriToInternalUri(uriList)
     }
 
-    override suspend  fun observeChanges(): Flow<Unit> {
-        return mediaManager.observeMediaChanges()
-    }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun getMediaThumbnail(

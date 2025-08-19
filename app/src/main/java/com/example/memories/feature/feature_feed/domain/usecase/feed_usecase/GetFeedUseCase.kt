@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_feed.domain.usecase
+package com.example.memories.feature.feature_feed.domain.usecase.feed_usecase
 
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
