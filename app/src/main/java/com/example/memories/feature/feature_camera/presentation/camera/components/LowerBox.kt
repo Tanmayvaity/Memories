@@ -50,7 +50,6 @@ import com.example.memories.feature.feature_camera.domain.model.CameraMode
 fun LowerBox(
     modifier: Modifier = Modifier,
     onToggleCamera: () -> Unit = {},
-    onChooseFromGallery: () -> Unit = {},
     onClick: () -> Unit = {},
     onCameraModeClick: (CameraMode) -> Unit = {},
     cameraMode: CameraMode = CameraMode.PHOTO,
@@ -76,79 +75,82 @@ fun LowerBox(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            // Take Picture layer
-            Row(
+
+
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AnimatedVisibility(
-                    visible = !isPictureTimerRunning
-                ) {
-                    IconItem(
-                        drawableRes = R.drawable.ic_feed,
-                        contentDescription = "Choose from gallery",
+                    .size(80.dp)
+                    .border(
+                        width = 5.dp,
                         color = Color.White,
-                        alpha = 0.5f,
-                        onClick = {
-                            onChooseFromGallery()
-                        },
+                        shape = CircleShape
                     )
-                }
+                    .clickable(
+//                            enabled = if (isPictureTimerRunning) false else true,
+                        onClick = {
+                            onClick()
+                        }
+                    ),
+            ) {
+                //internal circle with icon
+                Icon(
+                    painter = painterResource(R.drawable.ic_take_photo),
+                    contentDescription = "Capture Photo",
+                    modifier = Modifier
+                        .animateContentSize()
+                        .size(if(isPictureTimerRunning && !isVideoPlaying) 32.dp else 58.dp)
+                        .background(animateColor, CircleShape)
+                        .padding(2.dp),
+                    tint = animateColor
+                )
+            }
+            // Take Picture layer
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                AnimatedVisibility(
+//                    visible = !isPictureTimerRunning
+//                ) {
+//                    IconItem(
+//                        drawableRes = R.drawable.ic_feed,
+//                        contentDescription = "Choose from gallery",
+//                        color = Color.White,
+//                        alpha = 0.5f,
+//                        onClick = {
+////                            onChooseFromGallery()
+//                        },
+//                    )
+//                }
 
 
 
 
                 //external circle
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .border(
-                            width = 5.dp,
-                            color = Color.White,
-                            shape = CircleShape
-                        )
-                        .clickable(
-//                            enabled = if (isPictureTimerRunning) false else true,
-                            onClick = {
-                                onClick()
-                            }
-                        ),
-                ) {
-                    //internal circle with icon
-                    Icon(
-                        painter = painterResource(R.drawable.ic_take_photo),
-                        contentDescription = "Capture Photo",
-                        modifier = Modifier
-                            .animateContentSize()
-                            .size(if(isPictureTimerRunning && !isVideoPlaying) 32.dp else 58.dp)
-                            .background(animateColor, CircleShape)
-                            .padding(2.dp),
-                        tint = animateColor
-                    )
-                }
 
-                AnimatedVisibility(
-                    visible = !isPictureTimerRunning
-                ) {
-                    IconItem(
-                        drawableRes = R.drawable.ic_camera_flip,
-                        contentDescription = "Toggle camera lens",
-                        color = Color.White,
-                        alpha = 0.5f,
-                        onClick = { onToggleCamera() },
-                    )
-                }
+
+//                AnimatedVisibility(
+//                    visible = !isPictureTimerRunning
+//                ) {
+//                    IconItem(
+//                        drawableRes = R.drawable.ic_camera_flip,
+//                        contentDescription = "Toggle camera lens",
+//                        color = Color.White,
+//                        alpha = 0.5f,
+//                        onClick = { onToggleCamera() },
+//                    )
+//                }
 
 
 
                 // Camera Action Items
 
 
-            }
+//            }
 
             AnimatedContent(
                 targetState = isVideoPlaying,

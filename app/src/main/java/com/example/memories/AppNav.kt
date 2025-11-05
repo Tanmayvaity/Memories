@@ -85,30 +85,30 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
 //                        contentDescription = "Camera"
 //                    )
 //                }
-                AnimatedVisibility(
-                    visible = isFloatingActionButtonVisible
-                ) {
-                    ExtendedFloatingActionButton(
-                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                        text = {
-                            Text(
-                                text = "Create Memory"
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_camera),
-                                contentDescription = "Camera"
-                            )
-                        },
-                        onClick = {
-                            navController.navigate(AppScreen.Camera)
-                        },
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-
-                }
+//                AnimatedVisibility(
+//                    visible = isFloatingActionButtonVisible
+//                ) {
+//                    ExtendedFloatingActionButton(
+//                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
+//                        text = {
+//                            Text(
+//                                text = "Create Memory"
+//                            )
+//                        },
+//                        icon = {
+//                            Icon(
+//                                painter = painterResource(R.drawable.ic_camera),
+//                                contentDescription = "Camera"
+//                            )
+//                        },
+//                        onClick = {
+////                            navController.navigate(AppScreen.Camera)
+//                        },
+//                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                        containerColor = MaterialTheme.colorScheme.primaryContainer
+//                    )
+//
+//                }
 //                if(isFloatingActionButtonVisible){
 //                    ExtendedFloatingActionButton(
 //                        elevation = FloatingActionButtonDefaults.elevation(0.dp),

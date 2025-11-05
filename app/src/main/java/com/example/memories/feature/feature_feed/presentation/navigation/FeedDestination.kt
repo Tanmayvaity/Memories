@@ -17,7 +17,14 @@ fun NavGraphBuilder.createFeedGraph(
     composable<TopLevelScreen.Feed> {
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(true)
-        FeedRoot()
+        FeedRoot(
+            onCameraClick = {route ->
+                navController.navigate(route)
+            },
+            onNavigateToImageEdit = {route ->
+                navController.navigate(route)
+            }
+        )
     }
     composable<TopLevelScreen.Search> {
         onFloatingActionBtnVisibilityChange(false)

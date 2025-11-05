@@ -245,26 +245,26 @@ fun CameraScreen(
 
 //    val ratio = if(state.aspectRatio == AspectRatio.RATIO_16_9)
 
-    val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-
-        if (uri != null) {
-
-            val uriWrapper = UriType(
-                uri = uri.toString(),
-                type = uri.mapContentUriToType(context)
-            )
-            Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
-            Log.d(TAG, "CameraScreen: ${uriWrapper.type}")
-            onNavigateToImageEdit(
-                AppScreen.MediaEdit(
-                    uriWrapper
-                )
-            )
-        }
-
-    }
+//    val mediaLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.PickVisualMedia()
+//    ) { uri ->
+//
+//        if (uri != null) {
+//
+//            val uriWrapper = UriType(
+//                uri = uri.toString(),
+//                type = uri.mapContentUriToType(context)
+//            )
+//            Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
+//            Log.d(TAG, "CameraScreen: ${uriWrapper.type}")
+//            onNavigateToImageEdit(
+//                AppScreen.MediaEdit(
+//                    uriWrapper
+//                )
+//            )
+//        }
+//
+//    }
 
     LaunchedEffect(Unit) {
         viewModel.errorFlow.collect { message ->
@@ -391,22 +391,22 @@ fun CameraScreen(
             },
             isVideoPlaying = state.videoState == VideoState.Started,
             isPictureTimerRunning = state.timerMode == TimerMode.Running,
+            onToggleCamera = {
+                onEvent(CameraEvent.ChangeLensFacing)
+            }
         )
 
         LowerBox(
             modifier = Modifier
                 .align(Alignment.BottomCenter),
             isPictureTimerRunning = state.timerMode == TimerMode.Running,
-            onToggleCamera = {
-                onEvent(CameraEvent.ChangeLensFacing)
-            },
-            onChooseFromGallery = {
-                mediaLauncher.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                    )
-                )
-            },
+//            onChooseFromGallery = {
+//                mediaLauncher.launch(
+//                    PickVisualMediaRequest(
+//                        ActivityResultContracts.PickVisualMedia.ImageAndVideo
+//                    )
+//                )
+//            },
             onClick = {
 //                val file = createTempFile(
 //                    context

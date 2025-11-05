@@ -10,14 +10,17 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memories.R
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.ui.theme.MemoriesTheme
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
@@ -28,7 +31,8 @@ fun UpperBox(
     onTimerSet: () -> Unit = {},
     onAspectRatioChange: () -> Unit = {},
     isVideoPlaying: Boolean = false,
-    isPictureTimerRunning : Boolean = false
+    isPictureTimerRunning : Boolean = false,
+    onToggleCamera : () -> Unit = {}
 ) {
 
 
@@ -56,6 +60,13 @@ fun UpperBox(
                 onClick = {
                     onTorchToggle()
                 }
+            )
+            IconItem(
+                drawableRes = R.drawable.ic_camera_flip,
+                contentDescription = "Toggle camera lens",
+                color = Color.White,
+                alpha = 0.1f,
+                onClick = { onToggleCamera() },
             )
 
             // timer picture
@@ -102,4 +113,16 @@ fun UpperBox(
 
         }
     }
+}
+
+
+@Preview
+@Composable
+fun UpperBoxPreview(){
+    MemoriesTheme {
+        UpperBox(
+            torchState = false
+        )
+    }
+
 }

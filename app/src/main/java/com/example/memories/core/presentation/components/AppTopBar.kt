@@ -25,6 +25,7 @@ fun AppTopBar(
     title : String,
     showAction : Boolean = false,
     onActionClick : () -> Unit = {},
+    actionContent : @Composable () -> Unit = {},
     actionText : String = "",
     showNavigationIcon : Boolean = false,
     onNavigationIconClick : () -> Unit = {},
@@ -54,16 +55,17 @@ fun AppTopBar(
             },
             actions = {
                 if(showAction){
-                    TextButton(
-                        onClick = {
-                            onActionClick()
-                        }
-                    ) {
-                        Text(
-                            text = actionText,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    actionContent()
+//                    TextButton(
+//                        onClick = {
+//                            onActionClick()
+//                        }
+//                    ) {
+//                        Text(
+//                            text = actionText,
+//                            color = MaterialTheme.colorScheme.primary
+//                        )
+//                    }
                 }
             }
 
