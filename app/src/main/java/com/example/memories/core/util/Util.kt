@@ -7,6 +7,9 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
 import com.example.memories.core.domain.model.Type
 import java.io.File
 import java.net.URLConnection
@@ -117,5 +120,18 @@ fun Long.formatTime():String{
     val date = Date(this)
     val format = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     return format.format(date)
+}
+
+fun getExoPlayer(
+    context : Context,
+    uri : String,
+    playWhenReady : Boolean = false
+) : ExoPlayer{
+    return ExoPlayer.Builder(context).build().apply {
+        val mediaItem = MediaItem.fromUri(uri.toUri())
+        setMediaItem(mediaItem)
+        this.playWhenReady = playWhenReady
+        prepare()
+    }
 }
 

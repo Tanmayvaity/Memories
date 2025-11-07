@@ -57,12 +57,6 @@ fun MediaEditScreen(
         },
     ) { innerPadding ->
         MediaPreview(
-            onBackPress = {
-                onBackPress()
-            },
-            onEditItemClick = {
-                showEditBottomSheet = true
-            },
             bitmap = bitmapState.bitmap,
             onDownloadClick = {
                 if(uriType!!.type == Type.IMAGE){

@@ -28,9 +28,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.memories.R
+import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.ui.theme.MemoriesTheme
 
-@Preview
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditModalBottomSheet(
@@ -46,73 +48,20 @@ fun EditModalBottomSheet(
             onDismiss()
         },
     ) {
-        val actionList = listOf<Pair<String, Int>>(
-            Pair("Crop", R.drawable.ic_crop),
-            Pair("Rotate", R.drawable.ic_rotate),
-            Pair("Brightness", R.drawable.ic_brightness_2),
-            Pair("Lux", R.drawable.ic_lux),
-            Pair("Adjust", R.drawable.ic_adjust),
-            Pair("Filters", R.drawable.ic_torch_on),
-            Pair("Color", R.drawable.ic_color),
-            Pair("Blur", R.drawable.ic_blur),
-            Pair("Contrast", R.drawable.ic_contrast),
-            Pair("Structure", R.drawable.ic_structure),
-            Pair("Warmth", R.drawable.ic_warmth),
-            Pair("Saturation", R.drawable.ic_saturation),
-            Pair("Fade", R.drawable.ic_fade),
-            Pair("Highlights", R.drawable.ic_blur),
-            Pair("Shadows", R.drawable.ic_blur),
-            Pair("Vignette", R.drawable.ic_vignette),
-            Pair("Tilt Shift", R.drawable.ic_tilt_shift),
-            Pair("Sharpen", R.drawable.ic_blur),
+        val actionList = getEditMenuItems()
 
-            )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(225.dp)
-        ) {
-            LazyRow(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.align(Alignment.Center)
-            ) {
-                itemsIndexed(actionList) { index, it ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(5.dp)
-
-                    ) {
-                        IconItem(
-                            modifier = Modifier
-                                .border(
-                                    width = 1.dp,
-//                                    color = Color.LightGray.copy(0.3f),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape
-                                )
-                                .padding(20.dp),
-                            iconSize = 64.dp,
-                            drawableRes = it.second,
-                            contentDescription = it.first,
-                            shape = CircleShape,
-                            alpha = 0.1f,
-                            color = MaterialTheme.colorScheme.primary,
-                            backgroundColor = MaterialTheme.colorScheme.background
-                        )
-                        Text(
-                            text = it.first,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-            }
-        }
+        EditList(menuItems = actionList)
 
     }
 
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun EditModalBottomSheetPreview(){
+    MemoriesTheme {
+        EditModalBottomSheet()
+    }
 }
