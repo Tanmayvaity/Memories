@@ -79,7 +79,8 @@ fun FeedRoot(
     viewModel: FeedViewModel = hiltViewModel<FeedViewModel>(),
     themeViewModel: ThemeViewModel = hiltViewModel<ThemeViewModel>(),
     onCameraClick: (AppScreen.Camera) -> Unit = {},
-    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit
+    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
+    onNavigateToMemoryDetail : (AppScreen.MemoryDetail) -> Unit
 
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -94,11 +95,12 @@ fun FeedRoot(
         loadState = dataLoadingState,
         onCameraClick = onCameraClick,
         onNavigateToImageEdit = onNavigateToImageEdit,
-        isDarkModeEnabled  = isDarkModeEnabled
+        isDarkModeEnabled  = isDarkModeEnabled,
+        onNavigateToMemoryDetail = onNavigateToMemoryDetail
     )
 
     LaunchedEffect(Unit) {
-        viewModel.onEvent(FeedEvents.FetchFeed)
+//        viewModel.onEvent(FeedEvents.FetchFeed)
     }
 
 
@@ -113,6 +115,7 @@ fun FeedScreen(
     onEvent: (FeedEvents) -> Unit,
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit : (AppScreen.MediaEdit) -> Unit = {},
+    onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     isDarkModeEnabled : Boolean = false
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
@@ -120,6 +123,7 @@ fun FeedScreen(
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
     var currentItemIndex by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
+
 
     val mediaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -145,7 +149,9 @@ fun FeedScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Your Posts",
+                title = {
+                    Text("Your Posts")
+                },
                 showDivider = true,
                 showAction = true,
                 actionContent = {
@@ -196,7 +202,7 @@ fun FeedScreen(
             ,
         ) {
             itemsIndexed(
-                key = {index : Int,it : MemoryWithMediaModel -> it.memory.memoryId },
+//                key = {index : Int,it : MemoryWithMediaModel -> it.memory.memoryId },
                 items = state.memories,
             ) { index, it ->
                 MemoryItemCard(
@@ -204,7 +210,11 @@ fun FeedScreen(
                         .padding(16.dp)
                     ,
                     memoryItem = it,
-                    onClick = {},
+                    onClick = {
+                        onNavigateToMemoryDetail(
+                            AppScreen.MemoryDetail(memoryId = it.memory.memoryId)
+                        )
+                    },
                     onOverflowButtonClick = {
                         showSheet = true
                         currentItem = it

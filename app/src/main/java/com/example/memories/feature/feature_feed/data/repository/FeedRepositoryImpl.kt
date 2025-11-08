@@ -5,6 +5,8 @@ import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.mapper.toDomain
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.nio.file.Files.isHidden
 import javax.inject.Inject
 
@@ -16,8 +18,10 @@ class FeedRepositoryImpl @Inject constructor(
         private const val TAG = "FeedRepository"
     }
 
-    override suspend fun getMemories(): List<MemoryWithMediaModel> {
-        return memoryDao.getAllMemoriesWithMedia().map { it -> it.toDomain() }
+    override suspend fun getMemories(): Flow<List<MemoryWithMediaModel>> {
+        return memoryDao.getAllMemoriesWithMedia().map { memoryList ->
+            memoryList.map { it -> it.toDomain() }
+        }
     }
 
     override suspend fun updateFavouriteState(id: String, isFavourite: Boolean) {
@@ -28,6 +32,10 @@ class FeedRepositoryImpl @Inject constructor(
     override suspend fun updateHiddenState(id: String, isHidden: Boolean) {
         Log.d(TAG, "updateHiddenState: called")
         return memoryDao.updateHidden(id,isHidden)
+    }
+
+    override suspend fun getMemoryById(id: String): MemoryWithMediaModel? {
+        return memoryDao.getMemoryById(id)?.toDomain()
     }
 
 }

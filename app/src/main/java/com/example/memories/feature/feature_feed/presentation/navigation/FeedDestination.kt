@@ -3,7 +3,9 @@ package com.example.memories.feature.feature_feed.presentation.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MediaDetailRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchScreen
 import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
 import com.example.memories.navigation.AppScreen
@@ -23,6 +25,9 @@ fun NavGraphBuilder.createFeedGraph(
             },
             onNavigateToImageEdit = {route ->
                 navController.navigate(route)
+            },
+            onNavigateToMemoryDetail = {route ->
+                navController.navigate(route)
             }
         )
     }
@@ -40,6 +45,19 @@ fun NavGraphBuilder.createFeedGraph(
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
         SharedRoute(
+            onBack = {
+                navController.popBackStack()
+            }
+
+        )
+    }
+
+    composable<AppScreen.MemoryDetail>{
+        onBottomBarVisibilityChange(false)
+        onFloatingActionBtnVisibilityChange(false)
+        val args = it.toRoute<AppScreen.MemoryDetail>()
+        MediaDetailRoot(
+            memoryId = args.memoryId,
             onBack = {
                 navController.popBackStack()
             }

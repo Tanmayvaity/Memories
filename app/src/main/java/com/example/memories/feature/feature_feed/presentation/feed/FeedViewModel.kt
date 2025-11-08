@@ -9,8 +9,17 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCases
 import com.google.common.collect.Multimaps.index
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,22 +34,29 @@ class FeedViewModel @Inject constructor(
     }
 
     private val _state = MutableStateFlow<FeedState>(FeedState())
-    val state = _state.asStateFlow()
+    val state = _state
+        .onStart { fetchData() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = FeedState()
+        )
 
-    private val _isDataLoading =  MutableStateFlow<Boolean>(false)
+
+    private val _isDataLoading = MutableStateFlow<Boolean>(false)
     val isDataLoading = _isDataLoading.asStateFlow()
 
     fun onEvent(event: FeedEvents) {
         when (event) {
             FeedEvents.FetchFeed -> {
                 viewModelScope.launch {
-                   fetchData()
+                    fetchData()
                 }
             }
 
-            FeedEvents.Refresh ->{
+            FeedEvents.Refresh -> {
                 viewModelScope.launch {
-                    _isDataLoading.update{true}
+                    _isDataLoading.update { true }
                     fetchData()
                     _isDataLoading.update { false }
                 }
@@ -51,6 +67,7 @@ class FeedViewModel @Inject constructor(
                     updateFeedStateActionItems(updateFavourite = true, id = event.id)
 
                     val item = _state.value.memories.find { it.memory.memoryId == event.id }
+
                     Log.d(TAG, "_state.value.memories : ${_state.value.memories.size}")
                     if (item == null) {
                         Log.e(TAG, "onEvent: invalid id")
@@ -65,7 +82,8 @@ class FeedViewModel @Inject constructor(
 
             is FeedEvents.ToggleHidden -> {
                 viewModelScope.launch {
-                    val currentHiddenStatus = _state.value.memories.find { it.memory.memoryId == event.id }?.memory?.hidden
+                    val currentHiddenStatus =
+                        _state.value.memories.find { it.memory.memoryId == event.id }?.memory?.hidden
                     updateFeedStateActionItems(updateFavourite = false, id = event.id)
                     Log.d(TAG, "_state.value.memories : ${_state.value.memories.size}")
                     if (currentHiddenStatus == null) {
@@ -82,28 +100,30 @@ class FeedViewModel @Inject constructor(
 
     }
 
-    private suspend  fun fetchData(){
-        val memoryWithMediaList: List<MemoryWithMediaModel> =
-            feedUseCases.getFeedUseCase()
+    private suspend fun fetchData() {
+        Log.d(TAG, "fetchData: collecting ")
+        val memoryWithMediaList =
+            feedUseCases.getFeedUseCase().first()
+
 
         val filterList =
-            memoryWithMediaList.filter { it !in _state.value.memories }
+            memoryWithMediaList.filter { item -> _state.value.memories.none{item.memory.memoryId == it.memory.memoryId} }
 
         if (filterList.isNotEmpty()) {
             _state.update {
                 it.copy(
-                    memories = _state.value.memories + memoryWithMediaList
+                    memories = _state.value.memories + filterList
                 )
             }
         }
     }
 
 
-
     private fun updateFeedStateActionItems(
         updateFavourite: Boolean = false,
         id: String
     ) {
+
         _state.update { currentState ->
             val index = currentState.memories.indexOfFirst { it.memory.memoryId == id }
             if (index == -1) return@update currentState // Not found, return unchanged
@@ -124,8 +144,12 @@ class FeedViewModel @Inject constructor(
                 }
             }
 
-            val filterList = if(updateFavourite) updatedList else updatedList.filter { it.memory.memoryId !=id }
-            Log.d(TAG, "updateFeedStateActionItems _state.value.memories : ${_state.value.memories.size}")
+            val filterList =
+                if (updateFavourite) updatedList else updatedList.filter { it.memory.memoryId != id }
+            Log.d(
+                TAG,
+                "updateFeedStateActionItems _state.value.memories : ${_state.value.memories.size}"
+            )
 
             currentState.copy(memories = filterList)
         }

@@ -2,13 +2,12 @@ package com.example.memories.feature.feature_feed.domain.usecase.feed_usecase
 
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
-import kotlinx.coroutines.flow.Flow
 
-class GetFeedUseCase(
+class GetMemoryByIdUseCase(
     private val repository: FeedRepository
 ) {
-    suspend operator fun invoke(): Flow<List<MemoryWithMediaModel>>{
-        return repository.getMemories()
+    suspend operator fun invoke(id : String): MemoryWithMediaModel?{
+        return repository.getMemoryById(id)
     }
 
 }

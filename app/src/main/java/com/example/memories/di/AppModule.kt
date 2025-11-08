@@ -44,6 +44,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.FetchMediaFromSh
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.GetMediaThumbnailUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.SharedUriToInternalUriUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetMemoryByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
@@ -255,7 +256,8 @@ object AppModule {
         return FeedUseCases(
             getFeedUseCase = GetFeedUseCase(repository),
             toggleFavouriteUseCase = ToggleFavouriteUseCase(repository),
-            toggleHiddenUseCase = ToggleHiddenUseCase(repository)
+            toggleHiddenUseCase = ToggleHiddenUseCase(repository),
+            getMemoryByIdUseCase = GetMemoryByIdUseCase(repository)
         )
 
     }

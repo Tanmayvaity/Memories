@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -18,7 +19,11 @@ interface MemoryDao {
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity where hidden = 0")
-    suspend fun getAllMemoriesWithMedia(): List<MemoryWithMedia>
+    fun getAllMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity where memory_id = :id")
+    suspend fun getMemoryById(id : String): MemoryWithMedia?
 
     @Query("UPDATE memoryentity set hidden = :isHidden where memory_id = :id")
     suspend fun updateHidden(id:String,isHidden : Boolean)

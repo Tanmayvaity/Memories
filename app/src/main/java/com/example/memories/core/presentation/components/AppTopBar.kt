@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -12,6 +13,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,22 +25,22 @@ import com.example.memories.ui.theme.MemoriesTheme
 @Composable
 fun AppTopBar(
     modifier: Modifier = Modifier,
-    title : String,
+    title : @Composable () -> Unit = {},
     showAction : Boolean = false,
     onActionClick : () -> Unit = {},
     actionContent : @Composable () -> Unit = {},
     actionText : String = "",
     showNavigationIcon : Boolean = false,
     onNavigationIconClick : () -> Unit = {},
-    showDivider : Boolean  = true
+    showDivider : Boolean  = true,
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 ) {
 
     Column {
         CenterAlignedTopAppBar(
+            scrollBehavior = scrollBehavior,
             title = {
-                Text(
-                    text = title
-                )
+                title()
             },
             navigationIcon = {
                 if(showNavigationIcon){
@@ -70,20 +73,28 @@ fun AppTopBar(
             }
 
         )
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
+        if(showDivider){
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+        }
+
     }
 
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun AppTopBarPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         AppTopBar(
-            title = "Memory App",
+            title = {
+                Text(
+                    "Memory App"
+                )
+            },
             showAction =  true,
             showNavigationIcon = true,
             actionText = "Create"
