@@ -250,7 +250,7 @@ fun MediaDetailScreen(
                     }
                 ),
                 MenuItem(
-                    title = "Hide",
+                    title = if(item.hidden) "UnHide" else "Hide",
                     icon = if (item.hidden) R.drawable.ic_hidden else R.drawable.ic_not_hidden,
                     iconContentDescription = if(item.hidden) "UnHide" else "Hide",
                     onClick = {

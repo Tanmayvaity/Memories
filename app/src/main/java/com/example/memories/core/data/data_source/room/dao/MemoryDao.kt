@@ -22,7 +22,7 @@ interface MemoryDao {
     fun getAllMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1")
+    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0")
     fun getAllFavouriteMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
     @Transaction
