@@ -4,6 +4,7 @@ import android.R.attr.contentDescription
 import android.R.attr.onClick
 import android.R.attr.text
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,10 +26,13 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,7 +51,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +66,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.ContentActionSheet
+import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_feed.presentation.feed.FeedEvents
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEvents
@@ -69,20 +76,35 @@ import com.example.memories.ui.theme.MemoriesTheme
 @Composable
 fun MediaDetailRoot(
     modifier: Modifier = Modifier,
-    memoryId : String,
     viewmodel : MemoryDetailViewModel = hiltViewModel<MemoryDetailViewModel>(),
     onBack : () -> Unit ={}
 ) {
     val memory by viewmodel.memory.collectAsStateWithLifecycle()
-
+    val context = LocalContext.current
+//    LaunchedEffect(Unit) {
+//        Log.d("MemoryDetailScreen", "MediaDetailRoot: ${memoryId}")
+//        viewmodel.onEvent(MemoryDetailEvents.Fetch(id = memoryId))
+//    }
 
     LaunchedEffect(Unit) {
-        Log.d("MemoryDetailScreen", "MediaDetailRoot: ${memoryId}")
-        viewmodel.onEvent(MemoryDetailEvents.Fetch(id = memoryId))
+        viewmodel.eventFlow.collect {event ->
+            when(event){
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context,event.message.toString(),Toast.LENGTH_SHORT).show()
+                    when(event.type){
+                        UiEvent.ToastType.DELETE -> {
+                            onBack()
+                        }
+                        else -> {}
+
+                    }
+                }
+
+            }
+        }
     }
 
     MediaDetailScreen(
-        id = memoryId,
         memory = memory,
         onEvent = viewmodel::onEvent,
         onBack =  onBack
@@ -94,7 +116,6 @@ fun MediaDetailRoot(
 @Composable
 fun MediaDetailScreen(
     modifier: Modifier = Modifier,
-    id : String = "",
     memory : MemoryWithMediaModel? = null,
     onEvent : (MemoryDetailEvents) -> Unit = {},
     onBack : () -> Unit = {}
@@ -104,7 +125,7 @@ fun MediaDetailScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scrollState = rememberScrollState()
     var showContentSheet by remember { mutableStateOf(false) }
-
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -126,24 +147,15 @@ fun MediaDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ){
                         IconButton(onClick = {
-                            if(memory.memory.favourite){
-                               onEvent(
-                                   MemoryDetailEvents.UnFavourite(
-                                       id = memory.memory.memoryId
-                                   )
-                               )
-                            }else{
-                                onEvent(
-                                    MemoryDetailEvents.Favourite(
-                                        id = memory.memory.memoryId
-                                    )
-                                )
-                            }
+                            onEvent(MemoryDetailEvents.FavoriteToggle(
+                                id = memory.memory.memoryId,
+                                isFavourite = memory.memory.favourite
+                            ))
                         }) {
                             Icon(
                                 imageVector = if(memory.memory.favourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "More options",
-                                tint = if(memory.memory.favourite) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if(memory.memory.favourite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         IconButton(onClick = {
@@ -239,20 +251,63 @@ fun MediaDetailScreen(
                 ),
                 MenuItem(
                     title = "Hide",
-                    icon = if (item.hidden) R.drawable.ic_not_hidden else R.drawable.ic_hidden,
-                    iconContentDescription = "Hide",
+                    icon = if (item.hidden) R.drawable.ic_hidden else R.drawable.ic_not_hidden,
+                    iconContentDescription = if(item.hidden) "UnHide" else "Hide",
                     onClick = {
-
+                        onEvent(MemoryDetailEvents.HiddenToggle(item.memoryId,!item.hidden))
                     }
                 ),MenuItem(
                     title = "Delete",
                     icon = R.drawable.ic_delete,
                     iconContentDescription = "Delete",
-                    onClick = {}
+                    onClick = {
+                        showDeleteDialog = true
+
+                    }
                 ),
 
             )
 
+        )
+    }
+
+    if(showDeleteDialog){
+        GeneralAlertDialog(
+            title = "Delete Memory Alert",
+            text = "Are you sure you want to delete this memory",
+            onDismiss = {
+                showDeleteDialog = false
+            },
+            confirmButton = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    ),
+                    onClick = {
+                        showDeleteDialog = false
+                        showContentSheet = false
+                        onEvent(MemoryDetailEvents.Delete)
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+
+                ) {
+                    Text(
+                        text = stringResource(R.string.dismiss),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         )
     }
 

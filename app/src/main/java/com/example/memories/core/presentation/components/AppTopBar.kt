@@ -10,13 +10,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.memories.feature.feature_memory.presentation.MemoryEvents
 import com.example.memories.ui.theme.MemoriesTheme
@@ -33,11 +36,15 @@ fun AppTopBar(
     showNavigationIcon : Boolean = false,
     onNavigationIconClick : () -> Unit = {},
     showDivider : Boolean  = true,
-    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+    containerColor : Color = MaterialTheme.colorScheme.surface
 ) {
 
     Column {
-        CenterAlignedTopAppBar(
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = containerColor
+            ),
             scrollBehavior = scrollBehavior,
             title = {
                 title()

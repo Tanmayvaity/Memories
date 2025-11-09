@@ -48,7 +48,6 @@ fun NavGraphBuilder.createFeedGraph(
             onBack = {
                 navController.popBackStack()
             }
-
         )
     }
 
@@ -57,7 +56,6 @@ fun NavGraphBuilder.createFeedGraph(
         onFloatingActionBtnVisibilityChange(false)
         val args = it.toRoute<AppScreen.MemoryDetail>()
         MediaDetailRoot(
-            memoryId = args.memoryId,
             onBack = {
                 navController.popBackStack()
             }

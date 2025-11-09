@@ -22,6 +22,14 @@ interface MemoryDao {
     fun getAllMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
     @Transaction
+    @Query("SELECT * FROM MemoryEntity where favourite = 1")
+    fun getAllFavouriteMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity where hidden = 1")
+    fun getAllHiddenMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+
+    @Transaction
     @Query("SELECT * FROM MemoryEntity where memory_id = :id")
     suspend fun getMemoryById(id : String): MemoryWithMedia?
 
@@ -33,8 +41,10 @@ interface MemoryDao {
     suspend fun updateFavourite(id:String,isFavourite : Boolean)
 
 
+//    @Query("DELETE FROM memoryentity where memory_id = :id")
+//    suspend fun deleteById(id : String)
 
-
-
+    @Delete
+    suspend fun deleteMemory(memory: MemoryEntity) : Int
 
 }

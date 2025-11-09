@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import android.R.attr.contentDescription
 import android.R.attr.fontWeight
+import android.R.attr.onClick
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -9,16 +10,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -48,6 +53,9 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.presentation.ContextualMenuItem
+import com.example.memories.core.presentation.MenuItem
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -57,10 +65,11 @@ fun MemoryItemCard(
     memoryItem: MemoryWithMediaModel = MemoryWithMediaModel(),
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     onClick: () -> Unit = {},
-    onOverflowButtonClick: () -> Unit = {},
     onFavouriteButtonClick: () -> Unit = {},
+    onHideButtonClick : () -> Unit = {},
+    onDeleteButtonClick : () -> Unit = {},
     elevation : Int = 25,
-    shape : Shape = RoundedCornerShape(8.dp)
+    shape : Shape = RoundedCornerShape(8.dp),
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
@@ -75,7 +84,6 @@ fun MemoryItemCard(
             .fillMaxWidth()
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = onOverflowButtonClick
             ),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
@@ -125,24 +133,44 @@ fun MemoryItemCard(
                             .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
 
                     )
-                    IconButton(
-                        onClick = {
-                            onFavouriteButtonClick()
-                        }
+                    Row(
+                        modifier = Modifier.padding(5.dp)
                     ) {
-                        Icon(
-                            imageVector =
-                                if (memoryItem.memory.favourite) {
-                                    Icons.Default.Favorite
-                                } else {
-                                    Icons.Default.FavoriteBorder
-                                },
-                            contentDescription = "Favourite icon",
-                            tint = if(memoryItem.memory.favourite) Color.Red else Color.Gray
+
+                        IconItem(
+                            imageVector = if(memoryItem.memory.favourite)
+                                Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "",
+                            onClick = {
+                                onFavouriteButtonClick()
+                            },
+                            alpha = 0.1f,
+                            color = if(memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else Color.Gray
                         )
-
-
+                        IconItem(
+                            drawableRes = if(memoryItem.memory.hidden)
+                                R.drawable.ic_hidden else R.drawable.ic_not_hidden,
+                            contentDescription = "",
+                            onClick = {
+                                onHideButtonClick()
+                            },
+                            alpha = 0.1f,
+                            color = Color.Gray
+                        )
+                        IconItem(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "",
+                            onClick = {
+                                onDeleteButtonClick()
+                            },
+                            alpha = 0.1f,
+                            color = Color.Red,
+                        )
                     }
+
+
+
+
                 }
             }
 

@@ -6,5 +6,6 @@ data class FeedUseCases(
     val getFeedUseCase: GetFeedUseCase,
     val toggleFavouriteUseCase: ToggleFavouriteUseCase,
     val toggleHiddenUseCase: ToggleHiddenUseCase,
-    val getMemoryByIdUseCase: GetMemoryByIdUseCase
+    val getMemoryByIdUseCase: GetMemoryByIdUseCase,
+    val deleteMemoryUseCase: DeleteUseCase
 )

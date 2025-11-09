@@ -33,6 +33,13 @@ fun MemoryWithMedia.toDomain(): MemoryWithMediaModel {
     )
 }
 
+fun MemoryWithMediaModel.toEntity() : MemoryWithMedia {
+    return MemoryWithMedia(
+        memory = memory.toEntity(),
+        list = mediaList.map { it -> it.toEntity() }
+    )
+}
+
 
 
 
