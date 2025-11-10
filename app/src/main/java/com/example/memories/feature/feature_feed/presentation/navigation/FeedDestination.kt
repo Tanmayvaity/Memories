@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MediaDetailRoot
+import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchScreen
 import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
 import com.example.memories.navigation.AppScreen
@@ -34,8 +35,8 @@ fun NavGraphBuilder.createFeedGraph(
     composable<TopLevelScreen.Search> {
         onFloatingActionBtnVisibilityChange(false)
         onBottomBarVisibilityChange(true)
-        SearchScreen(
-            navigateToShared = { route ->
+        SearchRoot(
+            onNavigateToMemoryDetail = {route ->
                 navController.navigate(route)
             }
         )

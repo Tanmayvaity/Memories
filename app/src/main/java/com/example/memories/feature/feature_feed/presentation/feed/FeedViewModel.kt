@@ -1,34 +1,24 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.feature.feature_feed.domain.model.FetchType
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCases
-import com.google.common.collect.Multimaps.index
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
-    val feedUseCases: FeedUseCases,
+    val feedUseCases: FeedUseCaseWrapper,
     val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

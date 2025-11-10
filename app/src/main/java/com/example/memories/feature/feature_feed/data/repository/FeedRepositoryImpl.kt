@@ -48,5 +48,11 @@ class FeedRepositoryImpl @Inject constructor(
         return memoryDao.deleteMemory(memory.toEntity())
     }
 
+    override suspend fun getMemoryByTitle(query: String): Flow<List<MemoryWithMediaModel>> {
+        return memoryDao.getAllMemoriesWithMediaByTitle(query).map { memoryList ->
+            memoryList.map { it -> it.toDomain() }
+        }
+    }
+
 
 }

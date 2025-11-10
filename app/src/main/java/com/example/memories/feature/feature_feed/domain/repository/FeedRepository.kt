@@ -21,4 +21,7 @@ interface FeedRepository{
 
     suspend fun delete(memory : MemoryModel) : Int
 
+    suspend fun getMemoryByTitle(query : String) : Flow<List<MemoryWithMediaModel>>
+
+
 }

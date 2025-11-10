@@ -29,6 +29,12 @@ interface MemoryDao {
     @Query("SELECT * FROM MemoryEntity where hidden = 1")
     fun getAllHiddenMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
+
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity where title LIKE '%' || :query || '%'")
+    fun getAllMemoriesWithMediaByTitle(query : String): Flow<List<MemoryWithMedia>>
+
+
     @Transaction
     @Query("SELECT * FROM MemoryEntity where memory_id = :id")
     suspend fun getMemoryById(id : String): MemoryWithMedia?

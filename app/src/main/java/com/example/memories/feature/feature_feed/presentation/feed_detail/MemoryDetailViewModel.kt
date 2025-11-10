@@ -5,12 +5,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MemoryDetailViewModel @Inject constructor(
-    val feedUseCases: FeedUseCases,
+    val feedUseCases: FeedUseCaseWrapper,
     savedStateHandle: SavedStateHandle
 ) : ViewModel(){
 

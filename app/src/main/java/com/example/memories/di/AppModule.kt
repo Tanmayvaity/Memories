@@ -38,7 +38,7 @@ import com.example.memories.feature.feature_feed.domain.repository.FeedRepositor
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediasUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCases
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.MediaFeedUseCases
 import com.example.memories.feature.feature_feed.domain.usecase.FetchMediaFromSharedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
@@ -46,6 +46,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.GetMediaThumbnai
 import com.example.memories.feature.feature_feed.domain.usecase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.DeleteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetMemoryByIdUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SearchByTitleUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
@@ -253,13 +254,14 @@ object AppModule {
     @Singleton
     fun providesFeedUseCases(
         repository : FeedRepository
-    ): FeedUseCases{
-        return FeedUseCases(
+    ): FeedUseCaseWrapper{
+        return FeedUseCaseWrapper(
             getFeedUseCase = GetFeedUseCase(repository),
             toggleFavouriteUseCase = ToggleFavouriteUseCase(repository),
             toggleHiddenUseCase = ToggleHiddenUseCase(repository),
             getMemoryByIdUseCase = GetMemoryByIdUseCase(repository),
-            deleteMemoryUseCase = DeleteUseCase(repository)
+            deleteMemoryUseCase = DeleteUseCase(repository),
+            searchByTitleUseCase = SearchByTitleUseCase(repository)
         )
 
     }
