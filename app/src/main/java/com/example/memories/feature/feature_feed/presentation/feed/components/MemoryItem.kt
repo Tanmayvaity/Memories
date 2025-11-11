@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import android.R
+import android.R.attr.end
 import android.view.RoundedCorner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -104,8 +105,8 @@ fun MemoryItem(
                 Column(
                     modifier = Modifier
                         .padding(start = 5.dp)
-                        .weight(1f),
-
+                        .weight(1f)
+                        .padding(end = 10.dp)
                     ) {
 
                     Text(

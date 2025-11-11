@@ -173,12 +173,18 @@ fun SearchScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-
+                        .padding(5.dp)
                 ) {
-                    items(state.data) { item ->
+                    items(
+                        items = state.data,
+                        key = {it -> it.memory.memoryId}
+                    ) { item ->
                         MemoryItem(
                             memoryItem = item,
-                            modifier = Modifier.padding(10.dp)
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(bottom = 5.dp)
+
                         ) {
                             onNavigateToMemoryDetail(AppScreen.MemoryDetail(item.memory.memoryId))
                         }
