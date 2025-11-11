@@ -24,8 +24,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material3.AlertDialog
@@ -89,6 +92,7 @@ import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.toIndex
 import com.example.memories.feature.feature_feed.presentation.feed.components.ChipRow
+import com.example.memories.feature.feature_feed.presentation.feed.components.CustomFloatingActionButton
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItem
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
@@ -102,7 +106,8 @@ fun FeedRoot(
     themeViewModel: ThemeViewModel = hiltViewModel<ThemeViewModel>(),
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
-    onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit
+    onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
+    onNavigateToMemoryCreate : (AppScreen.Memory) -> Unit,
 
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -118,7 +123,8 @@ fun FeedRoot(
         onCameraClick = onCameraClick,
         onNavigateToImageEdit = onNavigateToImageEdit,
         isDarkModeEnabled = isDarkModeEnabled,
-        onNavigateToMemoryDetail = onNavigateToMemoryDetail
+        onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+        onNavigateToMemoryCreate = onNavigateToMemoryCreate
     )
 
     LaunchedEffect(Unit) {
@@ -138,6 +144,7 @@ fun FeedScreen(
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
+    onNavigateToMemoryCreate : (AppScreen.Memory) -> Unit = {},
     isDarkModeEnabled: Boolean = false
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
@@ -149,6 +156,7 @@ fun FeedScreen(
     var selectedChipIndex by remember { mutableStateOf<Int>(0) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var currentMemoryEntryMode : MemoryEntryMode? = null
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
@@ -161,13 +169,21 @@ fun FeedScreen(
                 uri = uri.toString(),
                 type = uri.mapContentUriToType(context)
             )
-//            Log.d(com.example.memories.feature.feature_camera.presentation.camera.TAG, "CameraScreen: ${uriWrapper.uri}")
-//            Log.d(com.example.memories.feature.feature_camera.presentation.camera.TAG, "CameraScreen: ${uriWrapper.type}")
-            onNavigateToImageEdit(
-                AppScreen.MediaEdit(
-                    uriWrapper
-                )
-            )
+
+            currentMemoryEntryMode?.let{ it ->
+                when(it){
+                    MemoryEntryMode.EditImage -> {
+                        onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapper))
+                    }
+
+                    MemoryEntryMode.ChooseImageAndCreate -> {
+                        onNavigateToMemoryCreate(AppScreen.Memory(uriWrapper))
+                    }
+
+                    else -> {}
+                }
+            }
+
         }
 
     }
@@ -209,24 +225,46 @@ fun FeedScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                onClick = {
-//                            navController.navigate(AppScreen.Camera)
-                    mediaLauncher.launch(
-                        PickVisualMediaRequest(
-                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+//            FloatingActionButton(
+//                elevation = FloatingActionButtonDefaults.elevation(0.dp),
+//                onClick = {
+////                            navController.navigate(AppScreen.Camera)
+//                    mediaLauncher.launch(
+//                        PickVisualMediaRequest(
+//                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+//                        )
+//                    )
+//                },
+//                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                containerColor = MaterialTheme.colorScheme.primaryContainer
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Add,
+//                    contentDescription = "Create Memory"
+//                )
+//            }
+
+            CustomFloatingActionButton(
+                expandable = true,
+                actionList = listOf(
+                    Triple(MemoryEntryMode.ChooseImageAndCreate, Icons.Default.AddCircle,"Choosing Media"),
+                    Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit,"Edit Media"),
+                    Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add,"Without Media"),
+
+                ),
+                onFabClick = {mode ->
+                    currentMemoryEntryMode = mode
+                    if(mode != MemoryEntryMode.DirectCreate){
+                        mediaLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                            )
                         )
-                    )
-                },
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Memory"
-                )
-            }
+                    }
+
+                }
+
+            )
         }
     ) { innerPadding ->
         Log.d("FeedScreen", "FeedScreen: ${state.memories.isEmpty()}")

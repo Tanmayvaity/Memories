@@ -29,6 +29,9 @@ fun NavGraphBuilder.createFeedGraph(
             },
             onNavigateToMemoryDetail = {route ->
                 navController.navigate(route)
+            },
+            onNavigateToMemoryCreate = {route ->
+                navController.navigate(route)
             }
         )
     }
