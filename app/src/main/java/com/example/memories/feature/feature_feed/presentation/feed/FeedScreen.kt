@@ -172,9 +172,8 @@ fun FeedScreen(
                 )
             }
 
-
-            currentMemoryEntryMode?.let{ it ->
-                when(it){
+            if(currentMemoryEntryMode!=null && uriWrapperList.isNotEmpty()){
+                when(currentMemoryEntryMode){
                     MemoryEntryMode.EditImage -> {
                         onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapperList[0]))
                     }
