@@ -37,6 +37,33 @@ object CustomNavType {
 
     }
 
+    val uriWrapperListType = object : NavType<List<UriType>>(
+        isNullableAllowed = false
+    ){
+        override fun get(
+            bundle: Bundle,
+            key: String
+        ): List<UriType>? {
+            return Json.Default.decodeFromString(bundle.getString(key)?:return null)
+        }
+
+        override fun parseValue(value: String): List<UriType> {
+            return Json.Default.decodeFromString(Uri.decode(value))
+        }
+
+        override fun serializeAsValue(value: List<UriType>): String {
+            return Uri.encode(Json.Default.encodeToString(value))
+        }
+
+        override fun put(
+            bundle: Bundle,
+            key: String,
+            value: List<UriType>
+        ) {
+            bundle.putString(key, Json.Default.encodeToString(value))
+        }
+    }
+
     val mediaType = object : NavType<Type>(
         isNullableAllowed =  false
     ){

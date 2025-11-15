@@ -32,7 +32,7 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     data class  Memory(
-        val uriTypeWrapper: UriType
+        val uriTypeWrapperList: List<UriType>
     ) : AppScreen("Memory")
 
     @Serializable

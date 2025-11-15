@@ -19,16 +19,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.EditModalBottomSheet
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.MediaPreview
 import com.example.memories.navigation.AppScreen
+import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.launch
 
 
@@ -55,6 +58,15 @@ fun MediaEditScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
+        topBar = {
+            AppTopBar(
+                showNavigationIcon = true,
+                onNavigationIconClick = {
+                    onBackPress()
+                },
+                showDivider = false
+            )
+        }
     ) { innerPadding ->
         MediaPreview(
             bitmap = bitmapState.bitmap,
@@ -70,13 +82,13 @@ fun MediaEditScreen(
 //
             },
             onNextClick = {
-                if(uriType!!.type == Type.IMAGE){
-                    viewModel.onEvent(MediaEvents.BitmapToUri)
-                }
-
-                if(uriType.type == Type.VIDEO){
-                    onNextClick(AppScreen.Memory(uriType))
-                }
+//                if(uriType!!.type == Type.IMAGE){
+//                    viewModel.onEvent(MediaEvents.BitmapToUri)
+//                }
+//
+//                if(uriType!!.type == Type.VIDEO){
+//                    onNextClick(AppScreen.Memory(listOf(uriType!!)))
+//                }
 
             },
             modifier = Modifier.padding(innerPadding),
@@ -125,18 +137,18 @@ fun MediaEditScreen(
 
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.saveBitmapToInternalSuccessFlow.collect { uri ->
-            Log.d("MediaEditScreen", "outside uri : ${uri.toString()}")
-            uri?.let { it ->
-                Log.d("MediaEditScreen", "inside uri : ${it.toString()}")
-                onNextClick(AppScreen.Memory(UriType(
-                    uri = it.toString(),
-                    type = it.mapToType()
-                )))
-            }
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        viewModel.saveBitmapToInternalSuccessFlow.collect { uri ->
+//            Log.d("MediaEditScreen", "outside uri : ${uri.toString()}")
+//            uri?.let { it ->
+//                Log.d("MediaEditScreen", "inside uri : ${it.toString()}")
+//                onNextClick(AppScreen.Memory(UriType(
+//                    uri = it.toString(),
+//                    type = it.mapToType()
+//                )))
+//            }
+//        }
+//    }
 
 
 }

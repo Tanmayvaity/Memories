@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_camera.presentation.camera.components
 
+import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -56,7 +57,7 @@ fun LowerBox(
     isVideoPlaying: Boolean = false,
     isPictureTimerRunning: Boolean = false
 ) {
-    val cameraActionItems: List<CameraMode> = CameraMode.entries.toList()
+    val cameraActionItems: List<CameraMode> = CameraMode.entries.filter { it != CameraMode.VIDEO }
     var selectedIndex by remember { mutableStateOf(cameraMode.mapToIndex()) }
     val animateColor by animateColorAsState(
         if (isVideoPlaying) Color.Red else Color.White,
@@ -216,14 +217,14 @@ fun CameraMode.mapToIndex(): Int {
         CameraMode.PHOTO -> {
             0
         }
-
         CameraMode.PORTRAIT -> {
             1
         }
-
         CameraMode.VIDEO -> {
             2
         }
+
+
     }
 
 }

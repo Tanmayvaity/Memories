@@ -64,14 +64,12 @@ fun MemoryRoot(
     viewModel: MemoryViewModel = hiltViewModel<MemoryViewModel>(),
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
-    uriType: UriType
+    uriList : List<UriType>,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
-
-
     MemoryScreen(
         onBackPress = onBackPress,
-        uriType = uriType,
+        uriList = uriList,
         onEvent = viewModel::onEvent,
         state = state,
         onCreateClick = onGoToHomeScreen,
@@ -89,7 +87,7 @@ fun MemoryRoot(
 @Composable
 fun MemoryScreen(
     onBackPress: () -> Unit = {},
-    uriType: UriType,
+    uriList: List<UriType>,
     onEvent: (MemoryEvents) -> Unit = {},
     state: MemoryState,
     onCreateClick : (TopLevelScreen.Feed) -> Unit = {},
@@ -103,7 +101,7 @@ fun MemoryScreen(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val pagerState = rememberPagerState(pageCount = {
-        1
+        uriList.size
     })
 
 
@@ -150,10 +148,10 @@ fun MemoryScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            Log.i("MemoryScreen", "MemoryScreen: ${uriType == null}")
+                            Log.i("MemoryScreen", "MemoryScreen: ${uriList == null}")
                             onEvent(
                                 MemoryEvents.CreateMemory(
-                                    uriList = listOf(uriType!!),
+                                    uriList = uriList,
                                     title = state.title,
                                     content = state.content
                                 )
@@ -184,7 +182,7 @@ fun MemoryScreen(
             ) {
                 MediaViewer(
                     pagerState = pagerState,
-                    uriType = uriType,
+                    uriTypeList = uriList,
                     imageContentDescription = "Captured Image",
                     lifecycle = lifecycle
                 )
@@ -272,7 +270,7 @@ fun MemoryScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         MemoryScreen(
             onBackPress = {},
-            uriType = UriType(),
+            uriList = emptyList<UriType>(),
             onEvent = {},
             state = MemoryState()
         )

@@ -114,7 +114,7 @@ fun MediaPreview(
         Log.d(TAG, "ImagePreview: uri is ${uriType!!.uri}")
     }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .animateContentSize()
     ) {
@@ -124,9 +124,9 @@ fun MediaPreview(
         ){
             Card(
                 modifier = Modifier.padding(5.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.LightGray.copy(alpha = 0.4f)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ){
                 if(uriType!!.type == Type.IMAGE){

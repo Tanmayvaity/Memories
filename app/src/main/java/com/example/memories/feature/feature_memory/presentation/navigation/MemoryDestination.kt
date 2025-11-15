@@ -20,7 +20,8 @@ fun NavGraphBuilder.createMemoryGraph(
     composable<AppScreen.Memory>(
         typeMap = mapOf(
             typeOf<UriType>() to CustomNavType.uriWrapperType,
-            typeOf<Type>() to CustomNavType.mediaType
+            typeOf<Type>() to CustomNavType.mediaType,
+            typeOf<List<UriType>>() to CustomNavType.uriWrapperListType
         )
     ) {
         val args = it.toRoute<AppScreen.Memory>()
@@ -38,7 +39,7 @@ fun NavGraphBuilder.createMemoryGraph(
                     launchSingleTop = true
                 }
             },
-            uriType = args.uriTypeWrapper
+            uriList = args.uriTypeWrapperList
         )
     }
 }

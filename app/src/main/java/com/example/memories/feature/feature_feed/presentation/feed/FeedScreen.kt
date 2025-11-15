@@ -160,24 +160,27 @@ fun FeedScreen(
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
+        contract = ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uriList ->
 
-        if (uri != null) {
+        if (uriList != null) {
 
-            val uriWrapper = UriType(
-                uri = uri.toString(),
-                type = uri.mapContentUriToType(context)
-            )
+            val uriWrapperList = uriList.map { uri ->
+                UriType(
+                    uri = uri.toString(),
+                    type = uri.mapContentUriToType(context)
+                )
+            }
+
 
             currentMemoryEntryMode?.let{ it ->
                 when(it){
                     MemoryEntryMode.EditImage -> {
-                        onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapper))
+                        onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapperList[0]))
                     }
 
                     MemoryEntryMode.ChooseImageAndCreate -> {
-                        onNavigateToMemoryCreate(AppScreen.Memory(uriWrapper))
+                        onNavigateToMemoryCreate(AppScreen.Memory(uriWrapperList))
                     }
 
                     else -> {}
@@ -257,7 +260,7 @@ fun FeedScreen(
                     if(mode != MemoryEntryMode.DirectCreate){
                         mediaLauncher.launch(
                             PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
                         )
                     }
