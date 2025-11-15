@@ -1,15 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail
 
-import android.R.attr.contentDescription
-import android.R.attr.onClick
-import android.R.attr.text
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +13,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -38,8 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,14 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,14 +53,12 @@ import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.ContentActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.util.formatTime
-import com.example.memories.feature.feature_feed.presentation.feed.FeedEvents
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEvents
-import com.example.memories.ui.theme.BlueishBlack
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
-fun MediaDetailRoot(
+fun MemoryDetailRoot(
     modifier: Modifier = Modifier,
     viewmodel : MemoryDetailViewModel = hiltViewModel<MemoryDetailViewModel>(),
     onBack : () -> Unit ={}
@@ -104,7 +88,7 @@ fun MediaDetailRoot(
         }
     }
 
-    MediaDetailScreen(
+    MemoryDetailScreen(
         memory = memory,
         onEvent = viewmodel::onEvent,
         onBack =  onBack
@@ -114,7 +98,7 @@ fun MediaDetailRoot(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MediaDetailScreen(
+fun MemoryDetailScreen(
     modifier: Modifier = Modifier,
     memory : MemoryWithMediaModel? = null,
     onEvent : (MemoryDetailEvents) -> Unit = {},
@@ -181,21 +165,34 @@ fun MediaDetailScreen(
         ) {
             memory?.let {
                 val item = memory.memory
-                HorizontalPager(
-                    state = pagerState
-                ) {page ->
-
-                    AsyncImage(
-                        model = if(LocalInspectionMode.current) R.drawable.ic_launcher_background else memory.mediaList[page].uri,
-                        contentDescription = "Linked Image",
+                Box{
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier
-                            .fillMaxWidth()
                             .height(300.dp)
-                        ,
-                        contentScale = ContentScale.FillWidth
-                    )
+                            .fillMaxWidth()
 
+                        ,
+
+                    ) {page ->
+
+                        AsyncImage(
+                            model = if(LocalInspectionMode.current) R.drawable.ic_launcher_background else memory.mediaList[page].uri,
+                            contentDescription = "Linked Image",
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.FillWidth
+                        )
+
+                    }
+                    MediaPageIndicatorLine(
+                        currentPage = pagerState.currentPage,
+                        pageCount = pagerState.pageCount,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+//                        backGroundColor = MaterialTheme.colorScheme.primaryContainer,
+//                        pageTextColor = MaterialTheme.colorScheme.primary
+                    )
                 }
+
                 Box(
                     modifier = Modifier
 //                        .background(BlueishBlack)
@@ -315,11 +312,12 @@ fun MediaDetailScreen(
 
 }
 
+@PreviewLightDark
 @Preview
 @Composable
-fun MediaDetailScreenPreview(modifier: Modifier = Modifier) {
+fun MemoryDetailScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
-        MediaDetailScreen(
+        MemoryDetailScreen(
             memory = MemoryWithMediaModel()
         )
     }

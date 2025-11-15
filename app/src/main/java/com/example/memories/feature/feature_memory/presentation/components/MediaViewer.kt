@@ -42,6 +42,7 @@ import coil3.request.crossfade
 import com.example.memories.R
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.VideoPlayer
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -123,8 +124,8 @@ fun MediaViewer(
 
 
         }
-        MediaPageIndicator(
-            modifier= Modifier.align(Alignment.TopEnd),
+        MediaPageIndicatorLine(
+            modifier= Modifier.align(Alignment.BottomCenter),
             currentPage = pagerState.currentPage,
             pageCount = pagerState.pageCount
         )
