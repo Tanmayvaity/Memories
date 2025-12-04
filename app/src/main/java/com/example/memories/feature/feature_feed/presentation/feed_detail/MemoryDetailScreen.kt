@@ -55,6 +55,7 @@ import com.example.memories.core.presentation.components.ContentActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.util.formatTime
+import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
@@ -213,6 +214,12 @@ fun MemoryDetailScreen(
                             text = item.timeStamp.formatTime(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        TagRow(
+                            totalTags = memory.tagsList,
+                            showAdd = false,
+                            onAddClick = {},
+                            modifier = Modifier.padding(top = 5.dp)
                         )
                         Text(
                             text = item.content,
