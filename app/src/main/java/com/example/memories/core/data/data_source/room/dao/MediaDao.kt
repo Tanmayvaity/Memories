@@ -19,7 +19,7 @@ interface MediaDao {
     @Query("SELECT * FROM MediaEntity WHERE hidden = 1")
     suspend fun getAllHiddenMedia(): List<MediaEntity>
 
-    @Insert
-    suspend fun insertAllMedia(mediaList: List<MediaEntity>)
+//    @Insert
+//    suspend fun insertAllMedia(mediaList: List<MediaEntity>)
 
 }

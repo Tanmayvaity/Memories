@@ -3,30 +3,27 @@ package com.example.memories.core.data.data_source.room.Entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
-import java.util.UUID
 
 @Entity(
+    primaryKeys = ["memory_id","tag_id"],
     foreignKeys = [
         ForeignKey(
             entity = MemoryEntity::class,
             parentColumns = ["memory_id"],
             childColumns = ["memory_id"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = TagEntity::class,
+            parentColumns = ["tag_id"],
+            childColumns = ["tag_id"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class MediaEntity(
-    @PrimaryKey(autoGenerate = false)
-    @ColumnInfo("media_id")
-    val mediaId: String ,
+data class MemoryTagCrossRef(
     @ColumnInfo("memory_id")
-    val memoryId: String,
-    val uri: String,
-    val hidden: Boolean,
-    val favourite: Boolean,
-    @ColumnInfo("time_stamp")
-    val timeStamp : Long,
-    val longitude : Long?,
-    val latitude : Long?
+    val memoryId : String,
+    @ColumnInfo("tag_id")
+    val tagId : String
 )

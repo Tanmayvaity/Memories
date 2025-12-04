@@ -8,5 +8,4 @@ data class FeedState(
     val isLoading : Boolean = false,
     val error : String? = null,
     val type : FetchType = FetchType.ALL
-
 )

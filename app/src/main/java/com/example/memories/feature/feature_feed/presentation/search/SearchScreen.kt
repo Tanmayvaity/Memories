@@ -95,7 +95,8 @@ fun SearchScreen(
             ),
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(10.dp),
+                .padding(10.dp)
+            ,
             inputField = {
                 SearchBarDefaults.InputField(
                     query = searchText,
@@ -160,7 +161,7 @@ fun SearchScreen(
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize(),
             ) {
 
                 if(state.isLoading){

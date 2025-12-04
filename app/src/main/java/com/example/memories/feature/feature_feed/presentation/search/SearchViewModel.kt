@@ -41,6 +41,7 @@ class SearchViewModel @Inject constructor(
     val state : StateFlow<SearchState> = _inputText
         .debounce(500)
         .flatMapLatest { query ->
+            Log.d("SearchViewModel", "Search query : ${query}")
             if (query.isBlank() || query.isEmpty()) {
                 flowOf(SearchState()) // empty state if no input
             } else {

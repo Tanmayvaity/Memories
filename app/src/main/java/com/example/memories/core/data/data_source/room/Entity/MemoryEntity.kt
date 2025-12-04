@@ -16,4 +16,6 @@ data class MemoryEntity(
     val favourite : Boolean,
     @ColumnInfo("time_stamp")
     val timeStamp : Long,
+    val longitude : Long?,
+    val latitude : Long?
 )

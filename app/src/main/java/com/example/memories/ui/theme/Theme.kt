@@ -34,18 +34,34 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-private val customLightScheme = lightColorScheme(
-    primary = Color.Black,
-    onPrimary = Color.White,
-    primaryContainer = Color.White,
-    onPrimaryContainer = Color.Black,
-    background = Color.White,
-    onBackground = Color.Black,
-    surface = Color.White,
-    onSurface = Color.Black,
-    onSurfaceVariant = Color.Gray,
-    inverseOnSurface = Color.White,
-    inverseSurface = Color.Black
+//private val customLightColorScheme = lightColorScheme(
+//    primary = Color(0xff002d55),
+//    secondary = Color(0xff222d3c),
+//    tertiary = Color(0xff382442),
+//    error = Color(0xff600004),
+//    onPrimary = Color(0xffffffff),
+//    onSecondary = Color(0xffffffff),
+//    onTertiary = Color(0xffffffff),
+//    onError = Color(0xffffffff),
+//    primaryContainer = Color(0xff234a78),
+//    secondaryContainer = Color(0xff3f4a5b),
+//    tertiaryContainer = Color(0xff574160),
+//    errorContainer = Color(0xff98000a),
+//    onPrimaryContainer = Color(0xffffffff),
+//    onSecondaryContainer = Color(0xffffffff),
+//    onTertiaryContainer = Color(0xffffffff),
+//    onErrorContainer = Color(0xffffffff),
+//    surface = Color(0xfff8f9ff),
+//    onSurface = Color(0xff000000),
+//    surfaceVariant = Color(0xff000000),
+//    inverseOnSurface = Color(0xffffffff),
+//    inversePrimary = Color(0xffa4c9fe),
+//    background = Color(0xffffffff),
+//    surfaceContainer = Color(0xffeff0f7)
+//)
+
+private val customDarkColorScheme = lightColorScheme(
+
 )
 
 

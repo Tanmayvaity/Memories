@@ -7,7 +7,11 @@ import com.example.memories.core.data.data_source.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
+import com.example.memories.core.data.data_source.room.dao.MemoryTagCrossRefDao
+import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.database.MemoryDatabase
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_1_2
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_2_3
 import com.example.memories.core.data.repository.ThemeRepositoryImpl
 import com.example.memories.core.domain.repository.ThemeRespository
 import com.example.memories.core.domain.usecase.GetThemeUseCase
@@ -58,6 +62,9 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmap
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
 import com.example.memories.feature.feature_memory.data.repository.MemoryRepositoryImpl
 import com.example.memories.feature.feature_memory.domain.repository.MemoryRepository
+import com.example.memories.feature.feature_memory.domain.usecase.AddTagUseCase
+import com.example.memories.feature.feature_memory.domain.usecase.FetchTagUseCase
+import com.example.memories.feature.feature_memory.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import dagger.Module
@@ -202,7 +209,9 @@ object AppModule {
             context,
             MemoryDatabase::class.java,
             "memory-db"
-        ).build()
+        )
+            .addMigrations(MEMORY_MIGRATION_1_2, MEMORY_MIGRATION_2_3)
+            .build()
     }
 
     @Provides
@@ -218,17 +227,33 @@ object AppModule {
         database: MemoryDatabase
     ): MediaDao = database.mediaDao
 
+
+    @Provides
+    @Singleton
+    fun providesTagDao(
+        database: MemoryDatabase
+    ): TagDao = database.tagDao
+
+    @Provides
+    @Singleton
+    fun providesMemoryTagCrossRefDao(
+        database: MemoryDatabase
+    ): MemoryTagCrossRefDao = database.memoryTagCrossRefDao
     @Provides
     @Singleton
     fun providesMemoryRepository(
          mediaManager : MediaManager,
          mediaDao: MediaDao,
-         memoryDao: MemoryDao
+         memoryDao: MemoryDao,
+         tagDao: TagDao,
+         memoryTagCrossRefDao : MemoryTagCrossRefDao
     ): MemoryRepository {
         return MemoryRepositoryImpl(
             mediaManager = mediaManager,
             mediaDao = mediaDao,
-            memoryDao = memoryDao
+            memoryDao = memoryDao,
+            tagDao = tagDao,
+            memoryTagCrossRefDao = memoryTagCrossRefDao
         )
     }
 
@@ -238,7 +263,10 @@ object AppModule {
         memoryRepository: MemoryRepository
     ): MemoryUseCase{
         return MemoryUseCase(
-            createMemoryUseCase = MemoryCreateUseCase(memoryRepository)
+            createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
+            fetchTagUseCase = FetchTagUseCase(memoryRepository),
+            addTagUseCase = AddTagUseCase(memoryRepository),
+            fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(memoryRepository)
         )
     }
 
