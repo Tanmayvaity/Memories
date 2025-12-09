@@ -30,7 +30,7 @@ fun ChipRow(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
+        modifier = modifier.padding(10.dp)
     ) {
         items.forEachIndexed { index, item ->
             FilterChip(

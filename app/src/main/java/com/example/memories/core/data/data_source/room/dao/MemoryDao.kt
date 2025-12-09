@@ -39,6 +39,10 @@ interface MemoryDao {
     fun getAllMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
     @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE memory_id IN (:memoryIds) and hidden =0")
+    fun getAllMemoriesWithMediaByTag(memoryIds : List<String>) : Flow<List<MemoryWithMedia>>
+
+    @Transaction
     @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY time_stamp DESC")
     fun getAllFavouriteMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
 
@@ -48,7 +52,7 @@ interface MemoryDao {
 
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where title LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM MemoryEntity where title LIKE '%' || :query || '%' order by time_stamp desc")
     fun getAllMemoriesWithMediaByTitle(query : String): Flow<List<MemoryWithMedia>>
 
 

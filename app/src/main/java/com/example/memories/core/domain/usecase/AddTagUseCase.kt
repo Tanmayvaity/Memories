@@ -1,19 +1,19 @@
-package com.example.memories.feature.feature_memory.domain.usecase
+package com.example.memories.core.domain.usecase
 
 import android.R.attr.tag
 import android.util.Log
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
-import com.example.memories.feature.feature_memory.domain.repository.MemoryRepository
+import com.example.memories.core.domain.repository.TagRepository
 import javax.inject.Inject
 
 class AddTagUseCase @Inject constructor(
-    val memoryRepository: MemoryRepository
+    val tagRepository: TagRepository
 ) {
     suspend operator fun invoke(label : String) : Result<TagModel>{
         try {
             val tag = TagModel(label = label)
-            memoryRepository.insertTag(tag)
+            tagRepository.insertTag(tag)
             Log.d(TAG, "Tag Added Successfully : $tag")
             return Result.Success(tag)
         }catch (e : Exception){

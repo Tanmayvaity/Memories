@@ -9,7 +9,7 @@ import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.feature.feature_memory.domain.repository.MemoryRepository
+import com.example.memories.core.domain.repository.MemoryRepository
 import java.lang.NullPointerException
 import javax.inject.Inject
 import kotlin.collections.map

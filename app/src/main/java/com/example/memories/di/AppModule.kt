@@ -1,6 +1,7 @@
 package com.example.memories.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.MediaManager
@@ -8,10 +9,13 @@ import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.MemoryTagCrossRefDao
+import com.example.memories.core.data.data_source.room.dao.SearchDao
 import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.database.MemoryDatabase
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_1_2
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_2_3
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_3_4
+import com.example.memories.core.domain.repository.TagRepository
 import com.example.memories.core.data.repository.ThemeRepositoryImpl
 import com.example.memories.core.domain.repository.ThemeRespository
 import com.example.memories.core.domain.usecase.GetThemeUseCase
@@ -38,8 +42,10 @@ import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUse
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
 import com.example.memories.feature.feature_feed.data.repository.FeedRepositoryImpl
 import com.example.memories.feature.feature_feed.data.repository.MediaFeedRepositoryImpl
+import com.example.memories.feature.feature_feed.data.repository.RecentSearchRepositoryImpl
 import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
+import com.example.memories.feature.feature_feed.domain.repository.RecentSearchRepository
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediasUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
@@ -53,6 +59,9 @@ import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.Get
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SearchByTitleUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentSearchUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.RecentSearchWrapper
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SaveSearchIdUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
@@ -60,11 +69,13 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWi
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
-import com.example.memories.feature.feature_memory.data.repository.MemoryRepositoryImpl
-import com.example.memories.feature.feature_memory.domain.repository.MemoryRepository
-import com.example.memories.feature.feature_memory.domain.usecase.AddTagUseCase
-import com.example.memories.feature.feature_memory.domain.usecase.FetchTagUseCase
-import com.example.memories.feature.feature_memory.domain.usecase.FetchTagsByLabelUseCase
+import com.example.memories.core.data.repository.MemoryRepositoryImpl
+import com.example.memories.core.domain.repository.MemoryRepository
+import com.example.memories.core.domain.usecase.AddTagUseCase
+import com.example.memories.core.domain.usecase.FetchTagUseCase
+import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
+import com.example.memories.core.data.repository.TagRepositoryImpl
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import dagger.Module
@@ -72,6 +83,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import javax.inject.Singleton
 
 
@@ -124,6 +137,18 @@ object AppModule {
     fun provideMediaRepository(mediaManager: MediaManager): MediaRepository {
         return MediaRepositoryImpl(mediaManager)
     }
+
+    @Provides
+    @Singleton
+    fun provideRecentSearchRepository(search : SearchDao): RecentSearchRepository {
+        return RecentSearchRepositoryImpl(search)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchDao(
+        database: MemoryDatabase
+    ): SearchDao = database.searchDao
 
 
     @Provides
@@ -209,8 +234,17 @@ object AppModule {
             context,
             MemoryDatabase::class.java,
             "memory-db"
+        ).setQueryCallback(
+            { sqlQuery, bindArgs ->
+                Log.i("MemoryDatabase", "providesMemoryDatabase: ${sqlQuery.toString()}")
+            },
+            Dispatchers.IO.asExecutor()
         )
-            .addMigrations(MEMORY_MIGRATION_1_2, MEMORY_MIGRATION_2_3)
+            .addMigrations(
+                MEMORY_MIGRATION_1_2,
+                MEMORY_MIGRATION_2_3,
+                MEMORY_MIGRATION_3_4
+            )
             .build()
     }
 
@@ -243,45 +277,53 @@ object AppModule {
     @Singleton
     fun providesMemoryRepository(
          mediaManager : MediaManager,
-         mediaDao: MediaDao,
          memoryDao: MemoryDao,
          tagDao: TagDao,
-         memoryTagCrossRefDao : MemoryTagCrossRefDao
     ): MemoryRepository {
         return MemoryRepositoryImpl(
             mediaManager = mediaManager,
-            mediaDao = mediaDao,
             memoryDao = memoryDao,
             tagDao = tagDao,
-            memoryTagCrossRefDao = memoryTagCrossRefDao
         )
+    }
+
+
+    @Provides
+    @Singleton
+    fun providesTagRepository(
+        tagDao: TagDao
+    ) : TagRepository{
+        return TagRepositoryImpl(tagDao)
     }
 
     @Provides
     @Singleton
     fun providesMemoryUseCase(
-        memoryRepository: MemoryRepository
+        memoryRepository: MemoryRepository,
+        tagRepository: TagRepository
     ): MemoryUseCase{
         return MemoryUseCase(
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
-            fetchTagUseCase = FetchTagUseCase(memoryRepository),
-            addTagUseCase = AddTagUseCase(memoryRepository),
-            fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(memoryRepository)
+            fetchTagUseCase = FetchTagUseCase(tagRepository),
+            addTagUseCase = AddTagUseCase(tagRepository),
+            fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(tagRepository)
         )
     }
 
     @Provides
     @Singleton
     fun providesFeedRepository(
-        memoryDao: MemoryDao
+        memoryDao: MemoryDao,
+        tagDao: TagDao
     ): FeedRepository{
-        return FeedRepositoryImpl(memoryDao)
+        return FeedRepositoryImpl(memoryDao,tagDao)
     }
 
     @Provides
     @Singleton
     fun providesFeedUseCases(
-        repository : FeedRepository
+        repository : MemoryRepository,
+        tagRepository: TagRepository
     ): FeedUseCaseWrapper{
         return FeedUseCaseWrapper(
             getFeedUseCase = GetFeedUseCase(repository),
@@ -289,7 +331,21 @@ object AppModule {
             toggleHiddenUseCase = ToggleHiddenUseCase(repository),
             getMemoryByIdUseCase = GetMemoryByIdUseCase(repository),
             deleteMemoryUseCase = DeleteUseCase(repository),
-            searchByTitleUseCase = SearchByTitleUseCase(repository)
+            searchByTitleUseCase = SearchByTitleUseCase(repository),
+            fetchTagUseCase = FetchTagUseCase(tagRepository),
+            fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository)
+        )
+
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecentSearchWrapper(
+        repository : RecentSearchRepository
+    ): RecentSearchWrapper{
+        return RecentSearchWrapper(
+            saveSearchIdUseCase = SaveSearchIdUseCase(repository),
+            fetchRecentSearchUseCase = FetchRecentSearchUseCase(repository)
         )
 
     }

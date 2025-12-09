@@ -54,6 +54,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
@@ -72,13 +73,11 @@ import kotlinx.coroutines.launch
 fun MemoryRoot(
     modifier: Modifier = Modifier,
     viewModel: MemoryViewModel = hiltViewModel<MemoryViewModel>(),
-    themeViewModel: ThemeViewModel = hiltViewModel<ThemeViewModel>(),
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
     uriList: List<UriType>,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
-    val themeState by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
     MemoryScreen(
         onBackPress = onBackPress,
         uriList = uriList,
@@ -87,7 +86,7 @@ fun MemoryRoot(
         onCreateClick = onGoToHomeScreen,
         errorFLow = viewModel.errorFlow,
         successFlow = viewModel.successFlow,
-        isDarkModeEnabled = themeState,
+        isDarkModeEnabled = LocalTheme.current,
     )
 
 

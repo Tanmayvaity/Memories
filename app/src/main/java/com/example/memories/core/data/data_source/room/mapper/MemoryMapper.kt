@@ -3,9 +3,11 @@ package com.example.memories.core.data.data_source.room.mapper
 import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.Entity.MemoryTagCrossRef
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
+import com.example.memories.core.data.data_source.room.Entity.TagsWithMemory
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryTagCrossRefModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.TagsWithMemoryModel
 
 fun MemoryEntity.toDomain() : MemoryModel {
     return MemoryModel(
@@ -43,6 +45,14 @@ fun MemoryWithMediaModel.toEntity() : MemoryWithMedia {
         memory = memory.toEntity(),
         list = mediaList.map { it -> it.toEntity() },
         tags = tagsList.map { it -> it.toEntity() }
+    )
+}
+
+fun TagsWithMemory.toDomain() : TagsWithMemoryModel {
+    return TagsWithMemoryModel(
+        tag = tag.toDomain(),
+//        mediaList = list.map { it -> it.toDomain() },
+        memoryList = memories.map { it -> it.toDomain() }
     )
 }
 

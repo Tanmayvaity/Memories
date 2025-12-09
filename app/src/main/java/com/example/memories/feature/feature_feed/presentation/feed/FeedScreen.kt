@@ -153,7 +153,7 @@ fun FeedScreen(
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
     var currentItemIndex by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var selectedChipIndex by remember { mutableStateOf<Int>(0) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -198,7 +198,7 @@ fun FeedScreen(
     )
 
     Scaffold(
-//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             AppTopBar(
 
@@ -281,9 +281,12 @@ fun FeedScreen(
                 ),
         ) {
 
-            item {
+            stickyHeader() {
                 ChipRow(
-                    modifier = Modifier.padding(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                    ,
                     selectedItemIndex = state.type.toIndex(),
                     items = listOf<MenuItem>(
                         MenuItem(

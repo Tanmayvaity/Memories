@@ -1,13 +1,11 @@
-package com.example.memories.feature.feature_memory.presentation.components
+package com.example.memories.core.presentation.components
 
-import android.R.attr.label
-import android.R.attr.tag
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,20 +22,22 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun TagChip(
     tag: TagModel,
     modifier: Modifier = Modifier,
-    onClick: (TagModel) -> Unit
+    selected : Boolean = true,
+    showBorder : Boolean = false,
+    onClick: (TagModel) -> Unit,
 ) {
     FilterChip(
         onClick = { onClick(tag) },
-        selected = false,
+        selected = selected,
         shape = RoundedCornerShape(20.dp),
-        border = null,
+        border = if(showBorder) BorderStroke(width = 1.dp,color = MaterialTheme.colorScheme.primaryContainer) else null,
         modifier = modifier
             .wrapContentHeight()
             .wrapContentWidth(align = Alignment.Start),
 //            .weight(1f),
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+//        colors = FilterChipDefaults.filterChipColors(
+//            containerColor = MaterialTheme.colorScheme.primaryContainer,
+//        ),
         label = {
             Text(
                 modifier = Modifier.padding(10.dp),
@@ -56,6 +56,6 @@ fun TagChip(
 @Composable
 fun TagChipPreview() {
     MemoriesTheme {
-        TagChip(tag = TagModel(label = "Memory"), onClick = {})
+        TagChip(tag = TagModel(label = "Memory"), onClick = {}, showBorder = true)
     }
 }

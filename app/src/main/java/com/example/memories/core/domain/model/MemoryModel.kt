@@ -18,6 +18,12 @@ data class MemoryWithMediaModel(
     val tagsList : List<TagModel> = emptyList()
 )
 
+data class TagsWithMemoryModel(
+    val tag : TagModel = TagModel(label = "Memory"),
+    val memoryList : List<MemoryModel> = emptyList(),
+//    val mediaList : List<MediaModel> = emptyList()
+)
+
 data class MemoryTagCrossRefModel(
     val memoryId : String,
     val tagId : String

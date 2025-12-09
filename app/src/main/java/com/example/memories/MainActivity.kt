@@ -17,8 +17,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.with
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +40,10 @@ import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.ui.theme.MemoriesTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+
+
+val LocalTheme = compositionLocalOf { false }
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
@@ -47,6 +54,7 @@ class MainActivity : ComponentActivity() {
 
             val viewmodel = hiltViewModel<ThemeViewModel>()
             val isDarkModeEnabled by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
+
             val navController = rememberNavController()
             LaunchedEffect(isDarkModeEnabled) {
                 Log.d("MainActivity", "onCreate: isDarkModeEnabled : ${isDarkModeEnabled}")
@@ -63,11 +71,15 @@ class MainActivity : ComponentActivity() {
                 },
                 label = "ThemeTransition"
             ) { isDark ->
-                MemoriesTheme(
-                    darkTheme = isDark
+                CompositionLocalProvider(
+                    LocalTheme provides isDark
                 ) {
+                    MemoriesTheme(
+                        darkTheme = isDark
+                    ) {
 
-                    AppNav(navController)
+                        AppNav(navController)
+                    }
                 }
 
             }

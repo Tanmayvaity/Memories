@@ -1,5 +1,9 @@
 package com.example.memories.feature.feature_memory.domain.usecase
 
+import com.example.memories.core.domain.usecase.AddTagUseCase
+import com.example.memories.core.domain.usecase.FetchTagUseCase
+import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
+
 data class MemoryUseCase(
     val createMemoryUseCase : MemoryCreateUseCase,
     val fetchTagUseCase: FetchTagUseCase,

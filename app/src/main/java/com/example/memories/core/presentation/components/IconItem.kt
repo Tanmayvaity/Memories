@@ -3,6 +3,7 @@ package com.example.memories.core.presentation.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -60,6 +61,22 @@ fun IconItem(
     }
 }
 
+/**
+ * A composable that displays an icon within a shaped, clickable background.
+ * The icon's color can be toggled upon selection.
+ * This overload accepts an [ImageVector] for the icon.
+ *
+ * @param modifier The modifier to be applied to the IconButton.
+ * @param imageVector The [ImageVector] to be displayed inside the button.
+ * @param contentDescription Text used by accessibility services to describe what this icon represents.
+ * @param color The default tint color for the icon.
+ * @param shape The shape of the background. Defaults to [CircleShape].
+ * @param iconSize The size of the icon itself. Defaults to 24.dp.
+ * @param backgroundColor The color of the background.
+ * @param alpha The alpha to be applied to the background color.
+ * @param onClick A lambda to be invoked when the icon is clicked.
+ * @param onSelectedIconColorToggleColor The color the icon's tint will change to when it is selected. Defaults to the value of [color].
+ */
 @Composable
 fun IconItem(
     modifier : Modifier = Modifier,
@@ -90,7 +107,8 @@ fun IconItem(
             contentDescription = contentDescription,
             tint = if(selected && color!=Color.LightGray) onSelectedIconColorToggleColor else color,
             modifier = Modifier
-                .size(iconSize),
+                .size(iconSize)
+            ,
         )
     }
 }

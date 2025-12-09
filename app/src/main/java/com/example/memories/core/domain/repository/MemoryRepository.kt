@@ -1,15 +1,30 @@
-package com.example.memories.feature.feature_feed.domain.repository
+package com.example.memories.core.domain.repository
 
-import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
+import android.net.Uri
+import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
+import com.example.memories.core.domain.model.MemoryTagCrossRefModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
-import com.example.memories.core.domain.model.TagsWithMemoryModel
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import kotlinx.coroutines.flow.Flow
 
+interface MemoryRepository {
 
-interface FeedRepository{
+    suspend fun saveToInternalStorage(uriList : List<Uri>): Result<List<Uri>>
+
+    suspend fun insertMemory(memory : MemoryModel)
+
+    suspend fun insertMedia(mediaList : List<MediaModel>)
+
+    suspend fun insertMemoryWithMediaAndTag(memory: MemoryModel, mediaList: List<MediaModel>, tagList : List<TagModel>)
+
+    suspend fun insertTags(tags : List<TagModel>)
+
+
+    suspend fun insertMemoryTagCrossRef(refs : List<MemoryTagCrossRefModel>)
+
     suspend fun getMemories(type : FetchType): Flow<List<MemoryWithMediaModel>>
 
     suspend fun updateFavouriteState(id : String,isFavourite : Boolean)
@@ -27,4 +42,7 @@ interface FeedRepository{
 
 
     suspend fun getMemoryByTag(id : String): Flow<List<MemoryWithMediaModel>>
+
+
+
 }
