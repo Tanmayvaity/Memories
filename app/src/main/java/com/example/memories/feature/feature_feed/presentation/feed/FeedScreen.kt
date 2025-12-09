@@ -161,10 +161,11 @@ fun FeedScreen(
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia()
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
     ) { uriList ->
 
-        if (uriList != null) {
+
+        if (uriList != null && uriList.size<=5) {
 
             val uriWrapperList = uriList.map { uri ->
                 UriType(
@@ -188,6 +189,16 @@ fun FeedScreen(
             }
 
         }
+        if(uriList == null){
+            Log.e(TAG, "FeedScreen: Uri List is NULL", )
+            return@rememberLauncherForActivityResult
+        }
+
+        if(uriList.size>5){
+            Log.e(TAG, "FeedScreen: uri list size  is greater than 5", )
+            return@rememberLauncherForActivityResult
+        }
+
 
     }
 
