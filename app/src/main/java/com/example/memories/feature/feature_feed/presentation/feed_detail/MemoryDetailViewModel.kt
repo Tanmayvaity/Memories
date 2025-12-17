@@ -8,6 +8,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -23,6 +24,9 @@ class MemoryDetailViewModel @Inject constructor(
 
     private val _memory = MutableStateFlow(MemoryWithMediaModel())
     val memory = _memory.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     private val _eventChannel  = Channel<UiEvent>()
     val eventFlow = _eventChannel.receiveAsFlow()
@@ -40,16 +44,18 @@ class MemoryDetailViewModel @Inject constructor(
     fun onEvent(event: MemoryDetailEvents){
         when(event){
             is MemoryDetailEvents.Fetch -> {
+                _isLoading.update { true }
                 viewModelScope.launch {
-
                     val memory = feedUseCases.getMemoryByIdUseCase(event.id)
                     if(memory!=null){
                         _memory.update {
                             memory
                         }
                     }
+                    _isLoading.update { false }
                     Log.d(TAG, "MemoryDetailEvents.Fetch : ${memory.toString()}")
                 }
+
             }
 
             is MemoryDetailEvents.FavoriteToggle -> {

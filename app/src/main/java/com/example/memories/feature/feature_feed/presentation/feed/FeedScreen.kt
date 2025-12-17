@@ -1,7 +1,9 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
 import android.R.attr.dialogTitle
+import android.R.attr.mode
 import android.R.attr.onClick
+import android.R.attr.text
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -26,6 +28,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -37,10 +42,13 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +56,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -64,10 +74,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -87,6 +101,7 @@ import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.ContentActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.TAG
 import com.example.memories.core.util.mapContentUriToType
@@ -108,9 +123,9 @@ fun FeedRoot(
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
-    onNavigateToMemoryCreate : (AppScreen.Memory) -> Unit,
+    onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
 
-) {
+    ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val dataLoadingState by viewModel.isDataLoading.collectAsStateWithLifecycle()
     val isDarkModeEnabled by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
@@ -136,7 +151,7 @@ fun FeedRoot(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FeedScreen(
     state: FeedState,
@@ -145,19 +160,20 @@ fun FeedScreen(
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
-    onNavigateToMemoryCreate : (AppScreen.Memory) -> Unit = {},
+    onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
     isDarkModeEnabled: Boolean = false
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
+    var expandFab by rememberSaveable() { mutableStateOf(false) }
     var currentItemIndex by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var selectedChipIndex by remember { mutableStateOf<Int>(0) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var currentMemoryEntryMode : MemoryEntryMode? = null
+    var currentMemoryEntryMode: MemoryEntryMode? = null
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
@@ -165,7 +181,7 @@ fun FeedScreen(
     ) { uriList ->
 
 
-        if (uriList != null && uriList.size<=5) {
+        if (uriList != null && uriList.size <= 5) {
 
             val uriWrapperList = uriList.map { uri ->
                 UriType(
@@ -174,14 +190,14 @@ fun FeedScreen(
                 )
             }
 
-            if(currentMemoryEntryMode!=null && uriWrapperList.isNotEmpty()){
-                when(currentMemoryEntryMode){
+            if (currentMemoryEntryMode != null && uriWrapperList.isNotEmpty()) {
+                when (currentMemoryEntryMode) {
                     MemoryEntryMode.EditImage -> {
                         onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapperList[0]))
                     }
 
                     MemoryEntryMode.ChooseImageAndCreate -> {
-                        onNavigateToMemoryCreate(AppScreen.Memory(null,uriWrapperList))
+                        onNavigateToMemoryCreate(AppScreen.Memory(null, uriWrapperList))
                     }
 
                     else -> {}
@@ -189,13 +205,13 @@ fun FeedScreen(
             }
 
         }
-        if(uriList == null){
-            Log.e(TAG, "FeedScreen: Uri List is NULL", )
+        if (uriList == null) {
+            Log.e(TAG, "FeedScreen: Uri List is NULL")
             return@rememberLauncherForActivityResult
         }
 
-        if(uriList.size>5){
-            Log.e(TAG, "FeedScreen: uri list size  is greater than 5", )
+        if (uriList.size > 5) {
+            Log.e(TAG, "FeedScreen: uri list size  is greater than 5")
             return@rememberLauncherForActivityResult
         }
 
@@ -209,7 +225,9 @@ fun FeedScreen(
     )
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ,
         topBar = {
             AppTopBar(
 
@@ -258,30 +276,92 @@ fun FeedScreen(
 //                )
 //            }
 
-            CustomFloatingActionButton(
-                expandable = true,
-                actionList = listOf(
-                    Triple(MemoryEntryMode.ChooseImageAndCreate, Icons.Default.AddCircle,"Choosing Media"),
-                    Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit,"Edit Media"),
-                    Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add,"Without Media"),
 
+//            CustomFloatingActionButton(
+//                expandable = true,
+//                actionList = listOf(
+//                    Triple(MemoryEntryMode.ChooseImageAndCreate, Icons.Default.AddCircle,"Choosing Media"),
+//                    Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit,"Edit Media"),
+//                    Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add,"Without Media"),
+//
+//                ),
+//                onFabClick = {mode ->
+//                    currentMemoryEntryMode = mode
+//                    if(mode != MemoryEntryMode.DirectCreate){
+//                        mediaLauncher.launch(
+//                            PickVisualMediaRequest(
+//                                ActivityResultContracts.PickVisualMedia.ImageOnly
+//                            )
+//                        )
+//                    }
+//
+//                }
+//
+//            )
+
+            val items = listOf(
+                Triple(
+                    MemoryEntryMode.ChooseImageAndCreate,
+                    Icons.Default.AddCircle,
+                    "Choosing Media"
                 ),
-                onFabClick = {mode ->
-                    currentMemoryEntryMode = mode
-                    if(mode != MemoryEntryMode.DirectCreate){
-                        mediaLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
+                Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit, "Edit Media"),
+                Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add, "Without Media"),
+            )
+
+            FloatingActionButtonMenu(
+                modifier = Modifier.animateFloatingActionButton(
+                    visible = true,
+                    alignment = Alignment.TopCenter
+                ),
+                expanded = expandFab,
+                button = {
+                    ToggleFloatingActionButton(
+                        checked = expandFab,
+                        onCheckedChange = {
+                            expandFab = it
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (!expandFab) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Create Memory",
+                            tint = if (expandFab) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            }
                         )
                     }
-
                 }
+            ) {
+                items.forEachIndexed { index, item ->
+                    FloatingActionButtonMenuItem(
+                        onClick = {
+                            expandFab = false
+                            currentMemoryEntryMode = item.first
+                            if (currentMemoryEntryMode != MemoryEntryMode.DirectCreate) {
+                                mediaLauncher.launch(
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
+                                )
+                            }
+                        },
+                        text = { Text(item.third) },
+                        icon = {
+                            Icon(
+                                imageVector = item.second,
+                                contentDescription = null
+                            )
+                        },
+                    )
+                }
+            }
 
-            )
         }
     ) { innerPadding ->
         Log.d("FeedScreen", "FeedScreen: ${state.memories.isEmpty()}")
+
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
@@ -296,8 +376,7 @@ fun FeedScreen(
                 ChipRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                    ,
+                        .background(MaterialTheme.colorScheme.surface),
                     selectedItemIndex = state.type.toIndex(),
                     items = listOf<MenuItem>(
                         MenuItem(
@@ -353,6 +432,7 @@ fun FeedScreen(
                         onNavigateToMemoryDetail(
                             AppScreen.MemoryDetail(memoryId = it.memory.memoryId)
                         )
+                        expandFab = false
                     },
                     onFavouriteButtonClick = {
                         if (it == null) {
@@ -381,6 +461,20 @@ fun FeedScreen(
                         )
                     }
 
+                )
+            }
+        }
+
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+
+            ) {
+                LoadingIndicator(
+                    text = "Fetching Memory"
                 )
             }
         }
@@ -424,7 +518,7 @@ fun FeedScreen(
             )
         }
 
-        if (state.memories.isEmpty()) {
+        if (state.memories.isEmpty() && !state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
