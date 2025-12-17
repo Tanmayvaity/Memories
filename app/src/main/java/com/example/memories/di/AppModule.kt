@@ -15,6 +15,7 @@ import com.example.memories.core.data.data_source.room.database.MemoryDatabase
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_1_2
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_2_3
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_3_4
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_4_5
 import com.example.memories.core.domain.repository.TagRepository
 import com.example.memories.core.data.repository.ThemeRepositoryImpl
 import com.example.memories.core.domain.repository.ThemeRespository
@@ -77,6 +78,7 @@ import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
+import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import dagger.Module
 import dagger.Provides
@@ -243,7 +245,8 @@ object AppModule {
             .addMigrations(
                 MEMORY_MIGRATION_1_2,
                 MEMORY_MIGRATION_2_3,
-                MEMORY_MIGRATION_3_4
+                MEMORY_MIGRATION_3_4,
+                MEMORY_MIGRATION_4_5
             )
             .build()
     }
@@ -306,7 +309,9 @@ object AppModule {
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             addTagUseCase = AddTagUseCase(tagRepository),
-            fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(tagRepository)
+            fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(tagRepository),
+            fetchMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
+            updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository)
         )
     }
 

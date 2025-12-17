@@ -41,7 +41,6 @@ fun ReminderPickerButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .padding(10.dp)
             .clip(shape),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,

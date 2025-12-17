@@ -56,13 +56,15 @@ import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
+import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
 fun MemoryDetailRoot(
     modifier: Modifier = Modifier,
     viewmodel : MemoryDetailViewModel = hiltViewModel<MemoryDetailViewModel>(),
-    onBack : () -> Unit ={}
+    onBack : () -> Unit ={},
+    onNavigateToMemory : (AppScreen) -> Unit
 ) {
     val memory by viewmodel.memory.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -92,7 +94,8 @@ fun MemoryDetailRoot(
     MemoryDetailScreen(
         memory = memory,
         onEvent = viewmodel::onEvent,
-        onBack =  onBack
+        onBack =  onBack,
+        onNavigateToMemory = onNavigateToMemory
     )
 }
 
@@ -103,7 +106,8 @@ fun MemoryDetailScreen(
     modifier: Modifier = Modifier,
     memory : MemoryWithMediaModel? = null,
     onEvent : (MemoryDetailEvents) -> Unit = {},
-    onBack : () -> Unit = {}
+    onBack : () -> Unit = {},
+    onNavigateToMemory: (AppScreen) -> Unit= {}
 ) {
     val previewMode = LocalInspectionMode.current
     val pagerState = rememberPagerState { if(previewMode) 1 else memory?.mediaList?.size?:0 }
@@ -251,6 +255,8 @@ fun MemoryDetailScreen(
                     icon = R.drawable.ic_edit,
                     iconContentDescription = "Edit",
                     onClick = {
+                        onNavigateToMemory(AppScreen.Memory(item.memoryId,emptyList()))
+                        showContentSheet = false
                     }
                 ),
                 MenuItem(

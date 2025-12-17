@@ -18,10 +18,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MemoryDao {
 
-    @Insert
+    @Upsert
     suspend fun insertMemory(memory: MemoryEntity)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAllMedia(mediaList: List<MediaEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -33,6 +33,88 @@ interface MemoryDao {
         mediaList.map { it.copy(memoryId = memory.memoryId) }.also { insertAllMedia(it) }
         tagList.map { tag -> MemoryTagCrossRef(memory.memoryId,tag.tagId) }.also {insertMemoryTagCrossRef(it)}
     }
+
+    @Transaction
+    suspend fun updateMemory(
+        memory : MemoryEntity,
+        mediaList : List<MediaEntity>,
+        tags : List<TagEntity>
+    ){
+        insertMemory(memory)
+
+//        val incomingMediaIds = mediaList.map { it.mediaId }
+//        if(incomingMediaIds.isEmpty()){
+//            deleteAllMediaForMemory(memory.memoryId)
+//            return
+//        }
+//
+//        val mediasToRemove = getMediaIdsToDelete(memory.memoryId,incomingMediaIds)
+//        if(mediasToRemove.isNotEmpty()){
+//            deleteMediaByIds(mediasToRemove)
+//        }
+//
+//        insertAllMedia(mediaList)
+
+        val incomingTagsIds = tags.map { it.tagId }
+        if(incomingTagsIds.isEmpty()){
+            deleteAllTagsForMemory(memory.memoryId)
+            return
+        }
+        val tagsToRemove = getTagIdsToRemove(memory.memoryId,incomingTagsIds)
+        if(tagsToRemove.isNotEmpty()){
+            deleteCrossRefs(memory.memoryId,tagsToRemove)
+        }
+        incomingTagsIds.map { MemoryTagCrossRef(memory.memoryId,it) }.also { insertMemoryTagCrossRef(it) }
+
+
+    }
+
+    @Query("""
+    DELETE FROM MediaEntity
+    WHERE memory_id = :memoryId
+""")
+    suspend fun deleteAllMediaForMemory(memoryId: String)
+
+    @Query("""
+    DELETE FROM MediaEntity
+    WHERE media_id IN (:mediaIds)
+""")
+    suspend fun deleteMediaByIds(mediaIds: List<String>)
+
+    @Query("""
+    SELECT media_id
+    FROM MediaEntity
+    WHERE memory_id = :memoryId
+    AND media_id NOT IN (:incomingMediaIds)
+""")
+    suspend fun getMediaIdsToDelete(
+        memoryId: String,
+        incomingMediaIds: List<String>
+    ): List<String>
+
+    @Query("""
+    SELECT tag_id
+    FROM MemoryTagCrossRef
+    WHERE memory_id = :memoryId
+    AND tag_id NOT IN (:incomingTagIds)
+""")
+    suspend fun getTagIdsToRemove(
+        memoryId: String,
+        incomingTagIds: List<String>
+    ): List<String>
+
+    @Query("""
+    DELETE FROM MemoryTagCrossRef
+    WHERE memory_id = :memoryId
+    AND tag_id IN (:tagIds)
+""")
+    suspend fun deleteCrossRefs(memoryId: String, tagIds: List<String>)
+
+    @Query("""
+    DELETE FROM MemoryTagCrossRef
+    WHERE memory_id = :memoryId
+""")
+    suspend fun deleteAllTagsForMemory(memoryId: String)
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity where hidden = 0 ORDER BY time_stamp DESC")

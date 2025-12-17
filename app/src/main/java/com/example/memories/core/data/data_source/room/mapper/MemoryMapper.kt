@@ -16,7 +16,8 @@ fun MemoryEntity.toDomain() : MemoryModel {
         content = content,
         hidden = hidden,
         favourite = favourite,
-        timeStamp = timeStamp
+        timeStamp = timeStamp,
+        memoryForTimeStamp = memoryForTimeStamp,
     )
 }
 fun MemoryModel.toEntity() : MemoryEntity {
@@ -28,7 +29,8 @@ fun MemoryModel.toEntity() : MemoryEntity {
         favourite = favourite,
         timeStamp = timeStamp,
         longitude = null,
-        latitude = null
+        latitude = null,
+        memoryForTimeStamp = memoryForTimeStamp!!
     )
 }
 

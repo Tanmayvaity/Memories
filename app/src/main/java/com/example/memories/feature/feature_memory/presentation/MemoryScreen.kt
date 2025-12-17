@@ -1,13 +1,20 @@
 package com.example.memories.feature.feature_memory.presentation
 
+import android.R.attr.label
+import android.R.attr.maxLines
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -17,17 +24,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,24 +56,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.util.formatTime
+import com.example.memories.core.util.formatTime
+import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.MediaViewer
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
@@ -67,6 +95,8 @@ import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
 
 
 @Composable
@@ -78,9 +108,12 @@ fun MemoryRoot(
     uriList: List<UriType>,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        if(uriList.isEmpty())return@LaunchedEffect
+        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
+    }
     MemoryScreen(
         onBackPress = onBackPress,
-        uriList = uriList,
         onEvent = viewModel::onEvent,
         state = state,
         onCreateClick = onGoToHomeScreen,
@@ -92,12 +125,12 @@ fun MemoryRoot(
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryScreen(
     onBackPress: () -> Unit = {},
-    uriList: List<UriType>,
     onEvent: (MemoryEvents) -> Unit = {},
     state: MemoryState,
     onCreateClick: (TopLevelScreen.Feed) -> Unit = {},
@@ -112,14 +145,15 @@ fun MemoryScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val pagerState = rememberPagerState(pageCount = {
-        uriList.size
+        state.uriList.size
     })
     var showTagBottomSheet by rememberSaveable{ mutableStateOf(false) }
     var newTagsTextValue by rememberSaveable{ mutableStateOf("") }
     val tagsFocusRequester = remember { FocusRequester() }
     val tagTextFieldInteractionSource = remember { MutableInteractionSource() }
+    var dateText by rememberSaveable { mutableStateOf("")}
     val totalTags = remember { mutableStateListOf<String>() }
-
+    val datePickerState = rememberDatePickerState()
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
@@ -163,18 +197,27 @@ fun MemoryScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            Log.i("MemoryScreen", "MemoryScreen: ${uriList == null}")
-                            onEvent(
-                                MemoryEvents.CreateMemory(
-                                    uriList = uriList,
-                                    title = state.title,
-                                    content = state.content
-                                )
-                            )
+//                            Log.i("MemoryScreen", "MemoryScreen: ${uriList == null}")
+
+                            when(state.creationState){
+                                CREATE -> {
+                                    onEvent(
+                                        MemoryEvents.CreateMemory(
+                                            uriList = state.uriList,
+                                            title = state.title,
+                                            content = state.content
+                                        )
+                                    )
+                                }
+                                UPDATE -> {
+                                    onEvent(MemoryEvents.UpdateMemory)
+                                }
+                            }
+
                         }
                     ) {
                         Text(
-                            text = "Create",
+                            text = if(state.creationState == CreationState.CREATE) "Create" else "Update",
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -197,18 +240,98 @@ fun MemoryScreen(
             ) {
                 MediaViewer(
                     pagerState = pagerState,
-                    uriTypeList = uriList,
+                    uriTypeList = state.uriList,
                     imageContentDescription = "Captured Image",
                     lifecycle = lifecycle
                 )
 
-                ReminderPickerButton(
-                    onClick = {
-                        showDatePicker = true
+                OutlinedTextField(
+                    value = state.memoryForTimeStamp?.formatTime(format = "dd/MM/YYYY") ?: "",
+                    onValueChange = {},
+                    label = {
+                        Text(
+                            text = "Date"
+                        )
                     },
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    vectorContentDescription = "Arrow Right"
+                    placeholder = {
+                        Text(
+                            text = "DD/MM/YYYY"
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+//                        .focusRequester(tagsFocusRequester)
+//                        .onFocusChanged{
+//                            if(it.isFocused){
+//                                showDatePicker = true
+//                            }
+//                        }
+                            ,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        cursorColor = Color.Transparent,
+                        errorCursorColor = Color.Transparent
+                    ),
+                    readOnly = true,
+                    maxLines = 1,
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                               showDatePicker = !showDatePicker
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Select Date For Memory"
+                            )
+                        }
+                    }
                 )
+
+
+//                ReminderPickerButton(
+//                    onClick = {
+//                        showDatePicker = true
+//                    },
+//                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+//                    vectorContentDescription = "Arrow Right",
+//                )
+
+
+//                Button(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(90.dp)
+//                        .padding(10.dp)
+//                    ,
+//                    onClick = {
+//                        showDatePicker = true
+//                    },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.primaryContainer
+//                    )
+//                ) {
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.DateRange,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.onSurface
+//                        )
+//                        Text(
+//                            text = dateText,
+//                            modifier = Modifier.padding(start = 5.dp),
+//                            style = MaterialTheme.typography.labelLarge,
+//                            color = MaterialTheme.colorScheme.onSurface
+//                        )
+//                    }
+//                }
+
+
+
+
+
                 var tagsText by remember { mutableStateOf("") }
 
 //               RoundedTagTextField(
@@ -327,11 +450,60 @@ fun MemoryScreen(
         }
 
         if (showDatePicker) {
-            ReminderDatePickerDialog(
-                onDismiss = {
-                    showDatePicker = false
-                }
-            )
+//            Popup(
+//                onDismissRequest = {
+//                    showDatePicker = false
+//                },
+////                alignment = Alignment.TopStart
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .offset(y = 64.dp)
+//                        .shadow(elevation = 4.dp)
+//                        .background(MaterialTheme.colorScheme.surface)
+//                        .padding(16.dp)
+//                ) {
+//                    DatePicker(
+//                        state = datePickerState,
+//                        showModeToggle = false
+//                    )
+//                }
+
+
+
+
+
+
+
+                ReminderDatePickerDialog(
+                    onDismiss = {
+                        showDatePicker = false
+                        focusManager.clearFocus()
+                    },
+                    onConfirm = { dateInMillis ->
+//                    onEvent(MemoryEvents.ReminderDateChanged(dateInMillis))
+                        onEvent(MemoryEvents.DateChanged(dateInMillis))
+                        dateInMillis?.let { it ->
+                            dateText = it.formatTime(format = "dd/MMM/YYYY")
+                        }
+                        focusManager.clearFocus()
+                        showDatePicker = false
+                    },
+                    datePickerState = rememberDatePickerState(
+                        selectableDates = object : SelectableDates {
+                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                return utcTimeMillis <= System.currentTimeMillis()
+                            }
+
+                            @RequiresApi(Build.VERSION_CODES.O)
+                            override fun isSelectableYear(year: Int): Boolean {
+                                return year <= LocalDate.now().year
+                            }
+                        }
+                    )
+                )
+//            }
         }
 
         if (showTagBottomSheet) {
@@ -393,7 +565,16 @@ fun MemoryScreen(
 
         LaunchedEffect(Unit) {
             successFlow!!.collect { message ->
-                onCreateClick(TopLevelScreen.Feed)
+                when(state.creationState){
+                    CreationState.CREATE ->{
+                        onCreateClick(TopLevelScreen.Feed)
+                    }
+                    CreationState.UPDATE -> {
+                        onBackPress()
+                    }
+
+                }
+
             }
         }
 
@@ -409,7 +590,6 @@ fun MemoryScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         MemoryScreen(
             onBackPress = {},
-            uriList = emptyList<UriType>(),
             onEvent = {},
             state = MemoryState()
         )

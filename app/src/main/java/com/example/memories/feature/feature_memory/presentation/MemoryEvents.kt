@@ -11,11 +11,17 @@ sealed class MemoryEvents {
     data class ContentChanged(val value : String): MemoryEvents()
     data class ContentFocusChanged(val focusState : FocusState) : MemoryEvents()
 
+    data class DateChanged(val dateInMillis : Long?) : MemoryEvents()
+//    data class DateFocusChanged(val focusState : FocusState) : MemoryEvents()
+
+
     data class CreateMemory(
         val uriList : List<UriType>,
         val title : String,
         val content : String ,
         ): MemoryEvents()
+
+    object UpdateMemory : MemoryEvents()
 
     object FetchTags : MemoryEvents()
 
@@ -25,4 +31,8 @@ sealed class MemoryEvents {
     data class RemoveTagsFromTextField(val tag : TagModel) : MemoryEvents()
 
     data class TagsTextFieldContentChanged(val value : String) : MemoryEvents()
+
+    data class UpdateList(val list : List<UriType>) : MemoryEvents()
+
+    data class FetchMemory(val id : String) : MemoryEvents()
 }

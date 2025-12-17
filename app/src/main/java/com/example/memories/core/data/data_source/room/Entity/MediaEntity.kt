@@ -3,6 +3,7 @@ package com.example.memories.core.data.data_source.room.Entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
@@ -14,6 +15,9 @@ import java.util.UUID
             childColumns = ["memory_id"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index("memory_id")
     ]
 )
 data class MediaEntity(

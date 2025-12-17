@@ -21,7 +21,7 @@ import com.example.memories.core.data.data_source.room.dao.TagDao
         MemoryTagCrossRef::class,
         SearchEntity::class
                ],
-    version = 4
+    version = 5
 )
 abstract class MemoryDatabase : RoomDatabase() {
     abstract val mediaDao: MediaDao

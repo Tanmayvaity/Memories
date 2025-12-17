@@ -8,7 +8,8 @@ data class MemoryModel(
     val content : String,
     val hidden : Boolean = false,
     val favourite : Boolean = false,
-    val timeStamp : Long = System.currentTimeMillis()
+    val timeStamp : Long = System.currentTimeMillis(),
+    val memoryForTimeStamp : Long? = null,
 )
 
 

@@ -61,7 +61,11 @@ fun NavGraphBuilder.createFeedGraph(
         MemoryDetailRoot(
             onBack = {
                 navController.popBackStack()
+            },
+            onNavigateToMemory = {route ->
+                navController.navigate(route)
             }
+
 
         )
     }

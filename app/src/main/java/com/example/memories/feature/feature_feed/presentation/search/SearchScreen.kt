@@ -101,7 +101,7 @@ fun SearchScreen(
         },
     ) { innerPadding ->
 
-        if (state.recentSearch.isEmpty()) {
+        if (state.recentSearch.isEmpty() && state.tags.isEmpty()) {
             Box(
                 modifier = Modifier
                     .padding(innerPadding)

@@ -15,6 +15,7 @@ interface MemoryRepository {
     suspend fun saveToInternalStorage(uriList : List<Uri>): Result<List<Uri>>
 
     suspend fun insertMemory(memory : MemoryModel)
+    suspend fun updateMemory(memory: MemoryModel,mediaList: List<MediaModel>,tagList: List<TagModel>)
 
     suspend fun insertMedia(mediaList : List<MediaModel>)
 

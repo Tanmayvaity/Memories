@@ -25,7 +25,8 @@ class MemoryCreateUseCase @Inject constructor(
         uriList: List<UriType>,
         title: String,
         content: String,
-        tagList : List<TagModel>
+        tagList : List<TagModel>,
+        memoryForTimeStamp : Long,
     ): Result<String> {
         Log.d(TAG, "invoke: MemoryCreateUseCase called")
 
@@ -46,7 +47,7 @@ class MemoryCreateUseCase @Inject constructor(
 
 
                 memoryRepository.insertMemoryWithMediaAndTag(
-                    memory = MemoryModel(title = title, content = content),
+                    memory = MemoryModel(title = title, content = content, memoryForTimeStamp = memoryForTimeStamp),
                     mediaList = permanentUriList.data.map { it -> MediaModel(memoryId = "", uri = it.toString()) },
                     tagList = tagList
                 )

@@ -1,7 +1,10 @@
 package com.example.memories.feature.feature_memory.presentation.components
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerFormatter
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -10,6 +13,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.memories.ui.theme.MemoriesTheme
 
 
@@ -18,8 +22,8 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun ReminderDatePickerDialog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {},
-    onConfirm: () -> Unit = {},
-    state: DatePickerState = rememberDatePickerState()
+    onConfirm: (Long?) -> Unit = {},
+    datePickerState: DatePickerState = rememberDatePickerState()
 ) {
     DatePickerDialog(
         onDismissRequest = {
@@ -28,7 +32,7 @@ fun ReminderDatePickerDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirm()
+                    onConfirm(datePickerState.selectedDateMillis)
                 }
             ) {
                 Text(
@@ -52,7 +56,14 @@ fun ReminderDatePickerDialog(
 
     ) {
         DatePicker(
-            state = state
+            state = datePickerState,
+//            title = {
+//                Text(
+//                    text = "Select Date",
+//                    modifier = Modifier.padding(10.dp)
+//                )
+//            }
+
         )
     }
 }
@@ -60,7 +71,7 @@ fun ReminderDatePickerDialog(
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReminderDatePickerDialogPreview(modifier: Modifier = Modifier) {
+fun ReminderDatePickerDialogPreview() {
     MemoriesTheme {
         ReminderDatePickerDialog(
             onDismiss = {},

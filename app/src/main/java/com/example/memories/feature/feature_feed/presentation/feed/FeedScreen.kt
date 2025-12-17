@@ -181,7 +181,7 @@ fun FeedScreen(
                     }
 
                     MemoryEntryMode.ChooseImageAndCreate -> {
-                        onNavigateToMemoryCreate(AppScreen.Memory(uriWrapperList))
+                        onNavigateToMemoryCreate(AppScreen.Memory(null,uriWrapperList))
                     }
 
                     else -> {}

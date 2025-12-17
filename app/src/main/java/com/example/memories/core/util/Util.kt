@@ -122,6 +122,12 @@ fun Long.formatTime():String{
     return format.format(date)
 }
 
+fun Long.formatTime(format : String = "dd/MMM/yyyy"):String{
+    val date = Date(this)
+    val format = SimpleDateFormat(format, Locale.getDefault())
+    return format.format(date)
+}
+
 fun getExoPlayer(
     context : Context,
     uri : String,

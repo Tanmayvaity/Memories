@@ -1,9 +1,16 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import android.util.Log
+import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.util.mapToType
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailViewModel
 import com.example.memories.feature.feature_feed.presentation.search.SearchState
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.feature.feature_memory.presentation.MemoryEvents.*
@@ -31,7 +38,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MemoryViewModel @Inject constructor(
-    val memoryUseCase: MemoryUseCase
+    val memoryUseCase: MemoryUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
@@ -66,6 +74,17 @@ class MemoryViewModel @Inject constructor(
         .launchIn(
             scope = viewModelScope,
         )
+
+    init {
+        savedStateHandle.get<String>("memoryId")?.let { id ->
+            if(id!=null){
+                Log.d(TAG, "memory id is $id")
+                onEvent(MemoryEvents.FetchMemory(id))
+            }
+            Log.d(TAG, "${id == null}: ")
+
+        }
+    }
 
 
 
@@ -104,17 +123,36 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
+            is MemoryEvents.DateChanged -> {
+                _memoryState.update { it.copy(memoryForTimeStamp = event.dateInMillis) }
+            }
+
+//            is MemoryEvents.DateFocusChanged -> {
+//                _memoryState.update {
+//                    _memoryState.value.copy(
+//                        isContentHintVisible = !event.focusState.isFocused && _memoryState.value.content.isBlank()
+//                    )
+//                }
+//            }
+
             is MemoryEvents.CreateMemory -> {
                 viewModelScope.launch {
+                    if(_memoryState.value.memoryForTimeStamp == null){
+                        _errorFlow.send("Memory timestamp cannot be empty")
+                        return@launch
+                    }
+
+
                     val result = memoryUseCase.createMemoryUseCase(
                         uriList = event.uriList,
                         title = event.title,
                         content = event.content,
-                        tagList = _memoryState.value.tagsSelectedForThisMemory
+                        tagList = _memoryState.value.tagsSelectedForThisMemory,
+                        memoryForTimeStamp = _memoryState.value.memoryForTimeStamp!!
                     )
                     when (result) {
                         is Result.Error -> {
-                            Log.e(TAG, "onEvent: ${result.error.message}")
+                            Log.e(TAG, "onEvent: Create Memory  ${result.error.message}")
                             _errorFlow.send(result.error.message.toString())
                         }
 
@@ -127,6 +165,39 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
+            is MemoryEvents.UpdateMemory -> {
+                viewModelScope.launch {
+
+                    if(_memoryState.value.memoryForTimeStamp == null){
+                        _errorFlow.send("Memory timestamp cannot be empty")
+                        return@launch
+                    }
+
+                    memoryState.value.memory?.let{ memory ->
+                        val result = memoryUseCase.updateMemoryUseCase(
+                            memory = memory.copy(
+                                memory = memory.memory.copy(
+                                    title = _memoryState.value.title,
+                                    content = _memoryState.value.content,
+                                    memoryForTimeStamp = _memoryState.value.memoryForTimeStamp!!
+                                ),
+                                tagsList = _memoryState.value.tagsSelectedForThisMemory
+                            )
+                        )
+
+                        when(result){
+                            is Result.Error -> {
+                                Log.e(TAG, "onEvent: Update Memory : ${result.error.message}", )
+                                _errorFlow.send(result.error.message.toString())
+                            }
+                            is Result.Success<String> -> {
+                                _successFlow.send(result.data.toString())
+                            }
+                        }
+                    }
+
+                }
+            }
             is MemoryEvents.FetchTags -> {
                 viewModelScope.launch {
                     val result = memoryUseCase.fetchTagUseCase()
@@ -176,6 +247,41 @@ class MemoryViewModel @Inject constructor(
             is MemoryEvents.TagsTextFieldContentChanged -> {
                 _memoryState.update { it.copy(tagTextFieldValue = event.value) }
 //                Log.d(TAG, "onEvent: ${tagInputText.value}")
+            }
+
+            is MemoryEvents.UpdateList -> {
+                _memoryState.update {
+                    it.copy(
+                        uriList = event.list
+                    )
+                }
+
+            }
+
+            is MemoryEvents.FetchMemory -> {
+                viewModelScope.launch {
+                    val result = memoryUseCase.fetchMemoryByIdUseCase(event.id)
+                    result?.let{ item ->
+                        _memoryState.update {
+                            it.copy(
+                                creationState = CreationState.UPDATE,
+                                title = item.memory.title,
+                                isTitleHintVisible = false,
+                                content = item.memory.content,
+                                isContentHintVisible = false,
+                                uriList = item.mediaList.map { it -> UriType(
+                                    uri = it.uri.toString(),
+                                    type = it.uri.toUri().mapToType()
+                                )},
+                                tagsSelectedForThisMemory = item.tagsList,
+                                timeStamp = item.memory.timeStamp,
+                                memory = item,
+                                memoryForTimeStamp = item.memory.memoryForTimeStamp
+                            )
+                        }
+
+                    }
+                }
             }
         }
     }

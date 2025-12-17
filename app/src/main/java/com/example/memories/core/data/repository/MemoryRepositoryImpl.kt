@@ -33,6 +33,15 @@ class MemoryRepositoryImpl @Inject constructor(
         memoryDao.insertMemory(memory.toEntity())
     }
 
+    override suspend fun updateMemory(
+        memory: MemoryModel,
+        mediaList: List<MediaModel>,
+        tagList: List<TagModel>
+    ) {
+        memoryDao.updateMemory(memory.toEntity(),mediaList.map { it -> it.toEntity() },tagList.map { it -> it.toEntity()})
+    }
+
+
     override suspend fun insertMedia(mediaList: List<MediaModel>) {
         memoryDao.insertAllMedia(mediaList.map { media -> media.toEntity() })
     }
@@ -40,7 +49,7 @@ class MemoryRepositoryImpl @Inject constructor(
     override suspend fun insertMemoryWithMediaAndTag(
         memory: MemoryModel,
         mediaList: List<MediaModel>,
-        tagList : List<TagModel>
+        tagList : List<TagModel>,
     ) {
         memoryDao.insertMemoryWithMediaAndTag(
             memory.toEntity(),
