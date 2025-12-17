@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -89,13 +90,21 @@ class MemoryDetailViewModel @Inject constructor(
 
             is MemoryDetailEvents.Delete -> {
                 viewModelScope.launch {
-                    val result = feedUseCases.deleteMemoryUseCase(_memory.value.memory)
-                    if(result == 1){
-                        Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
-                        _eventChannel.send(UiEvent.ShowToast(
-                            message = "Memory deleted",
-                            type = UiEvent.ToastType.DELETE
-                        ))
+                    val result = feedUseCases.deleteMemoryUseCase(
+                        memory = _memory.value.memory,
+                        uriList = _memory.value.mediaList.map { it.uri }
+                        )
+                    when(result){
+                        is Result.Error -> {
+                            Log.e(TAG, "onEvent: error while deleting", )
+                        }
+                        is Result.Success<String> -> {
+                            Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
+                            _eventChannel.send(UiEvent.ShowToast(
+                                message = "Memory deleted",
+                                type = UiEvent.ToastType.DELETE
+                            ))
+                        }
                     }
 
                 }

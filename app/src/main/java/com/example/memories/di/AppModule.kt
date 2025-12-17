@@ -328,14 +328,15 @@ object AppModule {
     @Singleton
     fun providesFeedUseCases(
         repository : MemoryRepository,
-        tagRepository: TagRepository
+        tagRepository: TagRepository,
+        mediaRepository: MediaRepository
     ): FeedUseCaseWrapper{
         return FeedUseCaseWrapper(
             getFeedUseCase = GetFeedUseCase(repository),
             toggleFavouriteUseCase = ToggleFavouriteUseCase(repository),
             toggleHiddenUseCase = ToggleHiddenUseCase(repository),
             getMemoryByIdUseCase = GetMemoryByIdUseCase(repository),
-            deleteMemoryUseCase = DeleteUseCase(repository),
+            deleteMemoryUseCase = DeleteUseCase(repository,mediaRepository),
             searchByTitleUseCase = SearchByTitleUseCase(repository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository)

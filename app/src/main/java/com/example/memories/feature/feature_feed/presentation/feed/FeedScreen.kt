@@ -493,7 +493,7 @@ fun FeedScreen(
                         ),
                         onClick = {
                             showDeleteDialog = false
-                            onEvent(FeedEvents.Delete(currentItem!!.memory))
+                            onEvent(FeedEvents.Delete(currentItem!!.memory,currentItem!!.mediaList.map { it -> it.uri }))
                         }
                     ) {
                         Text(

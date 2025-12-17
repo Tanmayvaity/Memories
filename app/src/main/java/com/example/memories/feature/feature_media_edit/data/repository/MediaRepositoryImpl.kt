@@ -27,4 +27,8 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun saveBitmapToInternalStorage(bitmap: Bitmap?): Result<Uri> {
         return mediaManager.saveBitmapToInternalStorage(bitmap)
     }
+
+    override suspend fun deleteMedia(uriList: List<Uri>) : Result<String> {
+        return mediaManager.deleteInternalMedia(uriList)
+    }
 }

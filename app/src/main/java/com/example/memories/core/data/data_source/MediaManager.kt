@@ -372,6 +372,28 @@ class MediaManager(
 
     }
 
+    suspend fun deleteInternalMedia(
+        uriList: List<Uri>
+    ) : Result<String> = withContext(Dispatchers.IO){
+        uriList.forEach { uri ->
+            try {
+                uri.path?.let { path ->
+                    val file = File(path)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+            }catch (e : Exception){
+                Log.e(TAG, "deleteInternalMedia: ${e}", )
+                Result.Error(e)
+            }
+
+        }
+        Result.Success("Media Deleted Successfully")
+    }
+
+
+
     @RequiresApi(Build.VERSION_CODES.Q)
     suspend fun getMediaThumbnail(
         uri : Uri,

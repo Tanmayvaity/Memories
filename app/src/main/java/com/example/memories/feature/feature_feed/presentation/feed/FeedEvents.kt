@@ -13,7 +13,7 @@ sealed class FeedEvents {
     data class ToggleFavourite(val id : String,val isFav: Boolean) : FeedEvents()
     data class ToggleHidden(val id : String,val isHidden : Boolean): FeedEvents()
 
-    data class Delete(val memory : MemoryModel) : FeedEvents()
+    data class Delete(val memory : MemoryModel,val uriList : List<String>) : FeedEvents()
 }
 
 

@@ -20,4 +20,10 @@ interface MediaRepository {
     suspend fun saveBitmapToInternalStorage(
         bitmap: Bitmap?
     ): Result<Uri>
+
+    suspend fun deleteMedia(
+        uriList : List<Uri>
+    ) : Result<String>
+
+
 }

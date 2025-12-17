@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -100,10 +101,14 @@ class FeedViewModel @Inject constructor(
 
             is FeedEvents.Delete -> {
                 viewModelScope.launch {
-                    val result = feedUseCases.deleteMemoryUseCase(event.memory)
-
-                    if(result ==1){
-                        Log.i(TAG, "FeedEvents Delete : Memory Deleted")
+                    val result = feedUseCases.deleteMemoryUseCase(event.memory,event.uriList)
+                    when(result){
+                        is Result.Error -> {
+                            Log.e(TAG, "onEvent: Error while deleting", )
+                        }
+                        is Result.Success<String> -> {
+                            Log.i(TAG, "onEvent: Deleted Succesfully")
+                        }
                     }
                 }
             }

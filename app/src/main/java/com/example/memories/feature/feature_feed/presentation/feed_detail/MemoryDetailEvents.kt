@@ -5,7 +5,7 @@ sealed class MemoryDetailEvents {
     data class FavoriteToggle(val id : String,val isFavourite : Boolean) : MemoryDetailEvents()
     data class HiddenToggle(val id : String,val isHidden : Boolean) : MemoryDetailEvents()
 
-    object Delete : MemoryDetailEvents()
+    object Delete: MemoryDetailEvents()
 }
 
 sealed class UiEvent{
