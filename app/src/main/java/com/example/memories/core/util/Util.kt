@@ -100,9 +100,9 @@ fun Uri?.mapToType(): Type{
     }
 
     return if(isVideoFile(this.toString())){
-        Type.VIDEO
+        Type.VIDEO_MP4
     }else{
-        Type.IMAGE
+        Type.IMAGE_JPG
     }
 }
 
@@ -113,7 +113,7 @@ fun Uri?.mapContentUriToType(context : Context): Type {
 
     return if (context.contentResolver.getType(this)
             ?.startsWith("video") == true
-    ) Type.VIDEO else Type.IMAGE
+    ) Type.VIDEO_MP4 else Type.IMAGE_JPG
 }
 
 fun Long.formatTime():String{

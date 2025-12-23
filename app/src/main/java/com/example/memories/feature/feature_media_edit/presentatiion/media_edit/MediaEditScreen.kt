@@ -71,11 +71,11 @@ fun MediaEditScreen(
         MediaPreview(
             bitmap = bitmapState.bitmap,
             onDownloadClick = {
-                if(uriType!!.type == Type.IMAGE){
+                if(uriType!!.type!!.isImageFile()){
                     viewModel.onEvent(MediaEvents.DownloadBitmap(bitmapState.bitmap!!))
                     return@MediaPreview
                 }
-                if(uriType!!.type == Type.VIDEO){
+                if(uriType!!.type!!.isVideoFile()){
                     viewModel.onEvent(MediaEvents.DownloadVideo(uriType.uri!!.toUri()))
                     return@MediaPreview
                 }
@@ -109,7 +109,7 @@ fun MediaEditScreen(
     }
 
     LaunchedEffect(Unit) {
-        if(uriType!!.type == Type.IMAGE){
+        if(uriType!!.type!!.isImageFile()){
             viewModel.onEvent(MediaEvents.UriToBitmap(uriType!!.uri!!.toUri()))
         }
     }

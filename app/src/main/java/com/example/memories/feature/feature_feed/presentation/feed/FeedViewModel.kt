@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onCompletion
@@ -45,7 +46,8 @@ class FeedViewModel @Inject constructor(
 
 
     private val _isDataLoading = MutableStateFlow<Boolean>(false)
-    val isDataLoading = _isDataLoading.asStateFlow()
+    val isDataLoading : StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     fun onEvent(event: FeedEvents) {
         when (event) {

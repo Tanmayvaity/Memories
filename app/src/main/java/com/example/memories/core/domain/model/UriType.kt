@@ -15,6 +15,18 @@ data class UriType(
 
 @Serializable
 enum class Type{
-    IMAGE,
-    VIDEO
+    IMAGE_JPG,
+    IMAGE_PNG,
+    IMAGE_BMP,
+    VIDEO_MP4,
+    UNKNOWN_TYPE;
+
+    fun isImageFile() : Boolean = this == IMAGE_JPG || this == IMAGE_PNG || this == IMAGE_BMP
+    fun isVideoFile() = this == VIDEO_MP4
+
+    fun isJpgFile() = this == IMAGE_JPG
+    fun isUnknownType()  = this == UNKNOWN_TYPE
+
+
+
 }

@@ -63,7 +63,7 @@ fun MediaViewer(
             modifier = Modifier.height(350.dp)
         ) { page ->
             val uriWrapper = uriTypeList[page]
-            if (uriWrapper.type == Type.IMAGE) {
+            if (uriWrapper.type!!.isImageFile()) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(uriWrapper.uri)
@@ -77,7 +77,7 @@ fun MediaViewer(
                 )
             }
 
-            if (uriWrapper.type == Type.VIDEO) {
+            if (uriWrapper.type!!.isVideoFile()) {
                 val player = ExoPlayer.Builder(LocalContext.current).build().apply {
                     val mediaItem = MediaItem.fromUri(uriWrapper.uri!!.toUri())
                     setMediaItem(mediaItem)

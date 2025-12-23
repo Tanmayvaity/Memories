@@ -129,7 +129,7 @@ fun MediaPreview(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             ){
-                if(uriType!!.type == Type.IMAGE){
+                if(uriType!!.type!!.isImageFile()){
                     AsyncImage(
                         model = if (LocalInspectionMode.current && bitmap == null) R.drawable.ic_launcher_background else uriType!!.uri,
                         contentDescription = "Choosen/taken image",
@@ -140,7 +140,7 @@ fun MediaPreview(
                     )
 
                 }
-                if(uriType!!.type == Type.VIDEO){
+                if(uriType!!.type!!.isVideoFile()){
                      player = remember(uriType.uri) {getExoPlayer(context,uriType!!.uri!!)  }
                     VideoPlayer(
                         uri = uriType.uri,
@@ -183,7 +183,7 @@ fun MediaPreview(
 fun MediaPreviewPreview() {
     MemoriesTheme {
         MediaPreview(
-            uriType = UriType(uri = "",type = Type.IMAGE)
+            uriType = UriType(uri = "",type = Type.IMAGE_JPG)
         )
     }
 }

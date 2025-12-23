@@ -518,14 +518,14 @@ fun CameraScreen(
     }
 
     LaunchedEffect(mediaUri) {
-        if (mediaUri.uri != null && mediaUri.type == Type.IMAGE) {
+        if (mediaUri.uri != null && mediaUri.type!!.isImageFile()) {
             onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
             onEvent(CameraEvent.Reset)
         }
     }
 
     LaunchedEffect(mediaUri) {
-        if (mediaUri.uri != null && mediaUri.type == Type.VIDEO) {
+        if (mediaUri.uri != null && mediaUri.type!!.isVideoFile()) {
             onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
             onEvent(CameraEvent.Reset)
         }
