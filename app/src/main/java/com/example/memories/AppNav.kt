@@ -1,6 +1,8 @@
 package com.example.memories
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -67,6 +69,12 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             bottomBar = {
                 AnimatedVisibility(
                     visible = isBottomBarVisible,
+                    enter = slideInVertically(
+                        initialOffsetY = { it } // starts below → moves UP
+                    ),
+                    exit = slideOutVertically(
+                        targetOffsetY = { it } // moves DOWN → exits below
+                    )
                 ) {
                     BottomNavBar(
                         navigateToTopLevelDestination = topLevelNavigation::navigateTo,
@@ -135,7 +143,9 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
 
         ) { innerPadding ->
             AppNavHost(
-                modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
                 navController = navController,
                 onBottomBarVisibilityChange = { visibility ->
                     isBottomBarVisible = visibility
@@ -148,6 +158,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
         }
     }
 }
+
 @PreviewLightDark
 @Preview
 @Composable

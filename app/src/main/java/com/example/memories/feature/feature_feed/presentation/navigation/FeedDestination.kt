@@ -31,7 +31,8 @@ fun NavGraphBuilder.createFeedGraph(
             },
             onNavigateToMemoryCreate = {route ->
                 navController.navigate(route)
-            }
+            },
+            onBottomBarVisibilityToggle = onBottomBarVisibilityChange
         )
     }
     composable<TopLevelScreen.Search> {

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -70,6 +71,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -124,8 +126,8 @@ fun FeedRoot(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
-
-    ) {
+    onBottomBarVisibilityToggle : (Boolean) -> Unit
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val dataLoadingState by viewModel.isDataLoading.collectAsStateWithLifecycle()
     val isDarkModeEnabled by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
@@ -140,7 +142,8 @@ fun FeedRoot(
         onNavigateToImageEdit = onNavigateToImageEdit,
         isDarkModeEnabled = isDarkModeEnabled,
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
-        onNavigateToMemoryCreate = onNavigateToMemoryCreate
+        onNavigateToMemoryCreate = onNavigateToMemoryCreate,
+        onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
     )
 
     LaunchedEffect(Unit) {
@@ -161,7 +164,8 @@ fun FeedScreen(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
-    isDarkModeEnabled: Boolean = false
+    isDarkModeEnabled: Boolean = false,
+    onBottomBarVisibilityToggle: (Boolean) -> Unit = {}
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -171,9 +175,37 @@ fun FeedScreen(
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var selectedChipIndex by remember { mutableStateOf<Int>(0) }
-
+    val lazyListState = rememberLazyListState()
+    var currentScrollValue by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentMemoryEntryMode: MemoryEntryMode? = null
+
+    var isScrollingUp by remember { mutableStateOf(true) } // Start with FAB visible
+
+// This effect will update isScrollingUp based on the scroll direction
+    LaunchedEffect(lazyListState) {
+        var previousScrollOffset = 0
+        snapshotFlow { lazyListState.firstVisibleItemScrollOffset }
+            .collect { currentScrollOffset ->
+                if (previousScrollOffset < currentScrollOffset) {
+                    // Scrolling down
+                    isScrollingUp = false
+                } else if (previousScrollOffset > currentScrollOffset) {
+                    // Scrolling up
+                    isScrollingUp = true
+                }
+                if(isScrollingUp != currentScrollValue){
+                    currentScrollValue = isScrollingUp
+                }
+                previousScrollOffset = currentScrollOffset
+            }
+
+    }
+
+    LaunchedEffect(currentScrollValue) {
+        onBottomBarVisibilityToggle(currentScrollValue)
+    }
+
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
@@ -309,10 +341,12 @@ fun FeedScreen(
                 Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add, "Without Media"),
             )
 
+
+
             FloatingActionButtonMenu(
                 modifier = Modifier.animateFloatingActionButton(
-                    visible = true,
-                    alignment = Alignment.TopCenter
+                    visible = isScrollingUp,
+                    alignment = Alignment.TopCenter,
                 ),
                 expanded = expandFab,
                 button = {
@@ -370,6 +404,7 @@ fun FeedScreen(
                     if (isDarkModeEnabled) Color.Black
                     else MaterialTheme.colorScheme.background
                 ),
+            state = lazyListState
         ) {
 
             stickyHeader() {
