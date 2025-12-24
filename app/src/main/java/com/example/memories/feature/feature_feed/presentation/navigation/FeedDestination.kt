@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -16,7 +18,32 @@ fun NavGraphBuilder.createFeedGraph(
     onBottomBarVisibilityChange : (Boolean) -> Unit,
     onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
-    composable<TopLevelScreen.Feed> {
+    composable<TopLevelScreen.Feed>(
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        }
+    ) {
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(true)
         FeedRoot(
@@ -35,7 +62,32 @@ fun NavGraphBuilder.createFeedGraph(
             onBottomBarVisibilityToggle = onBottomBarVisibilityChange
         )
     }
-    composable<TopLevelScreen.Search> {
+    composable<TopLevelScreen.Search>(
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        }
+    ) {
         onFloatingActionBtnVisibilityChange(false)
         onBottomBarVisibilityChange(true)
         SearchRoot(
@@ -55,7 +107,32 @@ fun NavGraphBuilder.createFeedGraph(
         )
     }
 
-    composable<AppScreen.MemoryDetail>{
+    composable<AppScreen.MemoryDetail>(
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        }
+    ){
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
         val args = it.toRoute<AppScreen.MemoryDetail>()

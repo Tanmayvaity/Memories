@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -143,7 +145,8 @@ fun MemoryItemCard(
 
                     )
                     Row(
-                        modifier = Modifier.padding(5.dp)
+                        modifier = Modifier
+                            .padding(5.dp)
                     ) {
 
                         IconItem(
@@ -153,7 +156,7 @@ fun MemoryItemCard(
                             onClick = {
                                 onFavouriteButtonClick()
                             },
-                            alpha = 0.1f,
+                            alpha = 0f,
                             color = if(memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else Color.Gray
                         )
                         IconItem(
@@ -163,7 +166,7 @@ fun MemoryItemCard(
                             onClick = {
                                 onHideButtonClick()
                             },
-                            alpha = 0.1f,
+                            alpha = 0f,
                             color = Color.Gray
                         )
                         IconItem(
@@ -172,7 +175,7 @@ fun MemoryItemCard(
                             onClick = {
                                 onDeleteButtonClick()
                             },
-                            alpha = 0.1f,
+                            alpha = 0f,
                             color = Color.Red,
                         )
                     }
