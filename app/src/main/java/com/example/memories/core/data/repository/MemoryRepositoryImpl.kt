@@ -14,6 +14,8 @@ import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -66,11 +68,77 @@ class MemoryRepositoryImpl @Inject constructor(
         memoryDao.insertMemoryTagCrossRef(refs.map { it -> it.toEntity() })
     }
 
-    override suspend fun getMemories(type: FetchType): Flow<List<MemoryWithMediaModel>> {
+    override suspend fun getMemories(type: FetchType, sortType: SortType, orderByType: OrderByType): Flow<List<MemoryWithMediaModel>> {
         return when (type) {
-            FetchType.ALL -> memoryDao.getAllMemoriesWithMedia()
-            FetchType.FAVORITE -> memoryDao.getAllFavouriteMemoriesWithMedia()
-            FetchType.HIDDEN -> memoryDao.getAllHiddenMemoriesWithMedia()
+            FetchType.ALL -> {
+                when(sortType){
+                    SortType.DateAdded -> {
+                        when(orderByType){
+                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMedia()
+                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaAscending()
+                        }
+                    }
+                    SortType.CreatedForDate -> {
+                        when(orderByType){
+                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStamp()
+                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStampAscending()
+                        }
+                    }
+                    SortType.Title -> {
+                        when(orderByType){
+                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByTitle()
+                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByTitleAscending()
+                        }
+
+                    }
+
+                }
+            }
+            FetchType.FAVORITE -> {
+                when(sortType){
+                    SortType.CreatedForDate -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending()
+                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp()
+                        }
+                    }
+                    SortType.DateAdded -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaAscending()
+                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMedia()
+                        }
+                    }
+                    SortType.Title -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitleAscending()
+                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitle()
+                        }
+                    }
+
+                }
+            }
+            FetchType.HIDDEN -> {
+                when(sortType){
+                    SortType.CreatedForDate -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
+                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
+                        }
+                    }
+                    SortType.DateAdded -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
+                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
+                        }
+                    }
+                    SortType.Title -> {
+                        when(orderByType){
+                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
+                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
+                        }
+                    }
+                }
+            }
         }.map { memoryList -> memoryList.map { it -> it.toDomain() } }
     }
 

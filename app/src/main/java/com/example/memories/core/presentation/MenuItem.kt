@@ -1,6 +1,7 @@
 package com.example.memories.core.presentation
 
 import androidx.annotation.DrawableRes
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class MenuItem(

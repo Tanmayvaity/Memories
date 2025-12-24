@@ -100,7 +100,7 @@ import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.AppTopBar
-import com.example.memories.core.presentation.components.ContentActionSheet
+import com.example.memories.core.presentation.components.FilterActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
@@ -108,6 +108,8 @@ import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.TAG
 import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.model.toIndex
 import com.example.memories.feature.feature_feed.presentation.feed.components.ChipRow
 import com.example.memories.feature.feature_feed.presentation.feed.components.CustomFloatingActionButton
@@ -126,7 +128,7 @@ fun FeedRoot(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
-    onBottomBarVisibilityToggle : (Boolean) -> Unit
+    onBottomBarVisibilityToggle: (Boolean) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val dataLoadingState by viewModel.isDataLoading.collectAsStateWithLifecycle()
@@ -194,7 +196,7 @@ fun FeedScreen(
                     // Scrolling up
                     isScrollingUp = true
                 }
-                if(isScrollingUp != currentScrollValue){
+                if (isScrollingUp != currentScrollValue) {
                     currentScrollValue = isScrollingUp
                 }
                 previousScrollOffset = currentScrollOffset
@@ -205,7 +207,6 @@ fun FeedScreen(
     LaunchedEffect(currentScrollValue) {
         onBottomBarVisibilityToggle(currentScrollValue)
     }
-
 
 
     val mediaLauncher = rememberLauncherForActivityResult(
@@ -258,8 +259,7 @@ fun FeedScreen(
 
     Scaffold(
         modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ,
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             AppTopBar(
 
@@ -283,6 +283,18 @@ fun FeedScreen(
                         onClick = {
                             Log.d("FeedScreen", "camera clicked")
                             onCameraClick(AppScreen.Camera)
+                        }
+                    )
+                },
+                showNavigationIcon = false,
+                navigationContent = {
+                    IconItem(
+                        backgroundColor = MaterialTheme.colorScheme.background,
+                        color = MaterialTheme.colorScheme.primary,
+                        drawableRes = R.drawable.ic_filter_list,
+                        contentDescription = "Camera",
+                        onClick = {
+                            showSheet = true
                         }
                     )
                 }
@@ -407,51 +419,51 @@ fun FeedScreen(
             state = lazyListState
         ) {
 
-            stickyHeader() {
-                ChipRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface),
-                    selectedItemIndex = state.type.toIndex(),
-                    items = listOf<MenuItem>(
-                        MenuItem(
-                            title = "All",
-                            onClick = {
+//            stickyHeader() {
+//                ChipRow(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .background(MaterialTheme.colorScheme.surface),
+//                    selectedItemIndex = state.type.toIndex(),
+//                    items = listOf<MenuItem>(
+//                        MenuItem(
+//                            title = "All",
+//                            onClick = {
+////
+//                                onEvent(FeedEvents.ChangeFetchType(FetchType.ALL))
+//                                onEvent(FeedEvents.FetchFeed)
+//                                selectedChipIndex = 0
+//                            },
+//                            iconContentDescription = "",
+//                            icon = -1
+//                        ),
+//                        MenuItem(
+//                            title = "Favorite",
+//                            onClick = {
+//                                selectedChipIndex = 1
+////                                onEvent(FeedEvents.FetchFeed(FetchType.FAVORITE))
+//                                onEvent(FeedEvents.ChangeFetchType(FetchType.FAVORITE))
+//                                onEvent(FeedEvents.FetchFeed)
+//                            },
+//                            iconContentDescription = "",
+//                            icon = R.drawable.ic_favourite_filled
+//                        ),
+//                        MenuItem(
+//                            title = "Hidden",
+//                            onClick = {
+//                                selectedChipIndex = 2
+////                                onEvent(FeedEvents.FetchFeed(FetchType.HIDDEN))
+//                                onEvent(FeedEvents.ChangeFetchType(FetchType.HIDDEN))
+//                                onEvent(FeedEvents.FetchFeed)
+//                            },
+//                            iconContentDescription = "",
+//                            icon = R.drawable.ic_hidden
+//                        ),
 //
-                                onEvent(FeedEvents.ChangeFetchType(FetchType.ALL))
-                                onEvent(FeedEvents.FetchFeed)
-                                selectedChipIndex = 0
-                            },
-                            iconContentDescription = "",
-                            icon = -1
-                        ),
-                        MenuItem(
-                            title = "Favorite",
-                            onClick = {
-                                selectedChipIndex = 1
-//                                onEvent(FeedEvents.FetchFeed(FetchType.FAVORITE))
-                                onEvent(FeedEvents.ChangeFetchType(FetchType.FAVORITE))
-                                onEvent(FeedEvents.FetchFeed)
-                            },
-                            iconContentDescription = "",
-                            icon = R.drawable.ic_favourite_filled
-                        ),
-                        MenuItem(
-                            title = "Hidden",
-                            onClick = {
-                                selectedChipIndex = 2
-//                                onEvent(FeedEvents.FetchFeed(FetchType.HIDDEN))
-                                onEvent(FeedEvents.ChangeFetchType(FetchType.HIDDEN))
-                                onEvent(FeedEvents.FetchFeed)
-                            },
-                            iconContentDescription = "",
-                            icon = R.drawable.ic_hidden
-                        ),
-
-
-                        )
-                )
-            }
+//
+//                        )
+//                )
+//            }
 
 
             itemsIndexed(
@@ -528,7 +540,11 @@ fun FeedScreen(
                         ),
                         onClick = {
                             showDeleteDialog = false
-                            onEvent(FeedEvents.Delete(currentItem!!.memory,currentItem!!.mediaList.map { it -> it.uri }))
+                            onEvent(
+                                FeedEvents.Delete(
+                                    currentItem!!.memory,
+                                    currentItem!!.mediaList.map { it -> it.uri })
+                            )
                         }
                     ) {
                         Text(
@@ -562,6 +578,93 @@ fun FeedScreen(
                     text = "No Memories Created"
                 )
             }
+        }
+
+        if (showSheet) {
+            FilterActionSheet(
+                onDismiss = {
+                    showSheet = false
+                },
+                onReset = {
+                    onEvent(FeedEvents.ResetFilterState)
+                },
+                onApplyFilter = {
+                    onEvent(FeedEvents.FetchFeed)
+                    showSheet = false
+                },
+                state = state,
+                title = "Filter & Sort Posts",
+                showActionList = listOf(
+                    MenuItem(
+                        title = "All",
+                        icon = R.drawable.ic_feed,
+                        iconContentDescription = "Feed Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeFetchType(FetchType.ALL))
+                        }
+                    ),
+                    MenuItem(
+                        title = "Favorite",
+                        icon = R.drawable.ic_favourite_filled,
+                        iconContentDescription = "Favorite Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeFetchType(FetchType.FAVORITE))
+                        }
+                    ),
+                    MenuItem(
+                        title = "Hidden",
+                        icon = R.drawable.ic_hidden,
+                        iconContentDescription = "Hidden Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeFetchType(FetchType.HIDDEN))
+                        }
+                    )
+                ),
+                sortByActionList = listOf(
+                    MenuItem(
+                        title = "Created For Date",
+                        icon = R.drawable.ic_calender,
+                        iconContentDescription = "Calendar Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeSortType(SortType.CreatedForDate))
+                        }
+                    ),
+                    MenuItem(
+                        title = "Date Added",
+                        icon = R.drawable.ic_timer,
+                        iconContentDescription = "timer Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeSortType(SortType.DateAdded))
+                        }
+                    ),
+                    MenuItem(
+                        title = "Title",
+                        icon = R.drawable.ic_title,
+                        iconContentDescription = "Title Icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeSortType(SortType.Title))
+                        }
+                    )
+                ),
+                orderByActionList = listOf(
+                    MenuItem(
+                        title = "Ascending",
+                        icon = R.drawable.ic_up,
+                        iconContentDescription = "up icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeOrderByType(OrderByType.Ascending))
+                        }
+                    ),
+                    MenuItem(
+                        title = "Descending",
+                        icon = R.drawable.ic_down,
+                        iconContentDescription = "down icon",
+                        onClick = {
+                            onEvent(FeedEvents.ChangeOrderByType(OrderByType.Descending))
+                        }
+                    )
+                )
+            )
         }
     }
 }

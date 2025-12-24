@@ -5,6 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.Result
+import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -54,7 +57,11 @@ class FeedViewModel @Inject constructor(
             is FeedEvents.FetchFeed -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isLoading = true) }
-                    feedUseCases.getFeedUseCase(_state.value.type)
+                    feedUseCases.getFeedUseCase(
+                        type = state.value.type,
+                        sortType = state.value.sortType,
+                        orderByType = state.value.orderByType
+                    )
                         .collectLatest { itemList ->
                         _state.update { it ->
                             it.copy(
@@ -70,6 +77,28 @@ class FeedViewModel @Inject constructor(
             is FeedEvents.ChangeFetchType ->{
                 _state.update {
                     it.copy(type = event.type)
+                }
+            }
+            is FeedEvents.ChangeSortType -> {
+                _state.update {
+                    it.copy(sortType = event.type)
+                }
+                Log.d(TAG, "ChangeSortType :${state.value.sortType}")
+            }
+
+            is FeedEvents.ChangeOrderByType -> {
+                _state.update {
+                    it.copy(orderByType = event.type)
+                }
+            }
+
+            is FeedEvents.ResetFilterState -> {
+                _state.update {
+                    it.copy(
+                        type = FetchType.ALL,
+                        sortType = SortType.DateAdded,
+                        orderByType = OrderByType.Descending
+                    )
                 }
             }
 

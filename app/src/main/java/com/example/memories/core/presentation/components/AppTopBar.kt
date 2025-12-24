@@ -35,6 +35,7 @@ fun AppTopBar(
     actionText : String = "",
     showNavigationIcon : Boolean = false,
     onNavigationIconClick : () -> Unit = {},
+    navigationContent : @Composable () -> Unit = {},
     showDivider : Boolean  = true,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
     containerColor : Color = MaterialTheme.colorScheme.surface
@@ -61,6 +62,8 @@ fun AppTopBar(
                             contentDescription = "Go back to previous screen"
                         )
                     }
+                }else{
+                    navigationContent()
                 }
             },
             actions = {

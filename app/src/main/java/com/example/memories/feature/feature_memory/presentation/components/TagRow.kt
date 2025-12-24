@@ -15,6 +15,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
@@ -29,9 +34,11 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun TagRow(
     totalTags: List<TagModel>,
     showAdd: Boolean,
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onAddClick: () -> Unit= {},
+    modifier: Modifier = Modifier,
 ) {
+    var selected by rememberSaveable { mutableStateOf(0) }
+
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -64,8 +71,11 @@ fun TagRow(
 //            )
             TagChip(
                 tag = totalTags[index],
-                modifier = Modifier
-            ) { }
+                modifier = Modifier,
+                selected = true
+            ) {
+                selected = index
+            }
         }
 
         // ----- CONDITIONAL ADD TAG BUTTON -----

@@ -350,7 +350,7 @@ fun MemoryScreen(
                     showAdd = true,
                     onAddClick = {
                         showTagBottomSheet = true
-                    }
+                    },
                 )
 
 

@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -9,7 +10,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,9 +32,9 @@ fun ChipRow(
     items: List<MenuItem> = emptyList(),
     selectedItemIndex: Int = 0
 ) {
-    Row(
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.padding(10.dp)
+        modifier = modifier
     ) {
         items.forEachIndexed { index, item ->
             FilterChip(
@@ -39,6 +43,9 @@ fun ChipRow(
                     .height(48.dp)
                     .weight(1f)
                 ,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
                 selected = selectedItemIndex == index,
                 onClick = { item.onClick() },
                 label = {

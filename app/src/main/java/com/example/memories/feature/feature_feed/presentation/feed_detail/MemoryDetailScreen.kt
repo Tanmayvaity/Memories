@@ -72,7 +72,6 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
-import com.example.memories.core.presentation.components.ContentActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
@@ -337,48 +336,6 @@ fun MemoryDetailScreen(
             }
         }
     }
-
-
-    if (showContentSheet && memory != null) {
-        val item = memory.memory
-        ContentActionSheet(
-            onDismiss = {
-                showContentSheet = false
-            },
-            title = item.title,
-            actionList = listOf(
-                MenuItem(
-                    title = "Edit",
-                    icon = R.drawable.ic_edit,
-                    iconContentDescription = "Edit",
-                    onClick = {
-                        onNavigateToMemory(AppScreen.Memory(item.memoryId, emptyList()))
-                        showContentSheet = false
-                    }
-                ),
-                MenuItem(
-                    title = if (item.hidden) "UnHide" else "Hide",
-                    icon = if (item.hidden) R.drawable.ic_hidden else R.drawable.ic_not_hidden,
-                    iconContentDescription = if (item.hidden) "UnHide" else "Hide",
-                    onClick = {
-                        onEvent(MemoryDetailEvents.HiddenToggle(item.memoryId, !item.hidden))
-                    }
-                ),
-                MenuItem(
-                    title = "Delete",
-                    icon = R.drawable.ic_delete,
-                    iconContentDescription = "Delete",
-                    onClick = {
-                        showDeleteDialog = true
-
-                    }
-                ),
-
-                )
-
-        )
-    }
-
     if (showDeleteDialog) {
         GeneralAlertDialog(
             title = "Delete Memory Alert",

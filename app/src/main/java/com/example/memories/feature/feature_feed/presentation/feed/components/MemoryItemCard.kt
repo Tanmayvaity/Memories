@@ -3,6 +3,10 @@ package com.example.memories.feature.feature_feed.presentation.feed.components
 import android.R.attr.contentDescription
 import android.R.attr.fontWeight
 import android.R.attr.onClick
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -35,7 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -58,6 +66,7 @@ import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
+
 
 @Composable
 fun MemoryItemCard(
@@ -103,7 +112,7 @@ fun MemoryItemCard(
                         .fillMaxWidth()
                         .height(250.dp)
                     ,
-                    contentScale = ContentScale.FillWidth
+                    contentScale = ContentScale.FillWidth,
                 )
             }
             Box(

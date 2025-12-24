@@ -8,6 +8,8 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortType
 import kotlinx.coroutines.flow.Flow
 
 interface MemoryRepository {
@@ -26,7 +28,7 @@ interface MemoryRepository {
 
     suspend fun insertMemoryTagCrossRef(refs : List<MemoryTagCrossRefModel>)
 
-    suspend fun getMemories(type : FetchType): Flow<List<MemoryWithMediaModel>>
+    suspend fun getMemories(type : FetchType, sortType: SortType, orderByType: OrderByType): Flow<List<MemoryWithMediaModel>>
 
     suspend fun updateFavouriteState(id : String,isFavourite : Boolean)
 
