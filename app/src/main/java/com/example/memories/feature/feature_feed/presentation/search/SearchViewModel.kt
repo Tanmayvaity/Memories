@@ -176,7 +176,6 @@ class SearchViewModel @Inject constructor(
                 viewModelScope.launch {
                     _state.update { it.copy(isRecentSearchLoading = true) }
                     val result = recentSearchUseCase.fetchRecentSearchUseCase()
-
                     when (result) {
                         is Result.Success -> {
                             result.data!!.collect { searches ->

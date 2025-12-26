@@ -76,6 +76,7 @@ import com.example.memories.core.domain.usecase.AddTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
+import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
@@ -311,7 +312,8 @@ object AppModule {
             addTagUseCase = AddTagUseCase(tagRepository),
             fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(tagRepository),
             fetchMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
-            updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository)
+            updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository),
+            tagDeleteTagUseCase = DeleteTagUseCase(tagRepository)
         )
     }
 

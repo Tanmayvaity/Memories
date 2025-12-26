@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.ThemeEvents
@@ -56,6 +57,7 @@ fun OtherScreen(
     val context = LocalContext.current
     val viewmodel = hiltViewModel<ThemeViewModel>()
     val isDarkModeEnabled by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    val theme = LocalTheme.current
     val scrollState = rememberScrollState()
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -109,12 +111,12 @@ fun OtherScreen(
                 heading = "Database backup",
                 content = "Take database backup"
             )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_language,
-                contentDescription = "Language icon",
-                heading = "Language",
-                content = "Change Language"
-            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_language,
+//                contentDescription = "Language icon",
+//                heading = "Language",
+//                content = "Change Language"
+//            )
             CustomCameraSettingsRow(
                 drawableRes = R.drawable.ic_theme,
                 contentDescription = "Theme icon",
@@ -125,56 +127,55 @@ fun OtherScreen(
                     Log.d(TAG, "OtherScreen: ${isDarkModeEnabled} ")
                 },
                 checked = isDarkModeEnabled
+            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_camera,
+//                contentDescription = "Camera Icon",
+//                heading = "Camera Settings",
+//                content = "View and Edit your camera settings",
+//            ) {
+//                onCameraSettingsClick(AppScreen.CameraSettings)
+//            }
 
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_camera,
-                contentDescription = "Camera Icon",
-                heading = "Camera Settings",
-                content = "View and Edit your camera settings",
-            ) {
-                onCameraSettingsClick(AppScreen.CameraSettings)
-            }
 
-
-            Text(
-                text = "MEMORIES",
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(10.dp)
-
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_archive,
-                contentDescription = "Archived Memories Icon",
-                heading = "Archive",
-                content = "Manage your archived photos and vidoes"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_hidden,
-                contentDescription = "Hidden memories icon",
-                heading = "Hidden",
-                content = "Manage your hidden photos and videos"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_memory,
-                contentDescription = "Manage memory icon",
-                heading = "Memories",
-                content = "Manage your Memories"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_bin,
-                contentDescription = "Bin icon",
-                heading = "Bin",
-                content = "View your items in the bin"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_delete,
-                contentDescription = "Delete Memories icon",
-                heading = "Delete your data",
-                content = "Wipe your entire data including memories,photos and videos",
-                color = Color.Red
-            )
+//            Text(
+//                text = "MEMORIES",
+//                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+//                style = MaterialTheme.typography.titleLarge,
+//                modifier = Modifier.padding(10.dp)
+//
+//            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_archive,
+//                contentDescription = "Archived Memories Icon",
+//                heading = "Archive",
+//                content = "Manage your archived photos and vidoes"
+//            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_hidden,
+//                contentDescription = "Hidden memories icon",
+//                heading = "Hidden",
+//                content = "Manage your hidden photos and videos"
+//            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_memory,
+//                contentDescription = "Manage memory icon",
+//                heading = "Memories",
+//                content = "Manage your Memories"
+//            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_bin,
+//                contentDescription = "Bin icon",
+//                heading = "Bin",
+//                content = "View your items in the bin"
+//            )
+//            CustomSettingRow(
+//                drawableRes = R.drawable.ic_delete,
+//                contentDescription = "Delete Memories icon",
+//                heading = "Delete your data",
+//                content = "Wipe your entire data including memories,photos and videos",
+//                color = Color.Red
+//            )
             Text(
                 text = "APP INFO",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),

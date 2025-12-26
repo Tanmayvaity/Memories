@@ -135,6 +135,15 @@ class MemoryViewModel @Inject constructor(
 //                }
 //            }
 
+            is MemoryEvents.TagDelete -> {
+                viewModelScope.launch {
+                    val result = memoryUseCase.tagDeleteTagUseCase(event.id)
+                    if(result is Result.Error){
+                        _errorFlow.send(result.error.message.toString())
+                    }
+                }
+            }
+
             is MemoryEvents.CreateMemory -> {
                 viewModelScope.launch {
                     if(_memoryState.value.memoryForTimeStamp == null){

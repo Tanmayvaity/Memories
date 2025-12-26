@@ -8,4 +8,6 @@ interface TagRepository {
     suspend fun fetchTags(): Flow<List<TagModel>>
 
     suspend fun fetchTagsByLabel(label : String) : Flow<List<TagModel>>
+
+    suspend fun deleteTag(id : String)
 }

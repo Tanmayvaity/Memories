@@ -34,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -64,6 +65,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
@@ -80,10 +82,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.memories.LocalTheme
+import com.example.memories.R
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.formatTime
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
+import com.example.memories.feature.feature_feed.presentation.share.DeleteConfirmationBottomSheet
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.MediaViewer
@@ -154,10 +160,12 @@ fun MemoryScreen(
     var dateText by rememberSaveable { mutableStateOf("")}
     val totalTags = remember { mutableStateListOf<String>() }
     val datePickerState = rememberDatePickerState()
+    var tagId by remember { mutableStateOf("") }
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var showTagDeleteDialog by remember { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             lifecycle = event
@@ -546,7 +554,52 @@ fun MemoryScreen(
                     onEvent(MemoryEvents.UpdateTagsInTextField(tag))
 //                    onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
                 },
-                isDarkMode = isDarkModeEnabled
+                isDarkMode = isDarkModeEnabled,
+                onDelete = {id ->
+                    showTagDeleteDialog = true
+                    tagId = id
+                }
+            )
+        }
+
+        if(showTagDeleteDialog){
+            GeneralAlertDialog(
+                title = "Delete Tag Alert",
+                text = "Are you sure you want to delete this tag",
+                onDismiss = {
+                    showTagDeleteDialog = false
+                },
+                confirmButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red
+                        ),
+                        onClick = {
+                            showTagDeleteDialog = false
+                            if(tagId == null)return@Button
+
+                            onEvent(MemoryEvents.TagDelete(id  = tagId))
+                        }
+                    ) {
+                        Text(
+                            text = "Delete",
+                            color = Color.White
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = {
+                            showTagDeleteDialog = false
+                        }
+
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dismiss),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             )
         }
 

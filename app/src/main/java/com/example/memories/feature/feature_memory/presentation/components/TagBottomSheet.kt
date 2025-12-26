@@ -62,7 +62,8 @@ fun TagBottomSheet(
     sheetState: SheetState = rememberModalBottomSheetState(),
     onDismiss: () -> Unit = {},
     savedTags: List<TagModel> = emptyList(),
-    isDarkMode: Boolean = false
+    isDarkMode: Boolean = false,
+    onDelete : (String) -> Unit = {}
 ) {
     ModalBottomSheet(
         onDismissRequest = {
@@ -200,7 +201,9 @@ fun TagBottomSheet(
                         IconButton(
                             modifier = Modifier
                                 .padding(end = 10.dp),
-                            onClick = onChipAddClick,
+                            onClick = {
+                                onDelete(tag.tagId)
+                            },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,

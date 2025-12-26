@@ -35,4 +35,6 @@ sealed class MemoryEvents {
     data class UpdateList(val list : List<UriType>) : MemoryEvents()
 
     data class FetchMemory(val id : String) : MemoryEvents()
+
+    data class TagDelete(val id : String) : MemoryEvents()
 }

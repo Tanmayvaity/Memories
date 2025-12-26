@@ -75,6 +75,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -117,6 +118,7 @@ import com.example.memories.feature.feature_feed.presentation.feed.components.Me
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -148,9 +150,7 @@ fun FeedRoot(
         onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
     )
 
-    LaunchedEffect(Unit) {
-//        viewModel.onEvent(FeedEvents.FetchFeed)
-    }
+
 
 
 }
@@ -203,6 +203,8 @@ fun FeedScreen(
             }
 
     }
+
+
 
     LaunchedEffect(currentScrollValue) {
         onBottomBarVisibilityToggle(currentScrollValue)
@@ -410,12 +412,14 @@ fun FeedScreen(
 
         LazyColumn(
             modifier = Modifier
-                .padding(innerPadding)
+//                .padding(innerPadding)
                 .fillMaxWidth()
+                .clipToBounds()
                 .background(
                     if (isDarkModeEnabled) Color.Black
                     else MaterialTheme.colorScheme.background
                 ),
+            contentPadding = innerPadding,
             state = lazyListState
         ) {
 
