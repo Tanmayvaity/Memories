@@ -56,7 +56,6 @@ fun LoadingIndicator(
         verticalArrangement = Arrangement.Center
     ) {
         CircularWavyProgressIndicator(
-            progress = { progress },
             waveSpeed = 16.dp,
             wavelength = 16.dp,
         )

@@ -75,6 +75,7 @@ import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
+import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
@@ -135,7 +136,7 @@ fun MemoryDetailScreen(
     onNavigateToMemory: (AppScreen) -> Unit = {}
 ) {
     val previewMode = LocalInspectionMode.current
-    val pagerState = rememberPagerState { if (previewMode) 1 else memory?.mediaList?.size ?: 0 }
+    val pagerState = rememberPagerState { if (previewMode) 5 else memory?.mediaList?.size ?: 0 }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scrollState = rememberScrollState()
     var showContentSheet by remember { mutableStateOf(false) }
@@ -177,31 +178,10 @@ fun MemoryDetailScreen(
         ) {
             if (memory != null && !isLoading) {
                 val item = memory.memory
-                Box {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier
-                            .height(300.dp)
-                            .fillMaxWidth(),
-
-                        ) { page ->
-
-                        AsyncImage(
-                            model = if (LocalInspectionMode.current) R.drawable.ic_launcher_background else memory.mediaList[page].uri,
-                            contentDescription = "Linked Image",
-                            modifier = Modifier.fillMaxWidth(),
-                            contentScale = ContentScale.FillWidth
-                        )
-
-                    }
-                    MediaPageIndicatorLine(
-                        currentPage = pagerState.currentPage,
-                        pageCount = pagerState.pageCount,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-//                        backGroundColor = MaterialTheme.colorScheme.primaryContainer,
-//                        pageTextColor = MaterialTheme.colorScheme.primary
-                    )
-                }
+                MediaPager(
+                    mediaUris = memory.mediaList.map { it -> it.uri },
+                    pagerState = pagerState
+                )
 
                 Box(
                     modifier = Modifier

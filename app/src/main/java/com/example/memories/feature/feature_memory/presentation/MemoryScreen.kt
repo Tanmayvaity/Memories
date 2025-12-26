@@ -65,6 +65,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -86,13 +87,13 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
 import com.example.memories.feature.feature_feed.presentation.share.DeleteConfirmationBottomSheet
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
-import com.example.memories.feature.feature_memory.presentation.components.MediaViewer
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
 import com.example.memories.feature.feature_memory.presentation.components.ReminderPickerButton
 import com.example.memories.feature.feature_memory.presentation.components.TagBottomSheet
@@ -144,6 +145,7 @@ fun MemoryScreen(
     successFlow: Flow<String>? = null,
     isDarkModeEnabled : Boolean = false,
 ) {
+    val isPreviewMode = LocalInspectionMode.current
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -151,6 +153,7 @@ fun MemoryScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val pagerState = rememberPagerState(pageCount = {
+        if(isPreviewMode) 5 else
         state.uriList.size
     })
     var showTagBottomSheet by rememberSaveable{ mutableStateOf(false) }
@@ -246,11 +249,10 @@ fun MemoryScreen(
                     .padding(10.dp)
                     .verticalScroll(scrollState),
             ) {
-                MediaViewer(
+                MediaPager(
+                    mediaUris = state.uriList.map { it -> it.uri?:"" },
                     pagerState = pagerState,
-                    uriTypeList = state.uriList,
-                    imageContentDescription = "Captured Image",
-                    lifecycle = lifecycle
+                    pagerHeight = 350.dp
                 )
 
                 OutlinedTextField(

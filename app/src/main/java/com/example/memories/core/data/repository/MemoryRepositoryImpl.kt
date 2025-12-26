@@ -59,11 +59,6 @@ class MemoryRepositoryImpl @Inject constructor(
             tagList = tagList.map { tag -> tag.toEntity() } )
     }
 
-    override suspend fun insertTags(tags: List<TagModel>) {
-        tagDao.insertTags(tags.map { it -> it.toEntity() })
-    }
-
-
     override suspend fun insertMemoryTagCrossRef(refs: List<MemoryTagCrossRefModel>) {
         memoryDao.insertMemoryTagCrossRef(refs.map { it -> it.toEntity() })
     }

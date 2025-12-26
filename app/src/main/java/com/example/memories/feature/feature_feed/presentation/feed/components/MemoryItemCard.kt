@@ -66,6 +66,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.ContextualMenuItem
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -84,7 +85,7 @@ fun MemoryItemCard(
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
-    val pager = rememberPagerState(pageCount = { if(isPreviewModeOn) 1 else memoryItem.mediaList.size })
+    val pager = rememberPagerState(pageCount = { if(isPreviewModeOn) 5 else memoryItem.mediaList.size })
 
     Card(
         elevation = CardDefaults.cardElevation(
@@ -106,17 +107,12 @@ fun MemoryItemCard(
             verticalArrangement = Arrangement.SpaceBetween,
 
             ) {
-            HorizontalPager(state = pager) { page ->
-                AsyncImage(
-                    model = if (LocalInspectionMode.current) R.drawable.ic_launcher_background else memoryItem.mediaList[page].uri,
-                    contentDescription = "Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                    ,
-                    contentScale = ContentScale.FillWidth,
-                )
-            }
+            MediaPager(
+                mediaUris = memoryItem.mediaList.map { it -> it.uri },
+                pagerState = pager,
+                pagerHeight = 250.dp,
+                imageContentScale = ContentScale.Crop
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

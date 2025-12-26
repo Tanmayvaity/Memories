@@ -23,9 +23,6 @@ interface MemoryRepository {
 
     suspend fun insertMemoryWithMediaAndTag(memory: MemoryModel, mediaList: List<MediaModel>, tagList : List<TagModel>)
 
-    suspend fun insertTags(tags : List<TagModel>)
-
-
     suspend fun insertMemoryTagCrossRef(refs : List<MemoryTagCrossRefModel>)
 
     suspend fun getMemories(type : FetchType, sortType: SortType, orderByType: OrderByType): Flow<List<MemoryWithMediaModel>>
@@ -36,8 +33,6 @@ interface MemoryRepository {
 
 
     suspend fun getMemoryById(id : String): MemoryWithMediaModel?
-
-//    suspend fun deleteById(id : String)
 
     suspend fun delete(memory : MemoryModel) : Int
 
