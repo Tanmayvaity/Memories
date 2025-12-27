@@ -152,20 +152,7 @@ fun FilterActionSheet(
 }
 
 
-@Composable
-fun HeadingText(
-    modifier: Modifier = Modifier,
-    textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleLarge,
-    title: String,
-) {
-    Text(
-        text = title.toString(),
-        style = textStyle,
-        fontWeight = FontWeight.Bold,
-        modifier = modifier
 
-    )
-}
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)

@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -76,7 +77,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Cyan
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -85,7 +88,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.Wallpapers
@@ -103,6 +110,7 @@ import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.FilterActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.util.PermissionHelper
@@ -181,7 +189,6 @@ fun FeedScreen(
     var currentScrollValue by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentMemoryEntryMode: MemoryEntryMode? = null
-
     var isScrollingUp by remember { mutableStateOf(true) } // Start with FAB visible
 
 // This effect will update isScrollingUp based on the scroll direction
@@ -268,10 +275,13 @@ fun FeedScreen(
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(
-                        "Your Posts",
+                        "Memories",
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleLarge
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                        )
                     )
                 },
                 showDivider = false,
@@ -530,47 +540,67 @@ fun FeedScreen(
             }
         }
 
-        if (showDeleteDialog && currentItem != null) {
-            GeneralAlertDialog(
+        if(showDeleteDialog && currentItem != null || state.isDeleting) {
+
+            GeneralAlertSheet(
                 title = "Delete Memory Alert",
-                text = "Are you sure you want to delete this memory",
+                content = "Are you sure you want to delete this memory",
                 onDismiss = {
                     showDeleteDialog = false
                 },
-                confirmButton = {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red
-                        ),
-                        onClick = {
-                            showDeleteDialog = false
-                            onEvent(
-                                FeedEvents.Delete(
-                                    currentItem!!.memory,
-                                    currentItem!!.mediaList.map { it -> it.uri })
-                            )
-                        }
-                    ) {
-                        Text(
-                            text = "Delete",
-                            color = Color.White
-                        )
-                    }
+                state = sheetState,
+                onConfirm = {
+                    showDeleteDialog = false
+                    onEvent(
+                        FeedEvents.Delete(
+                            currentItem!!.memory,
+                            currentItem!!.mediaList.map { it -> it.uri })
+                    )
                 },
-                dismissButton = {
-                    OutlinedButton(
-                        onClick = {
-                            showDeleteDialog = false
-                        }
-
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dismiss),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
+                isLoading = state.isDeleting
             )
+
+
+//            GeneralAlertDialog(
+//                title = "Delete Memory Alert",
+//                text = "Are you sure you want to delete this memory",
+//                onDismiss = {
+//                    showDeleteDialog = false
+//                },
+//                confirmButton = {
+//                    Button(
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color.Red
+//                        ),
+//                        onClick = {
+//                            showDeleteDialog = false
+//                            onEvent(
+//                                FeedEvents.Delete(
+//                                    currentItem!!.memory,
+//                                    currentItem!!.mediaList.map { it -> it.uri })
+//                            )
+//                        }
+//                    ) {
+//                        Text(
+//                            text = "Delete",
+//                            color = Color.White
+//                        )
+//                    }
+//                },
+//                dismissButton = {
+//                    OutlinedButton(
+//                        onClick = {
+//                            showDeleteDialog = false
+//                        }
+//
+//                    ) {
+//                        Text(
+//                            text = stringResource(R.string.dismiss),
+//                            color = MaterialTheme.colorScheme.onSurface
+//                        )
+//                    }
+//                }
+//            )
         }
 
         if (state.memories.isEmpty() && !state.isLoading) {
@@ -588,6 +618,7 @@ fun FeedScreen(
             FilterActionSheet(
                 onDismiss = {
                     showSheet = false
+                    onEvent(FeedEvents.ResetFilterState)
                 },
                 onReset = {
                     onEvent(FeedEvents.ResetFilterState)

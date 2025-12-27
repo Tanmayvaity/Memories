@@ -44,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,10 +74,12 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
+import com.example.memories.feature.feature_feed.presentation.feed.FeedEvents
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
@@ -90,6 +93,7 @@ fun MemoryDetailRoot(
 ) {
     val memory by viewmodel.memory.collectAsStateWithLifecycle()
     val isLoading by viewmodel.isLoading.collectAsStateWithLifecycle()
+    val isDeleting by viewmodel.isDeleting.collectAsStateWithLifecycle()
     val context = LocalContext.current
 //    LaunchedEffect(Unit) {
 //        Log.d("MemoryDetailScreen", "MediaDetailRoot: ${memoryId}")
@@ -120,7 +124,8 @@ fun MemoryDetailRoot(
         onEvent = viewmodel::onEvent,
         onBack = onBack,
         onNavigateToMemory = onNavigateToMemory,
-        isLoading = isLoading
+        isLoading = isLoading,
+        isDeleting = isDeleting
     )
 }
 
@@ -131,6 +136,7 @@ fun MemoryDetailScreen(
     modifier: Modifier = Modifier,
     memory: MemoryWithMediaModel? = null,
     isLoading: Boolean = false,
+    isDeleting : Boolean = false,
     onEvent: (MemoryDetailEvents) -> Unit = {},
     onBack: () -> Unit = {},
     onNavigateToMemory: (AppScreen) -> Unit = {}
@@ -143,6 +149,9 @@ fun MemoryDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val toolbarScrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom,
+    )
+    val sheetState =  rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
     )
     var expandToolBar by remember { mutableStateOf(false) }
 
@@ -316,43 +325,57 @@ fun MemoryDetailScreen(
             }
         }
     }
-    if (showDeleteDialog) {
-        GeneralAlertDialog(
+    if (showDeleteDialog || isDeleting) {
+//        GeneralAlertDialog(
+//            title = "Delete Memory Alert",
+//            text = "Are you sure you want to delete this memory",
+//            onDismiss = {
+//                showDeleteDialog = false
+//            },
+//            confirmButton = {
+//                Button(
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color.Red
+//                    ),
+//                    onClick = {
+//                        showDeleteDialog = false
+//                        showContentSheet = false
+//                        onEvent(MemoryDetailEvents.Delete)
+//                    }
+//                ) {
+//                    Text(
+//                        text = "Delete",
+//                        color = Color.White
+//                    )
+//                }
+//            },
+//            dismissButton = {
+//                OutlinedButton(
+//                    onClick = {
+//                        showDeleteDialog = false
+//                    }
+//
+//                ) {
+//                    Text(
+//                        text = stringResource(R.string.dismiss),
+//                        color = MaterialTheme.colorScheme.onSurface
+//                    )
+//                }
+//            }
+//        )
+
+        GeneralAlertSheet(
             title = "Delete Memory Alert",
-            text = "Are you sure you want to delete this memory",
+            content = "Are you sure you want to delete this memory",
             onDismiss = {
                 showDeleteDialog = false
             },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red
-                    ),
-                    onClick = {
-                        showDeleteDialog = false
-                        showContentSheet = false
-                        onEvent(MemoryDetailEvents.Delete)
-                    }
-                ) {
-                    Text(
-                        text = "Delete",
-                        color = Color.White
-                    )
-                }
+            state = sheetState,
+            onConfirm = {
+                showDeleteDialog = false
+                onEvent(MemoryDetailEvents.Delete)
             },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        showDeleteDialog = false
-                    }
-
-                ) {
-                    Text(
-                        text = stringResource(R.string.dismiss),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            isLoading = isDeleting
         )
     }
 

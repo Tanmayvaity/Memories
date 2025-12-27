@@ -6,4 +6,5 @@
     <string name="navigate_to_next">Next</string>
     <string name="download">Download</string>
     <string name ="previous">Go back to the previous screen</string>
+    <string name ="cancel">Cancel</string>
 </resources>

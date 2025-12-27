@@ -22,6 +22,7 @@ paging-compose = "3.4.0-alpha01"
 datastore = "1.1.7"
 room = "2.7.2"
 material-expressive = "1.5.0-alpha10"
+lottie = "6.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,7 @@ androidx-room-runtime = {module = "androidx.room:room-runtime",version.ref = "ro
 androidx-room-compiler = {module = "androidx.room:room-compiler",version.ref = "room"}
 androidx-room-ktx = {module = "androidx.room:room-ktx",version.ref = "room"}
 androidx-room-paging = {module = "androidx.room:room-paging",version.ref = "room"}
+dotlottie-android = {module = "com.airbnb.android:lottie-compose",version.ref = "lottie"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

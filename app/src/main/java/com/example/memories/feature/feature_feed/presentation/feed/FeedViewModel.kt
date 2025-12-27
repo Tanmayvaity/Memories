@@ -132,6 +132,7 @@ class FeedViewModel @Inject constructor(
 
             is FeedEvents.Delete -> {
                 viewModelScope.launch {
+                    _state.update { it.copy(isDeleting = true) }
                     val result = feedUseCases.deleteMemoryUseCase(event.memory,event.uriList)
                     when(result){
                         is Result.Error -> {
@@ -141,6 +142,7 @@ class FeedViewModel @Inject constructor(
                             Log.i(TAG, "onEvent: Deleted Succesfully")
                         }
                     }
+                    _state.update { it.copy(isDeleting = false) }
                 }
             }
         }

@@ -53,7 +53,6 @@ class MemoryViewModel @Inject constructor(
     private val _successFlow = Channel<String>()
     val successFlow = _successFlow.receiveAsFlow()
 
-
     private val _memoryState = MutableStateFlow<MemoryState>(MemoryState())
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)

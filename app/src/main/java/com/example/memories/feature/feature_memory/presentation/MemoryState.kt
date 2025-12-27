@@ -19,7 +19,7 @@ data class MemoryState(
     val uriList : List<UriType> = emptyList(),
     val memoryForTimeStamp : Long? = null,
     val timeStamp: Long? = null,
-    val memory : MemoryWithMediaModel? = null
+    val memory : MemoryWithMediaModel? = null,
 )
 
 

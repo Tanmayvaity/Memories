@@ -11,5 +11,6 @@ data class FeedState(
     val error : String? = null,
     val type : FetchType = FetchType.ALL,
     val sortType : SortType = SortType.DateAdded,
-    val orderByType: OrderByType = OrderByType.Descending
+    val orderByType: OrderByType = OrderByType.Descending,
+    val isDeleting : Boolean = false
 )

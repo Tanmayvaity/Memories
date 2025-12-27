@@ -28,7 +28,8 @@ class MemoryDetailViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
-
+    private val _isDeleting = MutableStateFlow(false)
+    val isDeleting = _isDeleting.asStateFlow()
     private val _eventChannel  = Channel<UiEvent>()
     val eventFlow = _eventChannel.receiveAsFlow()
 
@@ -89,11 +90,13 @@ class MemoryDetailViewModel @Inject constructor(
             }
 
             is MemoryDetailEvents.Delete -> {
+                _isDeleting.update { true }
                 viewModelScope.launch {
                     val result = feedUseCases.deleteMemoryUseCase(
                         memory = _memory.value.memory,
                         uriList = _memory.value.mediaList.map { it.uri }
                         )
+                    _isDeleting.update { false }
                     when(result){
                         is Result.Error -> {
                             Log.e(TAG, "onEvent: error while deleting", )
@@ -106,7 +109,6 @@ class MemoryDetailViewModel @Inject constructor(
                             ))
                         }
                     }
-
                 }
             }
         }

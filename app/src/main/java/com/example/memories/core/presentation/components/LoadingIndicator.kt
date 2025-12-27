@@ -32,6 +32,9 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun LoadingIndicator(
     modifier: Modifier = Modifier,
     text : String = "Your data is being loaded",
+    showText : Boolean = true,
+    waveSpeed : Int = 16,
+    waveLength : Int = 16
 ) {
     val transition = rememberInfiniteTransition()
     val progress by transition.animateFloat(
@@ -56,18 +59,21 @@ fun LoadingIndicator(
         verticalArrangement = Arrangement.Center
     ) {
         CircularWavyProgressIndicator(
-            waveSpeed = 16.dp,
-            wavelength = 16.dp,
+            waveSpeed = waveSpeed.dp,
+            wavelength = waveLength.dp,
         )
-        Text(
-            text = buildString {
-                append(text)
-                append(".".repeat(dotCount))
-            },
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(5.dp),
-            textAlign = TextAlign.Center
-        )
+        if(showText){
+            Text(
+                text = buildString {
+                    append(text)
+                    append(".".repeat(dotCount))
+                },
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(5.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+
     }
 }
 
@@ -79,7 +85,8 @@ fun LoadingIndicator(
 fun LoadingIndicatorPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         LoadingIndicator(
-            modifier = Modifier.background(MaterialTheme.colorScheme.background)
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+            showText = true,
         )
     }
 }
