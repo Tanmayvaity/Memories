@@ -9,8 +9,8 @@ class ThemeRepositoryImpl @Inject constructor(
     private val datastore : OtherSettingsDatastore
 ) : ThemeRespository {
     override val isDarkModeEnabled: Flow<Boolean> = datastore.isDarkModeEnabled
-    override suspend fun setDarkMode() {
-        datastore.setDarkMode()
+    override suspend fun setDarkMode(toDarkMode : Boolean ) {
+        datastore.setDarkMode(toDarkMode)
     }
 
 }

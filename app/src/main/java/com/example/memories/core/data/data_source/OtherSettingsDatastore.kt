@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
+import java.lang.Compiler.enable
 
 class OtherSettingsDatastore(
     val context : Context
@@ -25,11 +26,11 @@ class OtherSettingsDatastore(
     }
 
 
-    suspend fun setDarkMode(){
+    suspend fun setDarkMode(toDarkMode : Boolean){
         context.datastore.edit { preferences ->
-            val enable = preferences[DARK_MODE_KEY] ?: false
-            preferences[DARK_MODE_KEY] = !enable
-            Log.d(TAG, "setDarkMode: ${!enable} ")
+//            val enable = preferences[DARK_MODE_KEY] ?: false
+            preferences[DARK_MODE_KEY] = toDarkMode
+//            Log.d(TAG, "setDarkMode: ${!enable} ")
         }
     }
 

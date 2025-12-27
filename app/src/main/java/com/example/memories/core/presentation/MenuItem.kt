@@ -6,8 +6,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 data class MenuItem(
     val title : String,
+    val content : String? = null,
     @DrawableRes val icon : Int,
-    val iconContentDescription : String,
+    val iconContentDescription : String = "",
     val onClick : () -> Unit = {}
 )
 

@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.with
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,9 +35,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.ui.theme.MemoriesTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,7 +57,6 @@ class MainActivity : ComponentActivity() {
 
             val viewmodel = hiltViewModel<ThemeViewModel>()
             val isDarkModeEnabled by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
-
             val navController = rememberNavController()
             LaunchedEffect(isDarkModeEnabled) {
                 Log.d("MainActivity", "onCreate: isDarkModeEnabled : ${isDarkModeEnabled}")
@@ -71,11 +73,12 @@ class MainActivity : ComponentActivity() {
                 },
                 label = "ThemeTransition"
             ) { isDark ->
+                val themeState = (isDark == ThemeTypes.DARK)
                 CompositionLocalProvider(
-                    LocalTheme provides isDark
+                    LocalTheme provides themeState
                 ) {
                     MemoriesTheme(
-                        darkTheme = isDark
+                        darkTheme = themeState
                     ) {
 
                         AppNav(navController)

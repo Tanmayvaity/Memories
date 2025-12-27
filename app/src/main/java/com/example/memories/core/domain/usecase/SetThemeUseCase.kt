@@ -6,8 +6,8 @@ import javax.inject.Inject
 class SetThemeUseCase @Inject constructor(
     val repository: ThemeRespository
 ) {
-    suspend operator fun invoke(){
-         repository.setDarkMode()
+    suspend operator fun invoke( toDarkMode : Boolean){
+         repository.setDarkMode(toDarkMode)
     }
 
 }

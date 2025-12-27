@@ -1,11 +1,13 @@
 package com.example.memories.feature.feature_other.presentation.screens
 
+import android.app.ProgressDialog.show
 import android.content.Intent
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,11 +22,16 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,11 +44,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.LocalTheme
 import com.example.memories.R
+import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.feature.feature_other.presentation.ThemeTypes
+import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
 import com.example.memories.navigation.AppScreen
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 
@@ -56,9 +67,87 @@ fun OtherScreen(
 
     val context = LocalContext.current
     val viewmodel = hiltViewModel<ThemeViewModel>()
-    val isDarkModeEnabled by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
     val theme = LocalTheme.current
     val scrollState = rememberScrollState()
+    var showThemeSheet by remember { mutableStateOf(false) }
+
+
+
+
+    val generalSettingItems = listOf<MenuItem>(
+        MenuItem(
+            icon = R.drawable.ic_notification,
+            iconContentDescription = "Notifications Icon",
+            title = "Notifications",
+            content = "Manage Your Notifications",
+            onClick = {}
+        ),
+        MenuItem(
+            icon = R.drawable.ic_storage,
+            iconContentDescription = "Storage Icon",
+            title = "Storage",
+            content = "View app's storage information",
+            onClick = {}
+        ),
+        MenuItem(
+            icon = R.drawable.ic_database_backup,
+            iconContentDescription = "Database backup icon",
+            title = "Database backup",
+            content = "Take database backup",
+            onClick = {}
+        ),
+        MenuItem(
+            icon = R.drawable.ic_theme,
+            iconContentDescription = "Theme icon",
+            title = "Change Theme",
+            content = "Toggle between light and dark theme",
+            onClick = {
+                showThemeSheet = true
+            }
+        )
+
+    )
+    val appInfoSettingItems = listOf<MenuItem>(
+        MenuItem(
+            icon = R.drawable.ic_app_version,
+            iconContentDescription = "App Version Icon",
+            title = "App Version",
+            content = "1.0.0",
+            onClick = {
+                val developerUri = "https://github.com/Tanmayvaity/Memories"
+                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
+                context.startActivity(intent)
+            }
+        ),
+        MenuItem(
+            icon = R.drawable.ic_terms,
+            iconContentDescription = "Terms of service icon",
+            title = "Terms of service",
+            content = null
+        ),
+        MenuItem(
+            icon = R.drawable.ic_privacy,
+            iconContentDescription = "Privacy Policy Icon",
+            title = "Privacy policy",
+            content = null
+        ),
+        MenuItem(
+            icon = R.drawable.ic_developer,
+            iconContentDescription = "Developer Info Icon",
+            title = "Developer Info",
+            content = "View developer info",
+            onClick = {
+                val developerUri = "https://github.com/Tanmayvaity"
+                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
+                context.startActivity(intent)
+            }
+        )
+
+    )
+
+
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
@@ -76,7 +165,6 @@ fun OtherScreen(
 
         ) { innerPadding ->
 
-
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -93,89 +181,17 @@ fun OtherScreen(
 
                 )
 
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_notification,
-                contentDescription = "Notification Settings Icon",
-                heading = "Notifications",
-                content = "Manage Your Notifications"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_storage,
-                contentDescription = "Storage Info Icon",
-                heading = "Storage",
-                content = "View your Storage Information"
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_database_backup,
-                contentDescription = "Database Backup Icon",
-                heading = "Database backup",
-                content = "Take database backup"
-            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_language,
-//                contentDescription = "Language icon",
-//                heading = "Language",
-//                content = "Change Language"
-//            )
-            CustomCameraSettingsRow(
-                drawableRes = R.drawable.ic_theme,
-                contentDescription = "Theme icon",
-                heading = "Change Theme",
-                content = "Toggle between light and dark theme",
-                onSwitchStateChange = {
-                    viewmodel.onEvent(ThemeEvents.SetTheme)
-                    Log.d(TAG, "OtherScreen: ${isDarkModeEnabled} ")
-                },
-                checked = isDarkModeEnabled
-            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_camera,
-//                contentDescription = "Camera Icon",
-//                heading = "Camera Settings",
-//                content = "View and Edit your camera settings",
-//            ) {
-//                onCameraSettingsClick(AppScreen.CameraSettings)
-//            }
+            generalSettingItems.forEach { item ->
+                CustomSettingRow(
+                    drawableRes = item.icon,
+                    contentDescription = item.iconContentDescription ?: "",
+                    heading = item.title,
+                    content = item.content ?: "",
+                    onClick = item.onClick
+                )
+            }
 
 
-//            Text(
-//                text = "MEMORIES",
-//                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-//                style = MaterialTheme.typography.titleLarge,
-//                modifier = Modifier.padding(10.dp)
-//
-//            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_archive,
-//                contentDescription = "Archived Memories Icon",
-//                heading = "Archive",
-//                content = "Manage your archived photos and vidoes"
-//            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_hidden,
-//                contentDescription = "Hidden memories icon",
-//                heading = "Hidden",
-//                content = "Manage your hidden photos and videos"
-//            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_memory,
-//                contentDescription = "Manage memory icon",
-//                heading = "Memories",
-//                content = "Manage your Memories"
-//            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_bin,
-//                contentDescription = "Bin icon",
-//                heading = "Bin",
-//                content = "View your items in the bin"
-//            )
-//            CustomSettingRow(
-//                drawableRes = R.drawable.ic_delete,
-//                contentDescription = "Delete Memories icon",
-//                heading = "Delete your data",
-//                content = "Wipe your entire data including memories,photos and videos",
-//                color = Color.Red
-//            )
             Text(
                 text = "APP INFO",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
@@ -183,42 +199,71 @@ fun OtherScreen(
                 modifier = Modifier.padding(10.dp)
             )
 
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_app_version,
-                contentDescription = "App Version Icon",
-                heading = "App Version",
-                content = "1.0.0"
-            ) {
-                val developerUri = "https://github.com/Tanmayvaity/Memories"
-                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-                context.startActivity(intent)
-            }
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_terms,
-                contentDescription = "Terms of service icon",
-                heading = "Terms of service",
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_privacy,
-                contentDescription = "Privacy Policy Icon",
-                heading = "Privacy policy",
-            )
-            CustomSettingRow(
-                drawableRes = R.drawable.ic_developer,
-                contentDescription = "Developer Info Icon",
-                heading = "Developer Info",
-                content = "View developer info",
-                onClick = {
-                    val developerUri = "https://github.com/Tanmayvaity"
-                    val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-                    context.startActivity(intent)
-
-                },
+            appInfoSettingItems.forEach { item ->
+                CustomSettingRow(
+                    drawableRes = item.icon,
+                    contentDescription = item.iconContentDescription ?: "",
+                    heading = item.title,
+                    content = item.content ?: "",
+                    onClick = item.onClick
                 )
-
+            }
         }
 
+        if (showThemeSheet) {
+            ThemeBottomSheet(
+                heading = "Change Theme",
+                subHeading = "Choose your prefered theme",
+                isDarkMode = state,
+                onApplyTheme = {
+                    showThemeSheet = false
+                    viewmodel.onEvent(
+                        ThemeEvents.SetTheme
+                    )
+                },
+                themeOptions = listOf(
+                    MenuItem(
+                        title = "Light Mode",
+                        icon = R.drawable.ic_light_mode,
+                        iconContentDescription = "Light Mode Icon",
+                        onClick = {
+                            viewmodel.onEvent(
+                                ThemeEvents.ChangeThemeType(
+                                    ThemeTypes.LIGHT
 
+                                )
+                            )
+                        }
+                    ),
+                    MenuItem(
+                        title = "Dark Mode",
+                        icon = R.drawable.ic_night_mode,
+                        iconContentDescription = "Dark Mode Icon",
+                        onClick = {
+                            viewmodel.onEvent(
+                                ThemeEvents.ChangeThemeType(
+                                    ThemeTypes.DARK
+
+                                )
+                            )
+                        }
+                    ),
+//                    MenuItem(
+//                        title = "System Default",
+//                        icon = R.drawable.ic_theme,
+//                        iconContentDescription = "System Default Icon",
+//                        onClick = {
+//                            viewmodel.onEvent(ThemeEvents.ChangeThemeType(
+//                                ThemeTypes.SYSTEM
+//                            ))
+//                        }
+//                    )
+                ),
+                onDismiss = {
+                    showThemeSheet = false
+                }
+            )
+        }
     }
 }
 
@@ -233,11 +278,22 @@ fun CustomSettingRow(
     iconColor: Color = MaterialTheme.colorScheme.primary,
     iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit = {},
+    endContent: @Composable () -> Unit = {
+        Icon(
+            painter = painterResource(R.drawable.ic_right),
+            contentDescription = "Open $heading Memories",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier
+//                .weight(1f)
+                .padding(end = 10.dp)
+
+
+        )
+    }
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 15.dp)
             .clickable(
                 onClick = onClick,
                 indication = null,
@@ -248,8 +304,8 @@ fun CustomSettingRow(
         IconItem(
             drawableRes = drawableRes,
             modifier = Modifier
-                .padding(10.dp)
-                .weight(1f),
+                .padding(10.dp),
+//                .weight(1f)
             contentDescription = contentDescription,
             color = iconColor,
             backgroundColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -261,7 +317,7 @@ fun CustomSettingRow(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(5f)
+                .weight(1f)
                 .padding(5.dp)
         ) {
             Text(
@@ -281,17 +337,7 @@ fun CustomSettingRow(
             }
 
         }
-
-        Icon(
-            painter = painterResource(R.drawable.ic_right),
-            contentDescription = "Open $heading Memories",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier
-                .weight(1f)
-                .size(24.dp)
-
-
-        )
+        endContent()
 
 
     }

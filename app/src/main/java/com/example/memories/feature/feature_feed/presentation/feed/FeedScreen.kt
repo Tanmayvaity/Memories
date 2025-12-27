@@ -102,6 +102,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.UriType
@@ -152,7 +153,6 @@ fun FeedRoot(
         loadState = dataLoadingState,
         onCameraClick = onCameraClick,
         onNavigateToImageEdit = onNavigateToImageEdit,
-        isDarkModeEnabled = isDarkModeEnabled,
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
         onNavigateToMemoryCreate = onNavigateToMemoryCreate,
         onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
@@ -174,7 +174,6 @@ fun FeedScreen(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
-    isDarkModeEnabled: Boolean = false,
     onBottomBarVisibilityToggle: (Boolean) -> Unit = {}
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
@@ -426,7 +425,7 @@ fun FeedScreen(
                 .fillMaxWidth()
                 .clipToBounds()
                 .background(
-                    if (isDarkModeEnabled) Color.Black
+                    if (LocalTheme.current) Color.Black
                     else MaterialTheme.colorScheme.background
                 ),
             contentPadding = innerPadding,
