@@ -133,7 +133,7 @@ fun GeneralAlertSheet(
                 )
 
                 HeadingText(
-                    title = "Delete this tag",
+                    title = title.toString(),
                     textStyle = TextStyle(
                         textAlign = TextAlign.Center,
                         fontSize = 22.sp

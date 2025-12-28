@@ -10,6 +10,7 @@ import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
 import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
+import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 
@@ -145,6 +146,40 @@ fun NavGraphBuilder.createFeedGraph(
             }
 
 
+        )
+    }
+
+    composable<AppScreen.Tags>(
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        }
+    ) {
+        onBottomBarVisibilityChange(false)
+        TagsRoot(
+            onBack = {
+                navController.popBackStack()
+            }
         )
     }
 }

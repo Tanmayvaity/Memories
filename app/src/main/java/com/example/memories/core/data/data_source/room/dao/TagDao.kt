@@ -10,7 +10,9 @@ import androidx.room.Upsert
 import com.example.memories.core.data.data_source.room.Entity.MediaEntity
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.data.data_source.room.Entity.TagEntity
+import com.example.memories.core.data.data_source.room.Entity.TagWithMemoryCount
 import com.example.memories.core.data.data_source.room.Entity.TagsWithMemory
+import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -40,5 +42,20 @@ interface TagDao {
     @Query("DELETE FROM TagEntity WHERE tag_id = :id")
     suspend fun deleteTag(id : String)
 
+    @Transaction
+    @Query(
+        """
+SELECT 
+    t.tag_id,
+    t.label,
+    COUNT(mt.memory_id) AS memory_count
+FROM tagentity t
+LEFT JOIN MemoryTagCrossRef mt 
+    ON t.tag_id = mt.tag_id
+GROUP BY t.tag_id, t.label
+ORDER BY memory_count DESC
+        """
+    )
+    fun getTagsWithMemoryCount() : Flow<List<TagWithMemoryCount>>
 
 }

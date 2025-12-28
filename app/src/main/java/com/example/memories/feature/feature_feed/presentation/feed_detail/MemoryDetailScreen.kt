@@ -89,7 +89,8 @@ fun MemoryDetailRoot(
     modifier: Modifier = Modifier,
     viewmodel: MemoryDetailViewModel = hiltViewModel<MemoryDetailViewModel>(),
     onBack: () -> Unit = {},
-    onNavigateToMemory: (AppScreen) -> Unit
+    onNavigateToMemory: (AppScreen) -> Unit= {},
+    onTagClick : (AppScreen.Tags) -> Unit = {}
 ) {
     val memory by viewmodel.memory.collectAsStateWithLifecycle()
     val isLoading by viewmodel.isLoading.collectAsStateWithLifecycle()
@@ -125,7 +126,8 @@ fun MemoryDetailRoot(
         onBack = onBack,
         onNavigateToMemory = onNavigateToMemory,
         isLoading = isLoading,
-        isDeleting = isDeleting
+        isDeleting = isDeleting,
+        onTagClick = onTagClick
     )
 }
 
@@ -139,7 +141,8 @@ fun MemoryDetailScreen(
     isDeleting : Boolean = false,
     onEvent: (MemoryDetailEvents) -> Unit = {},
     onBack: () -> Unit = {},
-    onNavigateToMemory: (AppScreen) -> Unit = {}
+    onNavigateToMemory: (AppScreen) -> Unit = {},
+    onTagClick : (AppScreen.Tags)-> Unit = {}
 ) {
     val previewMode = LocalInspectionMode.current
     val pagerState = rememberPagerState { if (previewMode) 5 else memory?.mediaList?.size ?: 0 }

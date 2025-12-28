@@ -5,6 +5,7 @@ import com.example.memories.core.data.data_source.room.mapper.toDomain
 import com.example.memories.core.data.data_source.room.mapper.toEntity
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.repository.TagRepository
+import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -26,6 +27,12 @@ class TagRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTag(id: String) {
         tagDao.deleteTag(id)
+    }
+
+    override fun getTagsWithMemoryCount(): Flow<List<TagWithMemoryCountModel>> {
+        return tagDao.getTagsWithMemoryCount().map { tags ->
+            tags.map { tag -> tag.toDomain() }
+        }
     }
 
 }

@@ -78,6 +78,8 @@ import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
 import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
@@ -356,5 +358,16 @@ object AppModule {
             fetchRecentSearchUseCase = FetchRecentSearchUseCase(repository)
         )
 
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagsUseCaseWrapper(
+        repository: TagRepository
+    ) : TagUseCaseWrapper {
+        return TagUseCaseWrapper(
+            getTagsWithMemoryCountUseCase = GetTagsWithMemoryCountUseCase(repository),
+            deleteTagUseCase = DeleteTagUseCase(repository)
+        )
     }
 }

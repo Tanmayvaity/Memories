@@ -44,7 +44,7 @@ fun NavGraphBuilder.createOtherGraph(
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(false)
         OtherScreen(
-            onCameraSettingsClick = {route ->
+            onNavigateToTags = {route ->
                 navController.navigate(route)
             }
         )

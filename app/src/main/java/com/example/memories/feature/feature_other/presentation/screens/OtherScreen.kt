@@ -62,7 +62,7 @@ const val TAG = "OtherScreen"
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun OtherScreen(
-    onCameraSettingsClick: (AppScreen.CameraSettings) -> Unit = {}
+    onNavigateToTags: (AppScreen.Tags) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -104,6 +104,15 @@ fun OtherScreen(
             content = "Toggle between light and dark theme",
             onClick = {
                 showThemeSheet = true
+            }
+        ),
+        MenuItem(
+            icon = R.drawable.ic_tag,
+            iconContentDescription = "Tag Icon",
+            title = "Tags Info",
+            content = "Check and edit your created tags",
+            onClick = {
+                onNavigateToTags(AppScreen.Tags)
             }
         )
 
@@ -212,6 +221,7 @@ fun OtherScreen(
 
         if (showThemeSheet) {
             ThemeBottomSheet(
+                btnText = "Apply Theme",
                 heading = "Change Theme",
                 subHeading = "Choose your prefered theme",
                 isDarkMode = state,
@@ -263,6 +273,7 @@ fun OtherScreen(
                     showThemeSheet = false
                 }
             )
+
         }
     }
 }

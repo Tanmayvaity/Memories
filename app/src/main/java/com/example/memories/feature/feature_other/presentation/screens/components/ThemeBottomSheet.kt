@@ -1,6 +1,8 @@
 package com.example.memories.feature.feature_other.presentation.screens.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,9 +52,11 @@ fun ThemeBottomSheet(
     onDismiss : () -> Unit = {},
     state : SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     isDarkMode : ThemeTypes = ThemeTypes.DARK,
+    btnText : String = ""
 ) {
-
-
+    var isSelected  by remember { mutableStateOf(false) }
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = state
@@ -59,7 +67,7 @@ fun ThemeBottomSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             HeadingText(
-                title = "Change Theme",
+                title = heading.toString(),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
                 textStyle = TextStyle(
                     textAlign = TextAlign.Center,
@@ -70,10 +78,10 @@ fun ThemeBottomSheet(
                 Card(
                     border = BorderStroke(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        color = if(index == isDarkMode.toIndex()) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
                     ),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = if(index == isDarkMode.toIndex())MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     ),
                 ) {
                     CustomSettingRow(
@@ -81,14 +89,21 @@ fun ThemeBottomSheet(
                         contentDescription = item.iconContentDescription?: "",
                         heading = item.title,
                         content = item.content ?: "",
-                        onClick = item.onClick,
+                        onClick = {
+                            item.onClick()
+                        },
                         endContent = {
                             RadioButton(
                                 selected = index == isDarkMode.toIndex(),
-                                onClick = item.onClick
+                                onClick = {
+                                    item.onClick()
+                                }
                             )
                         },
-                        modifier = Modifier.padding(10.dp)
+                        modifier = Modifier
+                            .background(containerColor)
+                            .border(width = 1.dp,color = borderColor)
+                            .padding(10.dp)
 
                     )
                 }
@@ -101,7 +116,7 @@ fun ThemeBottomSheet(
                 ,
             ) {
                 Text(
-                    text = "Apply Theme",
+                    text = btnText,
                     modifier = Modifier.padding(10.dp)
                 )
 
@@ -127,6 +142,7 @@ fun ThemeBottomSheet(
 fun ThemeBottomSheetPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         ThemeBottomSheet(
+            btnText = "Apply Theme",
             heading = "Change Theme",
             subHeading = "Choose your prefered theme",
             themeOptions = listOf(

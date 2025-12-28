@@ -115,7 +115,7 @@ fun TagBottomSheet(
                 }
 
             }
-            item {
+            item{
                 TextFieldWithTags(
                     textFieldValue = textFieldValue,
                     onValueChanged = { newText ->

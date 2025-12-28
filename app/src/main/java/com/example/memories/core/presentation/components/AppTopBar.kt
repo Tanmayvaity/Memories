@@ -42,7 +42,7 @@ fun AppTopBar(
 ) {
 
     Column {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = containerColor
             ),

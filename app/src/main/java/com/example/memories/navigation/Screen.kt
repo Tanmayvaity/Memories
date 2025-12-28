@@ -46,5 +46,8 @@ sealed class AppScreen(val route: String) {
     data class MemoryDetail(
         val memoryId : String
     ): AppScreen("MemoryDetail")
+
+    @Serializable
+    object Tags : AppScreen("Tags")
 }
 
