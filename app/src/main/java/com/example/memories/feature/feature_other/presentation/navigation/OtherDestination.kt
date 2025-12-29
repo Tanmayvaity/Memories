@@ -15,32 +15,7 @@ fun NavGraphBuilder.createOtherGraph(
     onBottomBarVisibilityChange : (Boolean) -> Unit,
     onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
-    composable<TopLevelScreen.Other>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
-    ) {
+    composable<TopLevelScreen.Other> {
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(false)
         OtherScreen(

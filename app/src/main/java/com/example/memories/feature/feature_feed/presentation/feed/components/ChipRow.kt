@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
+import com.example.memories.core.util.PhonePreview
+import com.example.memories.core.util.SmallPhonePreview
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable

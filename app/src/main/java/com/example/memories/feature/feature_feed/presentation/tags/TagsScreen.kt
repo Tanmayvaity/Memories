@@ -68,20 +68,23 @@ import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
+import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.VeryLightGray
 
 @Composable
 fun TagsRoot(
     modifier: Modifier = Modifier,
     viewmodel: TagsViewModel = hiltViewModel(),
-    onBack : () -> Unit = {}
+    onBack : () -> Unit = {},
+    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
 
     TagsScreen(
         state = state,
         onBack = onBack,
-        onEvent = viewmodel::onEvent
+        onEvent = viewmodel::onEvent,
+        onNavigateToTagWithMemory = onNavigateToTagWithMemory
     )
 }
 
@@ -91,7 +94,8 @@ fun TagsScreen(
     modifier: Modifier = Modifier,
     state: TagsState = TagsState(),
     onBack: () -> Unit = {},
-    onEvent : (TagEvents) -> Unit = {}
+    onEvent : (TagEvents) -> Unit = {},
+    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit = {}
 ) {
     var inputText by rememberSaveable { mutableStateOf("") }
     var showSortBySheet by remember { mutableStateOf(false) }
@@ -207,7 +211,13 @@ fun TagsScreen(
                 items(state.tags) { tag ->
                     Card(
                         modifier = Modifier.combinedClickable(
-                            onClick = {},
+                            onClick = {
+                                onNavigateToTagWithMemory(
+                                    AppScreen.TagWithMemories(
+                                        id = tag.tagId,
+                                        tagLabel = tag.tagLabel)
+                                )
+                            },
                             onLongClick = {
                                 tagItem = tag
                                 showDeleteTagSheet = true

@@ -21,30 +21,6 @@ fun NavGraphBuilder.createMediaEditGraph(
     onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
     composable<AppScreen.MediaEdit>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
         typeMap = mapOf(
             typeOf<UriType>() to CustomNavType.uriWrapperType,
             typeOf<Type>() to CustomNavType.mediaType

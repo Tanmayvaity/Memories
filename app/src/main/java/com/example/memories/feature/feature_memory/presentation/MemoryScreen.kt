@@ -98,6 +98,7 @@ import com.example.memories.feature.feature_memory.presentation.components.Remin
 import com.example.memories.feature.feature_memory.presentation.components.ReminderPickerButton
 import com.example.memories.feature.feature_memory.presentation.components.TagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
+import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.Flow
@@ -112,6 +113,7 @@ fun MemoryRoot(
     viewModel: MemoryViewModel = hiltViewModel<MemoryViewModel>(),
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
+    onTagClick : (AppScreen.TagWithMemories) -> Unit,
     uriList: List<UriType>,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
@@ -127,6 +129,7 @@ fun MemoryRoot(
         errorFLow = viewModel.errorFlow,
         successFlow = viewModel.successFlow,
         isDarkModeEnabled = LocalTheme.current,
+        onTagClick = onTagClick
     )
 
 
@@ -144,6 +147,7 @@ fun MemoryScreen(
     errorFLow: Flow<String>? = null,
     successFlow: Flow<String>? = null,
     isDarkModeEnabled : Boolean = false,
+    onTagClick : (AppScreen.TagWithMemories) -> Unit = {}
 ) {
     val isPreviewMode = LocalInspectionMode.current
     val scrollState = rememberScrollState()
@@ -361,6 +365,15 @@ fun MemoryScreen(
                     onAddClick = {
                         showTagBottomSheet = true
                     },
+                    onTagClick = {id,label ->
+                        onTagClick(
+                            AppScreen.TagWithMemories(
+                                id = id,
+                                tagLabel = label
+                            )
+                        )
+                    }
+
                 )
 
 

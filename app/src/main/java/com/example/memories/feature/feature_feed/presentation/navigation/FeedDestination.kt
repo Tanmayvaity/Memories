@@ -6,93 +6,45 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.memories.core.util.isOnBackStack
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
 import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
+import com.example.memories.feature.feature_feed.presentation.tags_with_memory.TagWithMemoryRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 
 fun NavGraphBuilder.createFeedGraph(
     navController: NavHostController,
-    onBottomBarVisibilityChange : (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
-){
-    composable<TopLevelScreen.Feed>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
-    ) {
+    onBottomBarVisibilityChange: (Boolean) -> Unit,
+    onFloatingActionBtnVisibilityChange: (Boolean) -> Unit
+) {
+    composable<TopLevelScreen.Feed> {
         onBottomBarVisibilityChange(true)
         onFloatingActionBtnVisibilityChange(true)
         FeedRoot(
-            onCameraClick = {route ->
+            onCameraClick = { route ->
                 navController.navigate(route)
             },
-            onNavigateToImageEdit = {route ->
+            onNavigateToImageEdit = { route ->
                 navController.navigate(route)
             },
-            onNavigateToMemoryDetail = {route ->
+            onNavigateToMemoryDetail = { route ->
                 navController.navigate(route)
             },
-            onNavigateToMemoryCreate = {route ->
+            onNavigateToMemoryCreate = { route ->
                 navController.navigate(route)
             },
             onBottomBarVisibilityToggle = onBottomBarVisibilityChange
         )
     }
-    composable<TopLevelScreen.Search>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
-    ) {
+    composable<TopLevelScreen.Search> {
         onFloatingActionBtnVisibilityChange(false)
         onBottomBarVisibilityChange(true)
         SearchRoot(
-            onNavigateToMemoryDetail = {route ->
+            onNavigateToMemoryDetail = { route ->
                 navController.navigate(route)
             }
         )
@@ -108,32 +60,7 @@ fun NavGraphBuilder.createFeedGraph(
         )
     }
 
-    composable<AppScreen.MemoryDetail>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
-    ){
+    composable<AppScreen.MemoryDetail> {
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
         val args = it.toRoute<AppScreen.MemoryDetail>()
@@ -141,45 +68,37 @@ fun NavGraphBuilder.createFeedGraph(
             onBack = {
                 navController.popBackStack()
             },
-            onNavigateToMemory = {route ->
+            onNavigateToMemory = { route ->
+                navController.navigate(route)
+            },
+            onTagClick = {route ->
                 navController.navigate(route)
             }
-
-
         )
     }
 
-    composable<AppScreen.Tags>(
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
-    ) {
+    composable<AppScreen.Tags>{
         onBottomBarVisibilityChange(false)
         TagsRoot(
             onBack = {
                 navController.popBackStack()
+            },
+            onNavigateToTagWithMemory = { route ->
+                navController.navigate(route)
             }
+        )
+    }
+
+    composable<AppScreen.TagWithMemories>{
+        onBottomBarVisibilityChange(false)
+        TagWithMemoryRoot(
+            onBack = {
+                navController.popBackStack()
+            },
+            onNavigateToMemory = {route ->
+                navController.navigate(route)
+            }
+
         )
     }
 }

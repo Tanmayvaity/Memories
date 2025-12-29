@@ -6,6 +6,8 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.navigation.NavController
+import com.example.memories.navigation.AppScreen
 
 val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope> {
     error("animated visibility scope Must be provided first")
@@ -48,5 +50,15 @@ fun SharedTransitionScope.ProvideSharedTransitionScope(
 fun WithSharedTransitionScope(block: @Composable SharedTransitionScope.() -> Unit) {
     with(LocalSharedTransitionScope.current) {
         block()
+    }
+}
+
+
+fun NavController.isOnBackStack(route : AppScreen) : Boolean {
+    return try{
+        getBackStackEntry(route)
+        true
+    }catch (e : Exception){
+        false
     }
 }

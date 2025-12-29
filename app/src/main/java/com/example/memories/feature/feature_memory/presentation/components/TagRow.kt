@@ -36,6 +36,7 @@ fun TagRow(
     showAdd: Boolean,
     onAddClick: () -> Unit= {},
     modifier: Modifier = Modifier,
+    onTagClick : (String,String) -> Unit = {_,_ -> }
 ) {
     var selected by rememberSaveable { mutableStateOf(0) }
 
@@ -72,10 +73,12 @@ fun TagRow(
             TagChip(
                 tag = totalTags[index],
                 modifier = Modifier,
-                selected = true
-            ) {
-                selected = index
-            }
+                selected = true,
+                onClick = { tag ->
+                    selected = index
+                    onTagClick(tag.tagId,tag.label)
+                }
+            )
         }
 
         // ----- CONDITIONAL ADD TAG BUTTON -----

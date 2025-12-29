@@ -42,6 +42,7 @@ import com.example.memories.core.presentation.MenuItem
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlin.collections.forEachIndexed
 import com.example.memories.R
+import com.example.memories.core.util.SmallPhonePreview
 import com.example.memories.feature.feature_feed.domain.model.OrderByType
 import com.example.memories.feature.feature_feed.domain.model.toIndex
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
@@ -154,7 +155,7 @@ fun FilterActionSheet(
 
 
 
-@Preview
+@SmallPhonePreview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentActionSheetPreview(modifier: Modifier = Modifier) {

@@ -1,5 +1,6 @@
 package com.example.memories.navigation
 
+import com.airbnb.lottie.L
 import com.example.memories.core.domain.model.UriType
 import kotlinx.serialization.Serializable
 
@@ -49,5 +50,11 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     object Tags : AppScreen("Tags")
+
+    @Serializable
+    data class TagWithMemories(
+        val id : String,
+        val tagLabel : String
+    ): AppScreen("TagWithMemories")
 }
 
