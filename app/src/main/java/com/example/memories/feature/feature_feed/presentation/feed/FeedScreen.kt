@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -25,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -191,6 +193,9 @@ fun FeedScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentMemoryEntryMode: MemoryEntryMode? = null
     var isScrollingUp by remember { mutableStateOf(true) } // Start with FAB visible
+    var translateX = 600f
+    val leftTranslate = remember { Animatable(-translateX) }
+    val rightTranslate = remember { Animatable(translateX) }
 
 // This effect will update isScrollingUp based on the scroll direction
     LaunchedEffect(lazyListState) {
@@ -219,47 +224,47 @@ fun FeedScreen(
     }
 
 
-    val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-    ) { uriList ->
-
-
-        if (uriList != null && uriList.size <= 5) {
-
-            val uriWrapperList = uriList.map { uri ->
-                UriType(
-                    uri = uri.toString(),
-                    type = uri.mapContentUriToType(context)
-                )
-            }
-
-            if (currentMemoryEntryMode != null && uriWrapperList.isNotEmpty()) {
-                when (currentMemoryEntryMode) {
-                    MemoryEntryMode.EditImage -> {
-                        onNavigateToImageEdit(AppScreen.MediaEdit(uriWrapperList[0]))
-                    }
-
-                    MemoryEntryMode.ChooseImageAndCreate -> {
-                        onNavigateToMemoryCreate(AppScreen.Memory(null, uriWrapperList))
-                    }
-
-                    else -> {}
-                }
-            }
-
-        }
-        if (uriList == null) {
-            Log.e(TAG, "FeedScreen: Uri List is NULL")
-            return@rememberLauncherForActivityResult
-        }
-
-        if (uriList.size > 5) {
-            Log.e(TAG, "FeedScreen: uri list size  is greater than 5")
-            return@rememberLauncherForActivityResult
-        }
-
-
-    }
+//    val mediaLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+//    ) { uriList ->
+//
+//
+//        if (uriList != null && uriList.size <= 5) {
+//
+//            val uriWrapperList = uriList.map { uri ->
+//                UriType(
+//                    uri = uri.toString(),
+//                    type = uri.mapContentUriToType(context)
+//                )
+//            }
+//
+//            if (currentMemoryEntryMode != null && uriWrapperList.isNotEmpty()) {
+//                when (currentMemoryEntryMode) {
+//                    MemoryEntryMode.EditImage -> {
+//                        onNavigateToImageEdit(AppScreen.MediaEdit)
+//                    }
+//
+//                    MemoryEntryMode.ChooseImageAndCreate -> {
+//                        onNavigateToMemoryCreate(AppScreen.Memory(null, uriWrapperList))
+//                    }
+//
+//                    else -> {}
+//                }
+//            }
+//
+//        }
+//        if (uriList == null) {
+//            Log.e(TAG, "FeedScreen: Uri List is NULL")
+//            return@rememberLauncherForActivityResult
+//        }
+//
+//        if (uriList.size > 5) {
+//            Log.e(TAG, "FeedScreen: uri list size  is greater than 5")
+//            return@rememberLauncherForActivityResult
+//        }
+//
+//
+//    }
 
     val currentFontSize = lerp(
         start = 24.sp,
@@ -358,12 +363,11 @@ fun FeedScreen(
 
             val items = listOf(
                 Triple(
-                    MemoryEntryMode.ChooseImageAndCreate,
+                    MemoryEntryMode.CreateMemory,
                     Icons.Default.AddCircle,
-                    "Choosing Media"
+                    "Create Memory"
                 ),
                 Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit, "Edit Media"),
-                Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add, "Without Media"),
             )
 
 
@@ -398,12 +402,12 @@ fun FeedScreen(
                         onClick = {
                             expandFab = false
                             currentMemoryEntryMode = item.first
-                            if (currentMemoryEntryMode != MemoryEntryMode.DirectCreate) {
-                                mediaLauncher.launch(
-                                    PickVisualMediaRequest(
-                                        ActivityResultContracts.PickVisualMedia.ImageOnly
-                                    )
-                                )
+                            if (currentMemoryEntryMode == MemoryEntryMode.CreateMemory) {
+                                onNavigateToMemoryCreate(AppScreen.Memory(memoryId = null))
+                                return@FloatingActionButtonMenuItem
+                            }
+                            if(currentMemoryEntryMode == MemoryEntryMode.EditImage){
+                                onNavigateToImageEdit(AppScreen.MediaEdit)
                             }
                         },
                         text = { Text(item.third) },
@@ -486,6 +490,7 @@ fun FeedScreen(
                 items = state.memories,
             ) { index, it ->
                 MemoryItemCard(
+                    state = lazyListState,
                     modifier = Modifier
                         .animateItem()
                         .padding(16.dp),

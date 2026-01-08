@@ -169,7 +169,7 @@ fun CustomFloatingActionButtonPreview(modifier: Modifier = Modifier) {
         CustomFloatingActionButton(
             expandable = true,
             actionList = listOf(
-                Triple(MemoryEntryMode.ChooseImageAndCreate, Icons.Default.Add,"Create Memory"),
+                Triple(MemoryEntryMode.CreateMemory, Icons.Default.Add,"Create Memory"),
                 Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit,"Edit Image")
             ),
         )

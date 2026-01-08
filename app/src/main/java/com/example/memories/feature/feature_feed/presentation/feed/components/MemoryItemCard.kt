@@ -7,6 +7,7 @@ import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -20,9 +21,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -66,9 +71,11 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.ContextualMenuItem
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
+import com.google.common.collect.Multimaps.index
 
 
 @Composable
@@ -78,14 +85,16 @@ fun MemoryItemCard(
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     onClick: () -> Unit = {},
     onFavouriteButtonClick: () -> Unit = {},
-    onHideButtonClick : () -> Unit = {},
-    onDeleteButtonClick : () -> Unit = {},
-    elevation : Int = 25,
-    shape : Shape = RoundedCornerShape(8.dp),
+    onHideButtonClick: () -> Unit = {},
+    onDeleteButtonClick: () -> Unit = {},
+    elevation: Int = 25,
+    shape: Shape = RoundedCornerShape(8.dp),
+    state: LazyListState = rememberLazyListState(),
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
-    val pager = rememberPagerState(pageCount = { if(isPreviewModeOn) 5 else memoryItem.mediaList.size })
+    val pager =
+        rememberPagerState(pageCount = { if (isPreviewModeOn) 5 else memoryItem.mediaList.size })
 
     Card(
         elevation = CardDefaults.cardElevation(
@@ -104,15 +113,20 @@ fun MemoryItemCard(
         ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            if(memoryItem.mediaList.isNotEmpty()){
+                MediaPager(
+                    mediaUris = null,
+                    pagerState = pager,
+                    pagerHeight = 250.dp,
+                    imageContentScale = ContentScale.Crop,
+                    type = MediaCreationType.SHOW,
+                    readOnlyMediaUriList = memoryItem.mediaList.map { it.uri }
+                )
+            }
 
-            ) {
-            MediaPager(
-                mediaUris = memoryItem.mediaList.map { it -> it.uri },
-                pagerState = pager,
-                pagerHeight = 250.dp,
-                imageContentScale = ContentScale.Crop
-            )
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,7 +136,7 @@ fun MemoryItemCard(
                     Text(
                         text = memoryItem.memory.timeStamp.formatTime(),
                         modifier = Modifier
-                            .padding(start = 10.dp , top = 5.dp,end = 5.dp,bottom = 5.dp)
+                            .padding(start = 10.dp, top = 5.dp, end = 5.dp, bottom = 5.dp)
                     )
                     Text(
                         text = memoryItem.memory.title,
@@ -146,17 +160,17 @@ fun MemoryItemCard(
                     ) {
 
                         IconItem(
-                            imageVector = if(memoryItem.memory.favourite)
+                            imageVector = if (memoryItem.memory.favourite)
                                 Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "",
                             onClick = {
                                 onFavouriteButtonClick()
                             },
                             alpha = 0f,
-                            color = if(memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else Color.Gray
+                            color = if (memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else Color.Gray
                         )
                         IconItem(
-                            drawableRes = if(memoryItem.memory.hidden)
+                            drawableRes = if (memoryItem.memory.hidden)
                                 R.drawable.ic_hidden else R.drawable.ic_not_hidden,
                             contentDescription = "",
                             onClick = {
@@ -175,8 +189,6 @@ fun MemoryItemCard(
                             color = Color.Red,
                         )
                     }
-
-
 
 
                 }
@@ -199,7 +211,10 @@ fun MemoryItemCardPreview(modifier: Modifier = Modifier) {
                     content = "A peaceful day in the mountains 🌄",
                 ),
                 mediaList = listOf(
-                    MediaModel(uri = "android.resource://com.example.memories/drawable/ic_launcher_background", memoryId = "")
+                    MediaModel(
+                        uri = "android.resource://com.example.memories/drawable/ic_launcher_background",
+                        memoryId = ""
+                    )
                 )
             )
         )

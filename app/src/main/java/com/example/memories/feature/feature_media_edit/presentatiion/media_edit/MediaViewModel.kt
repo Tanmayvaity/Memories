@@ -23,6 +23,10 @@ class MediaViewModel @Inject constructor(
         private const val TAG = "MediaViewModel"
     }
 
+
+
+
+
     private val _bitmapState= MutableStateFlow<BitmapState>(BitmapState())
     val bitmapState = _bitmapState.asStateFlow()
 
@@ -102,6 +106,9 @@ class MediaViewModel @Inject constructor(
                         }
                     }
                 }
+            }
+
+            is MediaEvents.EditToolStateChange -> {
             }
 
         }

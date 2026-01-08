@@ -76,6 +76,7 @@ import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
@@ -190,10 +191,15 @@ fun MemoryDetailScreen(
         ) {
             if (memory != null && !isLoading) {
                 val item = memory.memory
-                MediaPager(
-                    mediaUris = memory.mediaList.map { it -> it.uri },
-                    pagerState = pagerState
-                )
+                if(memory.mediaList.isNotEmpty()){
+                    MediaPager(
+                        mediaUris = null,
+                        pagerState = pagerState,
+                        readOnlyMediaUriList = memory.mediaList.map { it -> it.uri },
+                        type = MediaCreationType.SHOW
+                    )
+                }
+
 
                 Box(
                     modifier = Modifier
@@ -265,7 +271,6 @@ fun MemoryDetailScreen(
                                 onNavigateToMemory(
                                     AppScreen.Memory(
                                         memory.memory.memoryId,
-                                        emptyList()
                                     )
                                 )
 //                                expandToolBar = !expandToolBar

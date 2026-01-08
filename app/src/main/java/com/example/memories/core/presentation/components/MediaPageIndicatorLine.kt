@@ -30,6 +30,8 @@ fun MediaPageIndicatorLine(
     modifier: Modifier = Modifier,
     currentPage : Int,
     pageCount : Int,
+    activePageColor : Color = Color.White,
+    inactivePageColor : Color = Color.White.copy(alpha = 0.5f)
 ) {
     Row(
         modifier
@@ -40,7 +42,7 @@ fun MediaPageIndicatorLine(
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(pageCount) { iteration ->
-            val color = if (currentPage == iteration) Color.White else Color.White.copy(alpha = 0.5f)
+            val color = if (currentPage == iteration) activePageColor else inactivePageColor
             Box(
                 modifier = Modifier
                     .padding(4.dp)

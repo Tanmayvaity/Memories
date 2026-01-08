@@ -45,6 +45,7 @@ import com.example.memories.feature.feature_feed.presentation.search.components.
 import com.example.memories.feature.feature_feed.presentation.search.components.MemoryItemForCategory
 import com.example.memories.feature.feature_feed.presentation.search.components.MemorySearchBar
 import com.example.memories.feature.feature_feed.presentation.search.components.RecentSearchSection
+import com.example.memories.feature.feature_feed.presentation.tags_with_memory.MemoryCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -179,11 +180,21 @@ fun SearchScreen(
                     }
                     else if (state.memories.isNotEmpty()) {
                         items(state.memories) { item ->
-                            MemoryItemForCategory(
-                                item = item,
-                                onClick = { id ->
+//                            MemoryItemForCategory(
+//                                item = item,
+//                                onClick = { id ->
+//                                    onNavigateToMemoryDetail(
+//                                        AppScreen.MemoryDetail(id)
+//                                    )
+//                                }
+//                            )
+                            MemoryCard(
+                                memory = item,
+                                onClick = {
                                     onNavigateToMemoryDetail(
-                                        AppScreen.MemoryDetail(id)
+                                        AppScreen.MemoryDetail(
+                                            memoryId = item.memory.memoryId
+                                        )
                                     )
                                 }
                             )

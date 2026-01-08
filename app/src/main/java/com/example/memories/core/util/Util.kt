@@ -94,6 +94,7 @@ fun isImageFile(path: String?): Boolean {
     return mimeType != null && mimeType.startsWith("image")
 }
 
+//TODO : refactor mapToType and mapContentUriToType
 fun Uri?.mapToType(): Type{
     if(this == null) {
         throw NullPointerException("Uri is null")

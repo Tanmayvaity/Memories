@@ -42,10 +42,9 @@ fun NavGraphBuilder.createMemoryGraph(
                     launchSingleTop = true
                 }
             },
-            uriList = args.uriTypeWrapperList,
             onTagClick = {route ->
                 navController.navigate(route)
-            }
+            },
         )
     }
 }

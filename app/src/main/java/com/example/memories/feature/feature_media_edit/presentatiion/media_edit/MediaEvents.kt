@@ -13,8 +13,6 @@ sealed class MediaEvents {
 
     object BitmapToUri : MediaEvents()
 
-//    data class Rotate(val bitmap : Bitmap) : MediaEvents()
-//    data class ChangeBrightness(val bitmap : Bitmap) : MediaEvents()
-//    data class Color( val bitmap : Bitmap) : MediaEvents()
+    data class EditToolStateChange(val tool : EditTool) : MediaEvents()
 }
 

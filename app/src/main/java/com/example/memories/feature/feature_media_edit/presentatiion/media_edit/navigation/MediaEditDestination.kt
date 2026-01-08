@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEditRoot
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEditScreen
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.CustomNavType
@@ -23,20 +24,17 @@ fun NavGraphBuilder.createMediaEditGraph(
     composable<AppScreen.MediaEdit>(
         typeMap = mapOf(
             typeOf<UriType>() to CustomNavType.uriWrapperType,
-            typeOf<Type>() to CustomNavType.mediaType
+            typeOf<Type>() to CustomNavType.mediaType,
+            typeOf<List<UriType>>() to CustomNavType.uriWrapperListType
         )
     ) {
         val args = it.toRoute<AppScreen.MediaEdit>()
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
-        MediaEditScreen(
-            uriType = args.uriTypeWrapper,
+        MediaEditRoot(
             onBackPress = {
                 navController.popBackStack()
             },
-            onNextClick = { route ->
-                navController.navigate(route)
-            }
         )
     }
 }

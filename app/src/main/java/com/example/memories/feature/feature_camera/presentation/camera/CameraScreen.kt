@@ -517,19 +517,19 @@ fun CameraScreen(
 
     }
 
-    LaunchedEffect(mediaUri) {
-        if (mediaUri.uri != null && mediaUri.type!!.isImageFile()) {
-            onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
-            onEvent(CameraEvent.Reset)
-        }
-    }
-
-    LaunchedEffect(mediaUri) {
-        if (mediaUri.uri != null && mediaUri.type!!.isVideoFile()) {
-            onNavigateToImageEdit(AppScreen.MediaEdit(mediaUri))
-            onEvent(CameraEvent.Reset)
-        }
-    }
+//    LaunchedEffect(mediaUri) {
+//        if (mediaUri.uri != null && mediaUri.type!!.isImageFile()) {
+//            onNavigateToImageEdit(AppScreen.MediaEdit(listOf(mediaUri)))
+//            onEvent(CameraEvent.Reset)
+//        }
+//    }
+//
+//    LaunchedEffect(mediaUri) {
+//        if (mediaUri.uri != null && mediaUri.type!!.isVideoFile()) {
+//            onNavigateToImageEdit(AppScreen.MediaEdit(listOf(mediaUri)))
+//            onEvent(CameraEvent.Reset)
+//        }
+//    }
 
 
     LaunchedEffect(lifecycleOwner, state.lensFacing, state.aspectRatio) {

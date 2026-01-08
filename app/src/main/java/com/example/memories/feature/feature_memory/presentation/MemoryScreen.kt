@@ -4,6 +4,9 @@ import android.R.attr.label
 import android.R.attr.maxLines
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -64,6 +67,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
@@ -75,6 +79,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -87,11 +92,14 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.formatTime
+import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
 import com.example.memories.feature.feature_feed.presentation.share.DeleteConfirmationBottomSheet
+import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaUri
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
@@ -113,14 +121,13 @@ fun MemoryRoot(
     viewModel: MemoryViewModel = hiltViewModel<MemoryViewModel>(),
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
-    onTagClick : (AppScreen.TagWithMemories) -> Unit,
-    uriList: List<UriType>,
+    onTagClick: (AppScreen.TagWithMemories) -> Unit,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        if(uriList.isEmpty())return@LaunchedEffect
-        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
-    }
+//    LaunchedEffect(Unit) {
+//        if(uriList.isEmpty())return@LaunchedEffect
+//        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
+//    }
     MemoryScreen(
         onBackPress = onBackPress,
         onEvent = viewModel::onEvent,
@@ -146,8 +153,8 @@ fun MemoryScreen(
     onCreateClick: (TopLevelScreen.Feed) -> Unit = {},
     errorFLow: Flow<String>? = null,
     successFlow: Flow<String>? = null,
-    isDarkModeEnabled : Boolean = false,
-    onTagClick : (AppScreen.TagWithMemories) -> Unit = {}
+    isDarkModeEnabled: Boolean = false,
+    onTagClick: (AppScreen.TagWithMemories) -> Unit = {}
 ) {
     val isPreviewMode = LocalInspectionMode.current
     val scrollState = rememberScrollState()
@@ -156,15 +163,17 @@ fun MemoryScreen(
     val titleInteractionSource = remember { MutableInteractionSource() }
     var showDatePicker by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val pagerState = rememberPagerState(pageCount = {
-        if(isPreviewMode) 5 else
-        state.uriList.size
-    })
-    var showTagBottomSheet by rememberSaveable{ mutableStateOf(false) }
-    var newTagsTextValue by rememberSaveable{ mutableStateOf("") }
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = {
+            5
+        })
+    val context = LocalContext.current
+    var showTagBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var newTagsTextValue by rememberSaveable { mutableStateOf("") }
     val tagsFocusRequester = remember { FocusRequester() }
     val tagTextFieldInteractionSource = remember { MutableInteractionSource() }
-    var dateText by rememberSaveable { mutableStateOf("")}
+    var dateText by rememberSaveable { mutableStateOf("") }
     val totalTags = remember { mutableStateListOf<String>() }
     val datePickerState = rememberDatePickerState()
     var tagId by remember { mutableStateOf("") }
@@ -183,6 +192,37 @@ fun MemoryScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
 
         }
+    }
+
+    val mediaUriList = rememberSaveable {
+        mutableStateListOf<MediaUri>().apply {
+            repeat(5) {
+                add(null)
+            }
+        }
+    }
+
+    val mediaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+
+
+        if (uri != null) {
+            mediaUriList[pagerState.currentPage] = uri.toString()
+        }
+
+
+    }
+
+    LaunchedEffect(state.uriList) {
+        if (state.uriList.isNotEmpty()) {
+            mediaUriList.clear()
+            mediaUriList.addAll(state.uriList.map { it.uri })
+            repeat(5 - mediaUriList.size){
+                mediaUriList.add(null)
+            }
+        }
+
     }
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -214,11 +254,11 @@ fun MemoryScreen(
                         onClick = {
 //                            Log.i("MemoryScreen", "MemoryScreen: ${uriList == null}")
 
-                            when(state.creationState){
+                            when (state.creationState) {
                                 CREATE -> {
                                     onEvent(
                                         MemoryEvents.CreateMemory(
-                                            uriList = state.uriList,
+                                            uriList = mediaUriList.filter { it!=null }.map {  it -> UriType(it,it!!.toUri().mapContentUriToType(context)) },
                                             title = state.title,
                                             content = state.content
                                         )
@@ -232,7 +272,7 @@ fun MemoryScreen(
                         }
                     ) {
                         Text(
-                            text = if(state.creationState == CreationState.CREATE) "Create" else "Update",
+                            text = if (state.creationState == CreationState.CREATE) "Create" else "Update",
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -254,9 +294,18 @@ fun MemoryScreen(
                     .verticalScroll(scrollState),
             ) {
                 MediaPager(
-                    mediaUris = state.uriList.map { it -> it.uri?:"" },
+                    mediaUris = mediaUriList,
                     pagerState = pagerState,
-                    pagerHeight = 350.dp
+                    pagerHeight = 350.dp,
+                    onAddMediaClick = {
+                        mediaLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onRemoveMediaClick = {
+                        mediaUriList[pagerState.currentPage] = null
+                    },
+                    type = MediaCreationType.EDIT
                 )
 
                 OutlinedTextField(
@@ -281,7 +330,7 @@ fun MemoryScreen(
 //                                showDatePicker = true
 //                            }
 //                        }
-                            ,
+                    ,
                     colors = OutlinedTextFieldDefaults.colors(
                         cursorColor = Color.Transparent,
                         errorCursorColor = Color.Transparent
@@ -291,7 +340,7 @@ fun MemoryScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                               showDatePicker = !showDatePicker
+                                showDatePicker = !showDatePicker
                             }
                         ) {
                             Icon(
@@ -343,9 +392,6 @@ fun MemoryScreen(
 //                }
 
 
-
-
-
                 var tagsText by remember { mutableStateOf("") }
 
 //               RoundedTagTextField(
@@ -365,7 +411,7 @@ fun MemoryScreen(
                     onAddClick = {
                         showTagBottomSheet = true
                     },
-                    onTagClick = {id,label ->
+                    onTagClick = { id, label ->
                         onTagClick(
                             AppScreen.TagWithMemories(
                                 id = id,
@@ -494,38 +540,33 @@ fun MemoryScreen(
 //                }
 
 
-
-
-
-
-
-                ReminderDatePickerDialog(
-                    onDismiss = {
-                        showDatePicker = false
-                        focusManager.clearFocus()
-                    },
-                    onConfirm = { dateInMillis ->
+            ReminderDatePickerDialog(
+                onDismiss = {
+                    showDatePicker = false
+                    focusManager.clearFocus()
+                },
+                onConfirm = { dateInMillis ->
 //                    onEvent(MemoryEvents.ReminderDateChanged(dateInMillis))
-                        onEvent(MemoryEvents.DateChanged(dateInMillis))
-                        dateInMillis?.let { it ->
-                            dateText = it.formatTime(format = "dd/MMM/YYYY")
+                    onEvent(MemoryEvents.DateChanged(dateInMillis))
+                    dateInMillis?.let { it ->
+                        dateText = it.formatTime(format = "dd/MMM/YYYY")
+                    }
+                    focusManager.clearFocus()
+                    showDatePicker = false
+                },
+                datePickerState = rememberDatePickerState(
+                    selectableDates = object : SelectableDates {
+                        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                            return utcTimeMillis <= System.currentTimeMillis()
                         }
-                        focusManager.clearFocus()
-                        showDatePicker = false
-                    },
-                    datePickerState = rememberDatePickerState(
-                        selectableDates = object : SelectableDates {
-                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                                return utcTimeMillis <= System.currentTimeMillis()
-                            }
 
-                            @RequiresApi(Build.VERSION_CODES.O)
-                            override fun isSelectableYear(year: Int): Boolean {
-                                return year <= LocalDate.now().year
-                            }
+                        @RequiresApi(Build.VERSION_CODES.O)
+                        override fun isSelectableYear(year: Int): Boolean {
+                            return year <= LocalDate.now().year
                         }
-                    )
+                    }
                 )
+            )
 //            }
         }
 
@@ -536,7 +577,7 @@ fun MemoryScreen(
                     Log.d("MemoryScreen", "new Text : ${newText}")
                     // Logic to add a tag when space or enter is pressed
 //                    newTagsTextValue = newText
-                    if(newText.contains('\n'))return@TagBottomSheet
+                    if (newText.contains('\n')) return@TagBottomSheet
 
                     onEvent(MemoryEvents.TagsTextFieldContentChanged(newText))
                 },
@@ -570,14 +611,14 @@ fun MemoryScreen(
 //                    onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
                 },
                 isDarkMode = isDarkModeEnabled,
-                onDelete = {id ->
+                onDelete = { id ->
                     showTagDeleteDialog = true
                     tagId = id
                 }
             )
         }
 
-        if(showTagDeleteDialog){
+        if (showTagDeleteDialog) {
             GeneralAlertDialog(
                 title = "Delete Tag Alert",
                 text = "Are you sure you want to delete this tag",
@@ -591,9 +632,9 @@ fun MemoryScreen(
                         ),
                         onClick = {
                             showTagDeleteDialog = false
-                            if(tagId == null)return@Button
+                            if (tagId == null) return@Button
 
-                            onEvent(MemoryEvents.TagDelete(id  = tagId))
+                            onEvent(MemoryEvents.TagDelete(id = tagId))
                         }
                     ) {
                         Text(
@@ -633,10 +674,11 @@ fun MemoryScreen(
 
         LaunchedEffect(Unit) {
             successFlow!!.collect { message ->
-                when(state.creationState){
-                    CreationState.CREATE ->{
+                when (state.creationState) {
+                    CreationState.CREATE -> {
                         onCreateClick(TopLevelScreen.Feed)
                     }
+
                     CreationState.UPDATE -> {
                         onBackPress()
                     }

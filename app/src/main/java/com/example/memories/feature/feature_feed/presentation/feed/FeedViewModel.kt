@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -36,6 +37,9 @@ class FeedViewModel @Inject constructor(
     private val _state = MutableStateFlow<FeedState>(FeedState())
     val state = _state
         .onStart { onEvent(FeedEvents.FetchFeed) }
+        .onEach {it ->
+            Log.d(TAG, "${it.memories}")
+        }
         .onCompletion {
             _state.update { it.copy(isLoading = false) }
         }

@@ -36,6 +36,7 @@ class MemoryCreateUseCase @Inject constructor(
         if (content.isBlank() || content.isEmpty()) {
             return Result.Error(IllegalArgumentException("content cannot be null"))
         }
+
         val permanentUriList =
             memoryRepository.saveToInternalStorage(uriList.map { it -> it.uri!!.toUri() })
 

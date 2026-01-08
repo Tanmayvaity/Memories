@@ -37,20 +37,23 @@ fun MemoryItemForCategory(
                 onClick(item.memory.memoryId)
             }
     ) {
-        AsyncImage(
-            model = if (LocalInspectionMode.current)
-                R.drawable.ic_launcher_background
-            else
-                item.mediaList.first().uri,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .clip(RoundedCornerShape(28.dp)),
-            error = painterResource(R.drawable.ic_launcher_background),
-            placeholder = painterResource(R.drawable.ic_launcher_background),
-        )
+        if(item.mediaList.isNotEmpty()){
+            AsyncImage(
+                model = if (LocalInspectionMode.current)
+                    R.drawable.ic_launcher_background
+                else
+                    item.mediaList.first().uri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(28.dp)),
+                error = painterResource(R.drawable.ic_launcher_background),
+                placeholder = painterResource(R.drawable.ic_launcher_background),
+            )
+        }
+
         Text(
             text = item.memory.title,
             modifier = Modifier
