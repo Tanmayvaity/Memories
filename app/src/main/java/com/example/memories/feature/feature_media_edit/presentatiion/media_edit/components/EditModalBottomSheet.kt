@@ -1,7 +1,9 @@
 package com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,15 +12,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -51,12 +57,15 @@ fun EditModalBottomSheet(
     onDismiss: () -> Unit = {},
     sheetState: SheetState = rememberModalBottomSheetState(),
     sheetTitle: String = "More Options",
-    items: List<MenuItem> = emptyList()
+    items: List<MenuItem> = emptyList(),
+    showLoading : Boolean = false,
+    loadingItemIndex : Int? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
-            onDismiss()
+           onDismiss()
         },
     ) {
         Column(
@@ -77,9 +86,11 @@ fun EditModalBottomSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
                         .padding(8.dp)
-                        .clickable{
-                            item.onClick()
-                        }
+                        .clickable(
+                            onClick = item.onClick,
+                            indication = null,
+                            interactionSource = interactionSource
+                        )
                 ) {
                     IconItem(
                         drawableRes = item.icon,
@@ -87,6 +98,7 @@ fun EditModalBottomSheet(
                         alpha = 0.3f,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
+
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(
                         modifier = Modifier.weight(1f),
@@ -105,6 +117,12 @@ fun EditModalBottomSheet(
                             )
                         }
                     }
+                    if(showLoading && loadingItemIndex == index){
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 
@@ -120,6 +138,7 @@ fun EditModalBottomSheet(
 fun EditModalBottomSheetPreview() {
     MemoriesTheme {
         EditModalBottomSheet(
+            showLoading = true,
             items = listOf(
                 MenuItem(
                     title = "Delete",

@@ -81,6 +81,9 @@ import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUse
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
+import com.example.memories.feature.feature_media_edit.domain.usecase.ApplyAdjustFilterUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.ApplyFilterUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCacheStorageWithBitmapUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
@@ -164,7 +167,10 @@ object AppModule {
             uriToBitmapUseCase = UriToBitmapUseCase(repository),
             downloadWithBitmap = DownloadWithBitmap(repository),
             saveBitmapToInternalStorageUseCase = SaveBitmapToInternalStorageUseCase(repository),
-            downloadVideoUseCase = DownloadVideoUseCase(repository)
+            downloadVideoUseCase = DownloadVideoUseCase(repository),
+            applyFilterUseCase = ApplyFilterUseCase(repository),
+            applyAdjustFilterUseCase = ApplyAdjustFilterUseCase(repository),
+            saveToCacheStorageWithBitmapUseCase = SaveToCacheStorageWithBitmapUseCase(repository)
         )
     }
 

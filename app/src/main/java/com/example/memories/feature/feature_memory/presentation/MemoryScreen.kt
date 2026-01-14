@@ -67,6 +67,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -99,7 +100,7 @@ import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
 import com.example.memories.feature.feature_feed.presentation.share.DeleteConfirmationBottomSheet
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaUri
+import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaUri
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
@@ -122,12 +123,12 @@ fun MemoryRoot(
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
     onTagClick: (AppScreen.TagWithMemories) -> Unit,
+    uriList : List<UriType>
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
-//    LaunchedEffect(Unit) {
-//        if(uriList.isEmpty())return@LaunchedEffect
-//        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
-//    }
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
+    }
     MemoryScreen(
         onBackPress = onBackPress,
         onEvent = viewModel::onEvent,
@@ -296,6 +297,7 @@ fun MemoryScreen(
                 MediaPager(
                     mediaUris = mediaUriList,
                     pagerState = pagerState,
+                    imageContentScale = ContentScale.Fit,
                     pagerHeight = 350.dp,
                     onAddMediaClick = {
                         mediaLauncher.launch(
@@ -305,7 +307,8 @@ fun MemoryScreen(
                     onRemoveMediaClick = {
                         mediaUriList[pagerState.currentPage] = null
                     },
-                    type = MediaCreationType.EDIT
+                    type = MediaCreationType.NOT_BITMAP,
+                    bitmapList = null
                 )
 
                 OutlinedTextField(
@@ -701,7 +704,7 @@ fun MemoryScreenPreview(modifier: Modifier = Modifier) {
         MemoryScreen(
             onBackPress = {},
             onEvent = {},
-            state = MemoryState()
+            state = MemoryState(),
         )
     }
 }

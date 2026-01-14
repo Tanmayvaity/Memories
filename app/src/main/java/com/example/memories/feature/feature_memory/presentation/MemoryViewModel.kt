@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.toRoute
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.mapToType
@@ -14,6 +15,7 @@ import com.example.memories.feature.feature_feed.presentation.feed_detail.Memory
 import com.example.memories.feature.feature_feed.presentation.search.SearchState
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.feature.feature_memory.presentation.MemoryEvents.*
+import com.example.memories.navigation.AppScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -83,6 +85,7 @@ class MemoryViewModel @Inject constructor(
             Log.d(TAG, "${id == null}: ")
 
         }
+
     }
 
 

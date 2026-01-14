@@ -271,6 +271,7 @@ fun MemoryDetailScreen(
                                 onNavigateToMemory(
                                     AppScreen.Memory(
                                         memory.memory.memoryId,
+                                        emptyList()
                                     )
                                 )
 //                                expandToolBar = !expandToolBar

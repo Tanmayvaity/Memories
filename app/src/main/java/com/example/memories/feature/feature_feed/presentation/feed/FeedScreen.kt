@@ -403,10 +403,11 @@ fun FeedScreen(
                             expandFab = false
                             currentMemoryEntryMode = item.first
                             if (currentMemoryEntryMode == MemoryEntryMode.CreateMemory) {
-                                onNavigateToMemoryCreate(AppScreen.Memory(memoryId = null))
+                                onNavigateToMemoryCreate(AppScreen.Memory(memoryId = null,emptyList()))
                                 return@FloatingActionButtonMenuItem
                             }
                             if(currentMemoryEntryMode == MemoryEntryMode.EditImage){
+                                onBottomBarVisibilityToggle(false)
                                 onNavigateToImageEdit(AppScreen.MediaEdit)
                             }
                         },

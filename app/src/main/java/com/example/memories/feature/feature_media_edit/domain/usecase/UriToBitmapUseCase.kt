@@ -10,8 +10,9 @@ class UriToBitmapUseCase @Inject constructor(
     val repository: MediaRepository
 ) {
     suspend operator fun invoke(
-        uri : Uri
+        uri : Uri,
+        degrees : Float = 0f
     ): Result<Bitmap>{
-        return repository.uriToBitmap(uri)
+        return repository.uriToBitmap(uri, degrees)
     }
 }

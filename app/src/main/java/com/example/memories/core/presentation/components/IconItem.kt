@@ -3,6 +3,7 @@ package com.example.memories.core.presentation.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -39,10 +40,12 @@ fun IconItem(
     backgroundColor : Color = Color.LightGray,
     alpha : Float = 1f,
     onClick: () -> Unit = {},
-    onSelectedIconColorToggleColor : Color = color
+    onSelectedIconColorToggleColor : Color = color,
+    enabled : Boolean = true,
 ) {
     var selected by remember { mutableStateOf(false) }
     IconButton(
+        enabled = enabled,
         onClick = {
             selected = !selected
             onClick()

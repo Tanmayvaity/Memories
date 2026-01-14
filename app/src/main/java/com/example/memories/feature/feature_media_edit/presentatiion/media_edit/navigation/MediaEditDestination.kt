@@ -10,8 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEditRoot
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEditScreen
+import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaEditRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.CustomNavType
 import kotlin.reflect.typeOf
@@ -35,6 +34,10 @@ fun NavGraphBuilder.createMediaEditGraph(
             onBackPress = {
                 navController.popBackStack()
             },
+            onNextClick = { route ->
+                navController.navigate(route)
+            }
+
         )
     }
 }
