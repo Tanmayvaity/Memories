@@ -29,9 +29,7 @@ fun ExploreByCategorySection(
 ) {
     Column(
         modifier = modifier
-
             .fillMaxWidth()
-
             .background(MaterialTheme.colorScheme.surface)
     ) {
         Text(

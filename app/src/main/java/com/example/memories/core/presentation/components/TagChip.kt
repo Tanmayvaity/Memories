@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +37,8 @@ fun TagChip(
             .wrapContentWidth(align = Alignment.Start),
 //            .weight(1f),
 //        colors = FilterChipDefaults.filterChipColors(
-//            containerColor = MaterialTheme.colorScheme.primaryContainer,
+//            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+//            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
 //        ),
         label = {
             Text(

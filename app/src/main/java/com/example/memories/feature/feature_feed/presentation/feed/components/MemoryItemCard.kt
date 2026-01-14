@@ -134,7 +134,7 @@ fun MemoryItemCard(
             ) {
                 Column {
                     Text(
-                        text = memoryItem.memory.timeStamp.formatTime(),
+                        text = memoryItem.memory.memoryForTimeStamp!!.formatTime(),
                         modifier = Modifier
                             .padding(start = 10.dp, top = 5.dp, end = 5.dp, bottom = 5.dp)
                     )

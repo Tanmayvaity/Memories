@@ -1,6 +1,8 @@
 package com.example.memories.feature.feature_feed.presentation.search
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -9,6 +11,7 @@ import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.SearchModel
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.TagsWithMemoryModel
+import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.RecentSearchWrapper
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
@@ -37,7 +40,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     val feedUseCase: FeedUseCaseWrapper,
@@ -106,12 +109,25 @@ class SearchViewModel @Inject constructor(
     init {
         onEvent(SearchEvents.FetchRecentSearch)
         onEvent(SearchEvents.FetchTags)
+        onEvent(SearchEvents.FetchOnThisDayData)
     }
+
 
 
     @OptIn(FlowPreview::class)
     fun onEvent(event: SearchEvents) {
         when (event) {
+
+            is SearchEvents.FetchOnThisDayData -> {
+                viewModelScope.launch {
+                    val result = feedUseCase.fetchOnThisDataUseCase()
+                    _state.update { it.copy(
+                        onThisDateMemories = result
+                    ) }
+                    Log.d(TAG, "onEvent: FetchOnThisDayDate : ${result}")
+                }
+            }
+
             is SearchEvents.InputTextChange -> {
                 _inputText.update { event.input }
                 if (_inputText.value.isEmpty() || _inputText.value.isBlank()) {
@@ -209,7 +225,7 @@ class SearchViewModel @Inject constructor(
                 viewModelScope.launch {
                     feedUseCase.fetchMemoryByTagUseCase(event.tag.tagId).collect { memories ->
                         _state.update { it.copy(memories = memories, isMemoriesTagLoading = false) }
-                        Log.d(TAG, "onEvent: SelectTag ${memories}")
+//                        Log.d(TAG, "onEvent: SelectTag ${memories}")
                     }
                 }
             }
@@ -233,5 +249,6 @@ data class SearchState(
     val tags : List<TagModel> = emptyList(),
     val currentTag : TagModel? = null,
     val memories : List<MemoryWithMediaModel> = emptyList(),
-    val isMemoriesTagLoading : Boolean = false
+    val isMemoriesTagLoading : Boolean = false,
+    val onThisDateMemories : List<OnThisDayMemories> = emptyList()
 )

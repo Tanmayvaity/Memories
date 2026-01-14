@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,7 +48,7 @@ fun RecentSearchSection(
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .heightIn(max = 300.dp)
                 .padding(vertical = 5.dp)
         ) {
 
@@ -62,7 +63,7 @@ fun RecentSearchSection(
             // Actual data
             items(state.recentSearch) { item ->
                 MemoryItem(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    modifier = Modifier.padding(vertical = 5.dp),
                     memoryItem = item,
                     backgroundColor = if (theme) VeryDarkGray else VeryLightGray,
                     onClick = {

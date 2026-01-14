@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.search.components
 
 import android.R.attr.contentDescription
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import com.example.memories.feature.feature_feed.presentation.search.SearchEvent
 import com.example.memories.feature.feature_feed.presentation.search.SearchState
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlin.math.exp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +51,10 @@ fun MemorySearchBar(
     onItemClick : (String) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val horizontalPadding by animateDpAsState(
+        targetValue = if (expanded) 0.dp else 16.dp,
+        label = "searchBarPadding"
+    )
 
     SearchBar(
         tonalElevation = 10.dp,
@@ -56,7 +62,7 @@ fun MemorySearchBar(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         modifier = modifier
-//            .padding(vertical = 5.dp, horizontal = 10.dp)
+            .padding(horizontal = horizontalPadding)
             .background(MaterialTheme.colorScheme.surface),
         inputField = {
             SearchBarDefaults.InputField(

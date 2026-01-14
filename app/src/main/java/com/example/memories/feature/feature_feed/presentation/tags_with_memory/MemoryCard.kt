@@ -91,7 +91,7 @@ fun MemoryCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = memory.memory.timeStamp.formatTime(
+                    text = memory.memory.memoryForTimeStamp!!.formatTime(
                         format = "dd MMM YYYY"
                     ), // Replace with your date logic
                     style = MaterialTheme.typography.labelSmall,

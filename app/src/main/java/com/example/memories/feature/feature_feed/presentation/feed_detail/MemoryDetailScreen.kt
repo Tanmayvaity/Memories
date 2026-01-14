@@ -217,7 +217,7 @@ fun MemoryDetailScreen(
                             style = MaterialTheme.typography.displayLarge
                         )
                         Text(
-                            text = item.timeStamp.formatTime(),
+                            text = item.memoryForTimeStamp!!.formatTime(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -124,7 +124,7 @@ fun MemoryItem(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = memoryItem.memory.timeStamp.formatTime(),
+                        text = memoryItem.memory.memoryForTimeStamp!!.formatTime(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,

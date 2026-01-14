@@ -41,6 +41,13 @@ interface MemoryRepository {
 
     suspend fun getMemoryByTag(id : String): Flow<List<MemoryWithMediaModel>>
 
+    suspend fun getEarliestMemoryTimeStamp() : Long?
+
+    suspend fun getMemoriesWithinRange(
+        min : Long,
+        max : Long,
+    ) : List<MemoryWithMediaModel>
+
 
 
 }

@@ -10,6 +10,8 @@ sealed class SearchEvents {
 
     object FetchRecentSearch : SearchEvents()
 
+    object FetchOnThisDayData : SearchEvents()
+
     object Expand : SearchEvents()
 
     object FetchTags : SearchEvents()

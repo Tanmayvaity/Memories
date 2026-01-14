@@ -1,7 +1,10 @@
 package com.example.memories.core.data.repository
 
 import android.net.Uri
+import androidx.room.Query
+import androidx.room.Transaction
 import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.mapper.toDomain
@@ -25,7 +28,7 @@ import javax.inject.Inject
 class MemoryRepositoryImpl @Inject constructor(
     val mediaManager: MediaManager,
     val memoryDao: MemoryDao,
-    val tagDao : TagDao,
+    val tagDao: TagDao,
 ) : MemoryRepository {
     override suspend fun saveToInternalStorage(uriList: List<Uri>): Result<List<Uri>> {
         return mediaManager.saveToInternalStorage(uriList)
@@ -40,7 +43,10 @@ class MemoryRepositoryImpl @Inject constructor(
         mediaList: List<MediaModel>,
         tagList: List<TagModel>
     ) {
-        memoryDao.updateMemory(memory.toEntity(),mediaList.map { it -> it.toEntity() },tagList.map { it -> it.toEntity()})
+        memoryDao.updateMemory(
+            memory.toEntity(),
+            mediaList.map { it -> it.toEntity() },
+            tagList.map { it -> it.toEntity() })
     }
 
 
@@ -51,36 +57,42 @@ class MemoryRepositoryImpl @Inject constructor(
     override suspend fun insertMemoryWithMediaAndTag(
         memory: MemoryModel,
         mediaList: List<MediaModel>,
-        tagList : List<TagModel>,
+        tagList: List<TagModel>,
     ) {
         memoryDao.insertMemoryWithMediaAndTag(
             memory.toEntity(),
             mediaList.map { media -> media.toEntity() },
-            tagList = tagList.map { tag -> tag.toEntity() } )
+            tagList = tagList.map { tag -> tag.toEntity() })
     }
 
     override suspend fun insertMemoryTagCrossRef(refs: List<MemoryTagCrossRefModel>) {
         memoryDao.insertMemoryTagCrossRef(refs.map { it -> it.toEntity() })
     }
 
-    override suspend fun getMemories(type: FetchType, sortType: SortType, orderByType: OrderByType): Flow<List<MemoryWithMediaModel>> {
+    override suspend fun getMemories(
+        type: FetchType,
+        sortType: SortType,
+        orderByType: OrderByType
+    ): Flow<List<MemoryWithMediaModel>> {
         return when (type) {
             FetchType.ALL -> {
-                when(sortType){
+                when (sortType) {
                     SortType.DateAdded -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Descending -> memoryDao.getAllMemoriesWithMedia()
                             OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaAscending()
                         }
                     }
+
                     SortType.CreatedForDate -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStamp()
                             OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStampAscending()
                         }
                     }
+
                     SortType.Title -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByTitle()
                             OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByTitleAscending()
                         }
@@ -89,22 +101,25 @@ class MemoryRepositoryImpl @Inject constructor(
 
                 }
             }
+
             FetchType.FAVORITE -> {
-                when(sortType){
+                when (sortType) {
                     SortType.CreatedForDate -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending()
                             OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp()
                         }
                     }
+
                     SortType.DateAdded -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaAscending()
                             OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMedia()
                         }
                     }
+
                     SortType.Title -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitleAscending()
                             OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitle()
                         }
@@ -112,22 +127,25 @@ class MemoryRepositoryImpl @Inject constructor(
 
                 }
             }
+
             FetchType.HIDDEN -> {
-                when(sortType){
+                when (sortType) {
                     SortType.CreatedForDate -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
                             OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
                         }
                     }
+
                     SortType.DateAdded -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
                             OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
                         }
                     }
+
                     SortType.Title -> {
-                        when(orderByType){
+                        when (orderByType) {
                             OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
                             OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
                         }
@@ -170,6 +188,17 @@ class MemoryRepositoryImpl @Inject constructor(
 
         }
     }
+
+    override suspend fun getEarliestMemoryTimeStamp(): Long? {
+        return memoryDao.getEarliestMemoryTimestamp()
+    }
+
+    override suspend fun getMemoriesWithinRange(min: Long, max: Long): List<MemoryWithMediaModel> {
+        return memoryDao.getMemoriesBetweenTimestamps(min,max).map {  it -> it.toDomain() }
+    }
+
+
+
 
 
 }

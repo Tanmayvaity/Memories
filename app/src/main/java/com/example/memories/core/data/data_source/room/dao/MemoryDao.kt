@@ -213,4 +213,23 @@ interface MemoryDao {
     @Delete
     suspend fun deleteMemory(memory: MemoryEntity) : Int
 
+
+    @Query("SELECT MIN(memory_for_time_stamp) FROM MemoryEntity WHERE hidden = 0")
+    suspend fun getEarliestMemoryTimestamp(): Long?
+
+    // Get memories within a date range
+    @Transaction
+    @Query("""
+      SELECT * FROM MemoryEntity 
+      WHERE hidden = 0 
+      AND memory_for_time_stamp >= :startTimestamp 
+      AND memory_for_time_stamp < :endTimestamp
+      ORDER BY memory_for_time_stamp DESC
+  """)
+    suspend fun getMemoriesBetweenTimestamps(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): List<MemoryWithMedia>
+
+
 }

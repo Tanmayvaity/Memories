@@ -1,23 +1,35 @@
 package com.example.memories.feature.feature_feed.presentation.search
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -27,8 +39,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
@@ -36,6 +52,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
@@ -48,7 +65,11 @@ import com.example.memories.feature.feature_feed.presentation.search.components.
 import com.example.memories.feature.feature_feed.presentation.tags_with_memory.MemoryCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
-
+import org.jetbrains.annotations.Async
+import com.example.memories.R
+import com.example.memories.core.presentation.components.MediaPager
+import com.example.memories.core.util.formatTime
+import com.google.common.collect.Multimaps.index
 
 @Composable
 fun SearchRoot(
@@ -77,14 +98,18 @@ fun SearchScreen(
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
 ) {
     val theme = LocalTheme.current
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var tagClickIndex by rememberSaveable { mutableStateOf(0) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val allMemories = state.onThisDateMemories.flatMap { it.memories }
+    val carouselState = rememberCarouselState() { allMemories.size }
     val configuration = LocalConfiguration.current
+    val pagerState = rememberPagerState { allMemories.size }
+
     Scaffold(
         topBar = {
             MemorySearchBar(
-                modifier = Modifier.padding(vertical = 10.dp)
-                ,
+                modifier = Modifier.padding(vertical = 10.dp),
                 searchText = searchText,
                 onQueryChange = { it ->
                     onEvent(SearchEvents.InputTextChange(it))
@@ -125,12 +150,11 @@ fun SearchScreen(
                 modifier = modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
-                ,
+                    .background(MaterialTheme.colorScheme.surface),
                 columns = GridCells.Fixed(
-                    if(configuration.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         4
-                    }else{
+                    } else {
                         2
                     }
                 ),
@@ -154,6 +178,57 @@ fun SearchScreen(
                         }
                     }
                 }
+
+                if (state.onThisDateMemories.isNotEmpty()) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Column(
+                            modifier = modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            Text(
+                                text = "On This Day",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HorizontalMultiBrowseCarousel(
+                                state = carouselState,
+                                preferredItemWidth = screenWidth,
+                                itemSpacing = 5.dp,
+                                modifier = Modifier.height(250.dp)
+                            ) { index ->
+                                val memory = allMemories[index]
+                                Box(
+                                    modifier = Modifier.fillMaxSize()
+                                ){
+                                    AsyncImage(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .clickable{
+                                                onNavigateToMemoryDetail(AppScreen.MemoryDetail(memory.memory.memoryId))
+                                            }
+                                        ,
+                                        contentScale = ContentScale.Crop,
+                                        placeholder = painterResource( R.drawable.ic_launcher_background),
+                                        error = painterResource(R.drawable.ic_launcher_background),
+                                        contentDescription = "",
+                                        model = memory.mediaList.firstOrNull()?.uri
+
+                                    )
+                                }
+
+                            }
+                        }
+                    }
+                }
                 if (state.tags.isNotEmpty()) {
                     stickyHeader(
                         key = "tags"
@@ -171,14 +246,13 @@ fun SearchScreen(
                     }
                 }
                 if (state.tags.isNotEmpty()) {
-                    if(state.isMemoriesTagLoading){
-                        items(6){
+                    if (state.isMemoriesTagLoading) {
+                        items(6) {
                             ShimmerLayoutForImage(
                                 isLoading = state.isMemoriesTagLoading
                             ) { }
                         }
-                    }
-                    else if (state.memories.isNotEmpty()) {
+                    } else if (state.memories.isNotEmpty()) {
                         items(state.memories) { item ->
 //                            MemoryItemForCategory(
 //                                item = item,
