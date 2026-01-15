@@ -1,5 +1,8 @@
 package com.example.memories.feature.feature_feed.domain.model
 
+import androidx.annotation.DrawableRes
+import com.example.memories.R
+
 enum class FetchType{
     ALL,
     FAVORITE,
@@ -11,10 +14,18 @@ enum class SortType{
     DateAdded,
     Title
 }
+enum class SortByTag{
+    Count,
+    Label
+}
 
-enum class OrderByType{
-    Ascending,
-    Descending
+enum class SortOrder(
+    val title: String,
+    val description: String,
+    @DrawableRes val icon: Int
+) {
+    Ascending("Ascending", "Low to High", R.drawable.ic_up),
+    Descending("Descending", "High to Low", R.drawable.ic_down)
 }
 
 
@@ -34,9 +45,9 @@ fun SortType.toIndex() : Int{
     }
 }
 
-fun OrderByType.toIndex() : Int {
-     when(this){
-        OrderByType.Ascending -> return 0
-        OrderByType.Descending -> return 1
-    }
-}
+//fun OrderByType.toIndex() : Int {
+//     when(this){
+//        OrderByType.Ascending -> return 0
+//        OrderByType.Descending -> return 1
+//    }
+//}

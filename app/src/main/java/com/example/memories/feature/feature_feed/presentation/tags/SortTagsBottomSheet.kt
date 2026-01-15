@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter.State.Empty.painter
 import com.example.memories.R
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.ui.theme.MemoriesTheme
 
 
@@ -51,12 +52,15 @@ import com.example.memories.ui.theme.MemoriesTheme
 @Composable
 fun SortTagsBottomSheet(
     onDismiss: () -> Unit,
-    onApply: (SortBy, SortOrder) -> Unit,
-    initialSortBy: SortBy = SortBy.Count,
-    initialSortOrder: SortOrder = SortOrder.Descending
+    onApply: () -> Unit,
+//    initialSortBy: SortBy = SortBy.Count,
+//    initialSortOrder: SortOrder = SortOrder.Descending,
+    state : TagsState = TagsState(),
+    onOrderBy : (SortOrder) -> Unit = {},
+    onSortBy : (SortBy) -> Unit = {},
 ) {
-    var selectedSortBy by remember { mutableStateOf(initialSortBy) }
-    var selectedSortOrder by remember { mutableStateOf(initialSortOrder) }
+//    var selectedSortBy by remember { mutableStateOf(initialSortBy) }
+//    var selectedSortOrder by remember { mutableStateOf(initialSortOrder) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -88,13 +92,13 @@ fun SortTagsBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SortBy.values().forEach { sortBy ->
+                SortBy.entries.forEach { sortBy ->
                     SortRow(
                         title = sortBy.title,
                         description = sortBy.description,
                         icon = sortBy.icon,
-                        isSelected = selectedSortBy == sortBy,
-                        onSelect = { selectedSortBy = sortBy }
+                        isSelected = state.sortBy == sortBy,
+                        onSelect = { onSortBy(sortBy)}
                     )
                 }
             }
@@ -109,13 +113,13 @@ fun SortTagsBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SortOrder.values().forEach { sortOrder ->
+                SortOrder.entries.forEach { sortOrder ->
                     SortRow(
                         title = sortOrder.title,
                         description = sortOrder.description,
                         icon = sortOrder.icon,
-                        isSelected = selectedSortOrder == sortOrder,
-                        onSelect = { selectedSortOrder = sortOrder }
+                        isSelected = state.orderBy == sortOrder,
+                        onSelect = { onOrderBy(sortOrder) }
                     )
                 }
             }
@@ -123,7 +127,7 @@ fun SortTagsBottomSheet(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onApply(selectedSortBy, selectedSortOrder) },
+                onClick = onApply,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -202,6 +206,6 @@ private fun SortRow(
 @Composable
 fun SortTagsBottomSheetPreview() {
     MemoriesTheme {
-        SortTagsBottomSheet(onDismiss = {}, onApply = { _, _ -> })
+        SortTagsBottomSheet(onDismiss = {}, onApply = { })
     }
 }

@@ -9,7 +9,7 @@ import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.FetchType
-import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.cache
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onCompletion
@@ -45,7 +46,7 @@ class FeedViewModel @Inject constructor(
     data class FilterState(
         val fetchType: FetchType,
         val sortType: SortType,
-        val orderByType: OrderByType
+        val orderByType: SortOrder
     )
 
     private val _state = MutableStateFlow<FeedState>(FeedState())
@@ -67,7 +68,7 @@ class FeedViewModel @Inject constructor(
         FilterState(
             fetchType = FetchType.ALL,
             sortType = SortType.DateAdded,
-            orderByType = OrderByType.Descending
+            orderByType = SortOrder.Descending
         )
     )
 
@@ -141,7 +142,7 @@ class FeedViewModel @Inject constructor(
                     it.copy(
                         type = FetchType.ALL,
                         sortType = SortType.DateAdded,
-                        orderByType = OrderByType.Descending
+                        orderByType = SortOrder.Descending
                     )
                 }
             }

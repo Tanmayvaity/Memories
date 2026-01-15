@@ -58,4 +58,74 @@ ORDER BY memory_count DESC
     )
     fun getTagsWithMemoryCount() : Flow<List<TagWithMemoryCount>>
 
+
+    @Transaction
+    @Query(
+        """
+SELECT 
+    t.tag_id,
+    t.label,
+    COUNT(mt.memory_id) AS memory_count
+FROM tagentity t
+LEFT JOIN MemoryTagCrossRef mt 
+    ON t.tag_id = mt.tag_id
+GROUP BY t.tag_id, t.label
+ORDER BY label DESC
+        """
+    )
+    fun getTagsWithMemoryCountByLabel() : Flow<List<TagWithMemoryCount>>
+
+
+
+    @Transaction
+    @Query(
+        """
+SELECT 
+    t.tag_id,
+    t.label,
+    COUNT(mt.memory_id) AS memory_count
+FROM tagentity t
+LEFT JOIN MemoryTagCrossRef mt 
+    ON t.tag_id = mt.tag_id
+GROUP BY t.tag_id, t.label
+ORDER BY memory_count ASC
+        """
+    )
+    fun getTagsWithMemoryCountAscending() : Flow<List<TagWithMemoryCount>>
+
+
+    @Transaction
+    @Query(
+        """
+SELECT 
+    t.tag_id,
+    t.label,
+    COUNT(mt.memory_id) AS memory_count
+FROM tagentity t
+LEFT JOIN MemoryTagCrossRef mt 
+    ON t.tag_id = mt.tag_id
+GROUP BY t.tag_id, t.label
+ORDER BY label ASC
+        """
+    )
+    fun getTagsWithMemoryCountByLabelAscending() : Flow<List<TagWithMemoryCount>>
+
+
+    @Transaction
+    @Query(
+        """
+    SELECT 
+        t.tag_id,
+        t.label,
+        COUNT(mt.memory_id) AS memory_count
+    FROM tagentity t
+    LEFT JOIN MemoryTagCrossRef mt 
+        ON t.tag_id = mt.tag_id
+    WHERE t.label LIKE '%' || :query || '%'
+    GROUP BY t.tag_id, t.label
+    ORDER BY memory_count DESC
+    """
+    )
+    fun getTagsWithMemoryCountBySearch(query: String): Flow<List<TagWithMemoryCount>>
+
 }

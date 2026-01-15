@@ -12,11 +12,3 @@ enum class SortBy(
     Label("Label", "Alphabetical (A-Z)", R.drawable.ic_language)
 }
 
-enum class SortOrder(
-    val title: String,
-    val description: String,
-    @DrawableRes val icon: Int
-) {
-    Ascending("Ascending", "Low to High", R.drawable.ic_up),
-    Descending("Descending", "High to Low", R.drawable.ic_down)
-}

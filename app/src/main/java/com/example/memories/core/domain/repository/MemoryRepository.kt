@@ -9,7 +9,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.feature.feature_feed.domain.model.FetchType
-import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import kotlinx.coroutines.flow.Flow
 
@@ -37,7 +37,7 @@ interface MemoryRepository {
     fun getMemories(
         type: FetchType,
         sortType: SortType,
-        orderByType: OrderByType
+        orderByType: SortOrder
     ): Flow<PagingData<MemoryWithMediaModel>>
 
     suspend fun updateFavouriteState(id: String, isFavourite: Boolean)

@@ -68,7 +68,7 @@ import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_feed.domain.model.FetchType
-import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
@@ -657,7 +657,7 @@ fun FeedScreen(
                         icon = R.drawable.ic_up,
                         iconContentDescription = "up icon",
                         onClick = {
-                            onEvent(FeedEvents.ChangeOrderByType(OrderByType.Ascending))
+                            onEvent(FeedEvents.ChangeOrderByType(SortOrder.Ascending))
                         }
                     ),
                     MenuItem(
@@ -665,7 +665,7 @@ fun FeedScreen(
                         icon = R.drawable.ic_down,
                         iconContentDescription = "down icon",
                         onClick = {
-                            onEvent(FeedEvents.ChangeOrderByType(OrderByType.Descending))
+                            onEvent(FeedEvents.ChangeOrderByType(SortOrder.Descending))
                         }
                     )
                 )

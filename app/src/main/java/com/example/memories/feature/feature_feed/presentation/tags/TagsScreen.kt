@@ -79,12 +79,14 @@ fun TagsRoot(
     onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
+    val inputText by viewmodel.inputText.collectAsStateWithLifecycle()
 
     TagsScreen(
         state = state,
         onBack = onBack,
         onEvent = viewmodel::onEvent,
-        onNavigateToTagWithMemory = onNavigateToTagWithMemory
+        onNavigateToTagWithMemory = onNavigateToTagWithMemory,
+        inputText  = inputText
     )
 }
 
@@ -95,13 +97,15 @@ fun TagsScreen(
     state: TagsState = TagsState(),
     onBack: () -> Unit = {},
     onEvent : (TagEvents) -> Unit = {},
-    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit = {}
+    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit = {},
+    inputText : String = ""
 ) {
-    var inputText by rememberSaveable { mutableStateOf("") }
     var showSortBySheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteTagSheet by remember { mutableStateOf(false) }
     var tagItem : TagWithMemoryCountModel? = null
+    var showTagSheet by remember { mutableStateOf(false) }
+
 
     Scaffold(
         topBar = {
@@ -127,7 +131,7 @@ fun TagsScreen(
 
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { onEvent(TagEvents.InputTextChange(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Search Tags") },
                     leadingIcon = {
@@ -141,7 +145,7 @@ fun TagsScreen(
                             IconItem(
                                 imageVector = Icons.Default.Close,
                                 onClick = {
-                                    inputText = ""
+                                    onEvent(TagEvents.InputTextChange(""))
                                 },
                                 contentDescription = "remove text",
                                 alpha = 0f,
@@ -158,7 +162,9 @@ fun TagsScreen(
                 )
 
                 Button(
-                    onClick = {},
+                    onClick = {
+                        showTagSheet = true
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -252,8 +258,26 @@ fun TagsScreen(
                 onDismiss = {
                     showSortBySheet = false
                 },
-                onApply = { sortBy, sortOrder ->
+                onApply = {
+                    onEvent(TagEvents.ApplyFilter)
                     showSortBySheet = false
+                },
+                state = state,
+                onOrderBy = {sortOrder ->
+                    onEvent(TagEvents.ChangeSortOrderBy(sortOrder))
+                },
+                onSortBy = {
+                    onEvent(TagEvents.ChangeSortBy(it))
+                }
+            )
+        }
+        if(showTagSheet){
+            CreateTagBottomSheet(
+                onDismiss = { showTagSheet = false },
+                isLoading = state.isTagInserting,
+                onCreateTag = {name ->
+                    onEvent(TagEvents.CreateTag(name))
+                    showTagSheet = false
                 }
             )
         }

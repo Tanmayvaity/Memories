@@ -6,14 +6,12 @@ import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCount
 import com.example.memories.feature.feature_feed.presentation.tags.SortBy
 import kotlinx.coroutines.flow.Flow
 
-class GetTagsWithMemoryCountUseCase(
+class GetTagsWithMemoryCountBySearchUseCase(
     private val repository : TagRepository
 ) {
     operator fun invoke(
-        sortOrder: SortOrder,
-        sortBy: SortBy,
-        query : String = ""
+        query : String
     ): Flow<List<TagWithMemoryCountModel>> {
-        return repository.getTagsWithMemoryCount(sortOrder, sortBy,query)
+        return repository.getTagsWithMemoryCountBySearch(query)
     }
 }

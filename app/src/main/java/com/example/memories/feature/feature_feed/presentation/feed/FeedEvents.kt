@@ -2,7 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.feed
 
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.feature.feature_feed.domain.model.FetchType
-import com.example.memories.feature.feature_feed.domain.model.OrderByType
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 
 sealed class FeedEvents {
@@ -11,7 +11,7 @@ sealed class FeedEvents {
     data class ChangeFetchType(val type : FetchType) : FeedEvents()
 
     data class ChangeSortType(val type : SortType) : FeedEvents()
-    data class ChangeOrderByType(val type : OrderByType) : FeedEvents()
+    data class ChangeOrderByType(val type : SortOrder) : FeedEvents()
     object  ResetFilterState : FeedEvents()
     object Refresh : FeedEvents()
 

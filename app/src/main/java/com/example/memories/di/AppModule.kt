@@ -78,6 +78,7 @@ import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchOnThisDataUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountBySearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
 import com.example.memories.feature.feature_media_edit.domain.usecase.ApplyAdjustFilterUseCase
@@ -374,7 +375,9 @@ object AppModule {
     ) : TagUseCaseWrapper {
         return TagUseCaseWrapper(
             getTagsWithMemoryCountUseCase = GetTagsWithMemoryCountUseCase(repository),
-            deleteTagUseCase = DeleteTagUseCase(repository)
+            deleteTagUseCase = DeleteTagUseCase(repository),
+            getTagsWithMemoryCountBySearchUseCase = GetTagsWithMemoryCountBySearchUseCase(repository),
+            addTagUseCase = AddTagUseCase(repository)
         )
     }
 
