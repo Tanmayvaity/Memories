@@ -4,23 +4,31 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.OrderByType
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,6 +41,12 @@ class FeedViewModel @Inject constructor(
     companion object {
         private const val TAG = "FeedViewModel"
     }
+
+    data class FilterState(
+        val fetchType: FetchType,
+        val sortType: SortType,
+        val orderByType: OrderByType
+    )
 
     private val _state = MutableStateFlow<FeedState>(FeedState())
     val state = _state
@@ -49,6 +63,24 @@ class FeedViewModel @Inject constructor(
             initialValue = FeedState()
         )
 
+    private val _appliedFilters = MutableStateFlow(
+        FilterState(
+            fetchType = FetchType.ALL,
+            sortType = SortType.DateAdded,
+            orderByType = OrderByType.Descending
+        )
+    )
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val memories: Flow<PagingData<MemoryWithMediaModel>> = _appliedFilters
+        .flatMapLatest { filters ->
+            feedUseCases.getFeedUseCase(filters.fetchType, filters.sortType, filters.orderByType)
+        }
+        .cachedIn(viewModelScope)
+
+
+
 
 
 
@@ -59,23 +91,31 @@ class FeedViewModel @Inject constructor(
     fun onEvent(event: FeedEvents) {
         when (event) {
             is FeedEvents.FetchFeed -> {
-                viewModelScope.launch {
-                    _state.update { it.copy(isLoading = true) }
-                    feedUseCases.getFeedUseCase(
-                        type = state.value.type,
-                        sortType = state.value.sortType,
-                        orderByType = state.value.orderByType
-                    )
-                        .collectLatest { itemList ->
-                        _state.update { it ->
-                            it.copy(
-                                memories = itemList,
-                                isLoading = false,
-                                error = null
-                            )
-                        }
-                    }
-                }
+//                viewModelScope.launch {
+//                    _state.update { it.copy(isLoading = true) }
+//                    feedUseCases.getFeedUseCase(
+//                        type = state.value.type,
+//                        sortType = state.value.sortType,
+//                        orderByType = state.value.orderByType
+//                    )
+//                        .collectLatest { itemList ->
+//                        _state.update { it ->
+//                            it.copy(
+//                                memories = itemList,
+//                                isLoading = false,
+//                                error = null
+//                            )
+//                        }
+//                    }
+//                }
+            }
+
+            is FeedEvents.ApplyFilter -> {
+                _appliedFilters.update { it.copy(
+                    fetchType = state.value.type,
+                    sortType = state.value.sortType,
+                    orderByType = state.value.orderByType
+                )}
             }
 
             is FeedEvents.ChangeFetchType ->{

@@ -41,10 +41,8 @@ import com.example.memories.feature.feature_camera.domain.usecase.TakeMediaUseCa
 import com.example.memories.feature.feature_camera.domain.usecase.TapToFocusUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
-import com.example.memories.feature.feature_feed.data.repository.FeedRepositoryImpl
 import com.example.memories.feature.feature_feed.data.repository.MediaFeedRepositoryImpl
 import com.example.memories.feature.feature_feed.data.repository.RecentSearchRepositoryImpl
-import com.example.memories.feature.feature_feed.domain.repository.FeedRepository
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
 import com.example.memories.feature.feature_feed.domain.repository.RecentSearchRepository
 import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
@@ -327,14 +325,14 @@ object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun providesFeedRepository(
-        memoryDao: MemoryDao,
-        tagDao: TagDao
-    ): FeedRepository{
-        return FeedRepositoryImpl(memoryDao,tagDao)
-    }
+//    @Provides
+//    @Singleton
+//    fun providesFeedRepository(
+//        memoryDao: MemoryDao,
+//        tagDao: TagDao
+//    ): FeedRepository{
+//        return FeedRepositoryImpl(memoryDao,tagDao)
+//    }
 
     @Provides
     @Singleton

@@ -19,6 +19,8 @@ sealed class FeedEvents {
     data class ToggleHidden(val id : String,val isHidden : Boolean): FeedEvents()
 
     data class Delete(val memory : MemoryModel,val uriList : List<String>) : FeedEvents()
+
+    object ApplyFilter : FeedEvents()
 }
 
 

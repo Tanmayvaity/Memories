@@ -1,137 +1,81 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
-import android.R.attr.dialogTitle
-import android.R.attr.mode
-import android.R.attr.onClick
-import android.R.attr.text
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.MailOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Cyan
-import androidx.compose.ui.graphics.RenderEffect
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.FilterActionSheet
-import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.core.util.PermissionHelper
-import com.example.memories.core.util.TAG
-import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.OrderByType
 import com.example.memories.feature.feature_feed.domain.model.SortType
-import com.example.memories.feature.feature_feed.domain.model.toIndex
-import com.example.memories.feature.feature_feed.presentation.feed.components.ChipRow
-import com.example.memories.feature.feature_feed.presentation.feed.components.CustomFloatingActionButton
-import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItem
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
-import kotlinx.coroutines.delay
+import com.google.common.collect.Multimaps.index
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -146,6 +90,7 @@ fun FeedRoot(
     onBottomBarVisibilityToggle: (Boolean) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val memories = viewModel.memories.collectAsLazyPagingItems()
     val dataLoadingState by viewModel.isDataLoading.collectAsStateWithLifecycle()
     val isDarkModeEnabled by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
 
@@ -153,16 +98,14 @@ fun FeedRoot(
 
     FeedScreen(
         state = state,
-        onEvent = viewModel::onEvent,
         loadState = dataLoadingState,
-        onCameraClick = onCameraClick,
+        onEvent = viewModel::onEvent,
         onNavigateToImageEdit = onNavigateToImageEdit,
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
         onNavigateToMemoryCreate = onNavigateToMemoryCreate,
-        onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
+        onBottomBarVisibilityToggle = onBottomBarVisibilityToggle,
+        memories = memories
     )
-
-
 
 
 }
@@ -178,7 +121,8 @@ fun FeedScreen(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
-    onBottomBarVisibilityToggle: (Boolean) -> Unit = {}
+    onBottomBarVisibilityToggle: (Boolean) -> Unit = {},
+    memories: LazyPagingItems<MemoryWithMediaModel>,
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -196,6 +140,7 @@ fun FeedScreen(
     var translateX = 600f
     val leftTranslate = remember { Animatable(-translateX) }
     val rightTranslate = remember { Animatable(translateX) }
+    val scope = rememberCoroutineScope()
 
 // This effect will update isScrollingUp based on the scroll direction
     LaunchedEffect(lazyListState) {
@@ -403,10 +348,15 @@ fun FeedScreen(
                             expandFab = false
                             currentMemoryEntryMode = item.first
                             if (currentMemoryEntryMode == MemoryEntryMode.CreateMemory) {
-                                onNavigateToMemoryCreate(AppScreen.Memory(memoryId = null,emptyList()))
+                                onNavigateToMemoryCreate(
+                                    AppScreen.Memory(
+                                        memoryId = null,
+                                        emptyList()
+                                    )
+                                )
                                 return@FloatingActionButtonMenuItem
                             }
-                            if(currentMemoryEntryMode == MemoryEntryMode.EditImage){
+                            if (currentMemoryEntryMode == MemoryEntryMode.EditImage) {
                                 onBottomBarVisibilityToggle(false)
                                 onNavigateToImageEdit(AppScreen.MediaEdit)
                             }
@@ -486,36 +436,38 @@ fun FeedScreen(
 //            }
 
 
-            itemsIndexed(
+            items(
 //                key = {index : Int,it : MemoryWithMediaModel -> it.memory.memoryId },
-                items = state.memories,
-            ) { index, it ->
+                count = memories.itemCount,
+            ) { index ->
+                val memory = memories[index]
+                if (memory == null) return@items
                 MemoryItemCard(
                     state = lazyListState,
                     modifier = Modifier
                         .animateItem()
                         .padding(16.dp),
-                    memoryItem = it,
+                    memoryItem = memory!!,
                     onClick = {
                         onNavigateToMemoryDetail(
-                            AppScreen.MemoryDetail(memoryId = it.memory.memoryId)
+                            AppScreen.MemoryDetail(memoryId = memory.memory.memoryId)
                         )
                         expandFab = false
                     },
                     onFavouriteButtonClick = {
-                        if (it == null) {
+                        if (memory == null) {
                             Log.e("FeedScreen", "FeedScreen: item is null")
                             return@MemoryItemCard
                         }
                         onEvent(
                             FeedEvents.ToggleFavourite(
-                                it.memory.memoryId,
-                                !it.memory.favourite
+                                memory.memory.memoryId,
+                                !memory.memory.favourite
                             )
                         )
                     },
                     onDeleteButtonClick = {
-                        currentItem = it
+                        currentItem = memory
                         Log.d("FeedScreen", "FeedScreen: ${currentItem!!.memory.toString()}")
                         showDeleteDialog = true
 
@@ -523,8 +475,8 @@ fun FeedScreen(
                     onHideButtonClick = {
                         onEvent(
                             FeedEvents.ToggleHidden(
-                                it.memory.memoryId,
-                                !it.memory.hidden
+                                memory.memory.memoryId,
+                                !memory.memory.hidden
                             )
                         )
                     }
@@ -532,26 +484,30 @@ fun FeedScreen(
                 )
             }
 
-            item{
+            if (memories.loadState.append is LoadState.Loading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+
+                    ) {
+                        LoadingIndicator(
+                            text = "Fetching Memory"
+                        )
+                    }
+                }
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
 
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
 
-            ) {
-                LoadingIndicator(
-                    text = "Fetching Memory"
-                )
-            }
-        }
 
-        if(showDeleteDialog && currentItem != null || state.isDeleting) {
+        if (showDeleteDialog && currentItem != null || state.isDeleting) {
 
             GeneralAlertSheet(
                 title = "Delete Memory Alert",
@@ -614,7 +570,7 @@ fun FeedScreen(
 //            )
         }
 
-        if (state.memories.isEmpty() && !state.isLoading) {
+        if (memories.itemCount == 0 && memories.loadState.append != LoadState.Loading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -635,8 +591,11 @@ fun FeedScreen(
                     onEvent(FeedEvents.ResetFilterState)
                 },
                 onApplyFilter = {
-                    onEvent(FeedEvents.FetchFeed)
+                    onEvent(FeedEvents.ApplyFilter)
                     showSheet = false
+                    scope.launch {
+                        lazyListState.scrollToItem(0)
+                    }
                 },
                 state = state,
                 title = "Filter & Sort Posts",
@@ -720,13 +679,15 @@ fun FeedScreen(
 @Composable
 fun FeedScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
+        val previewMemories = List(30) { MemoryWithMediaModel() }
         FeedScreen(
             state = FeedState(
                 memories = List(30) { MemoryWithMediaModel() }
 //                memories = emptyList()
             ),
+            loadState = false,
             onEvent = {},
-            loadState = false
+            memories = flowOf(PagingData.from(previewMemories)).collectAsLazyPagingItems()
         )
     }
 }

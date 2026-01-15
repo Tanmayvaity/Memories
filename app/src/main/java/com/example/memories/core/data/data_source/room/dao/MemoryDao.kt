@@ -1,5 +1,6 @@
 package com.example.memories.core.data.data_source.room.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -28,208 +29,175 @@ interface MemoryDao {
     suspend fun insertMemoryTagCrossRef(memoryTagCrossRef: List<MemoryTagCrossRef>)
 
     @Transaction
-    suspend fun insertMemoryWithMediaAndTag(memory: MemoryEntity, mediaList: List<MediaEntity>, tagList: List<TagEntity>) {
+    suspend fun insertMemoryWithMediaAndTag(
+        memory: MemoryEntity,
+        mediaList: List<MediaEntity>,
+        tagList: List<TagEntity>
+    ) {
         insertMemory(memory)
         mediaList.map { it.copy(memoryId = memory.memoryId) }.also { insertAllMedia(it) }
-        tagList.map { tag -> MemoryTagCrossRef(memory.memoryId,tag.tagId) }.also {insertMemoryTagCrossRef(it)}
+        tagList.map { tag -> MemoryTagCrossRef(memory.memoryId, tag.tagId) }
+            .also { insertMemoryTagCrossRef(it) }
     }
 
     @Transaction
     suspend fun updateMemory(
-        memory : MemoryEntity,
-        mediaList : List<MediaEntity>,
-        tags : List<TagEntity>
-    ){
+        memory: MemoryEntity,
+        mediaList: List<MediaEntity>,
+        tags: List<TagEntity>
+    ) {
         insertMemory(memory)
 
-//        val incomingMediaIds = mediaList.map { it.mediaId }
-//        if(incomingMediaIds.isEmpty()){
-//            deleteAllMediaForMemory(memory.memoryId)
-//            return
-//        }
-//
-//        val mediasToRemove = getMediaIdsToDelete(memory.memoryId,incomingMediaIds)
-//        if(mediasToRemove.isNotEmpty()){
-//            deleteMediaByIds(mediasToRemove)
-//        }
-//
-//        insertAllMedia(mediaList)
-
         val incomingTagsIds = tags.map { it.tagId }
-        if(incomingTagsIds.isEmpty()){
+        if (incomingTagsIds.isEmpty()) {
             deleteAllTagsForMemory(memory.memoryId)
             return
         }
-        val tagsToRemove = getTagIdsToRemove(memory.memoryId,incomingTagsIds)
-        if(tagsToRemove.isNotEmpty()){
-            deleteCrossRefs(memory.memoryId,tagsToRemove)
+        val tagsToRemove = getTagIdsToRemove(memory.memoryId, incomingTagsIds)
+        if (tagsToRemove.isNotEmpty()) {
+            deleteCrossRefs(memory.memoryId, tagsToRemove)
         }
-        incomingTagsIds.map { MemoryTagCrossRef(memory.memoryId,it) }.also { insertMemoryTagCrossRef(it) }
-
-
+        incomingTagsIds.map { MemoryTagCrossRef(memory.memoryId, it) }
+            .also { insertMemoryTagCrossRef(it) }
     }
 
-    @Query("""
-    DELETE FROM MediaEntity
-    WHERE memory_id = :memoryId
-""")
+    @Query("DELETE FROM MediaEntity WHERE memory_id = :memoryId")
     suspend fun deleteAllMediaForMemory(memoryId: String)
 
-    @Query("""
-    DELETE FROM MediaEntity
-    WHERE media_id IN (:mediaIds)
-""")
+    @Query("DELETE FROM MediaEntity WHERE media_id IN (:mediaIds)")
     suspend fun deleteMediaByIds(mediaIds: List<String>)
 
     @Query("""
-    SELECT media_id
-    FROM MediaEntity
-    WHERE memory_id = :memoryId
-    AND media_id NOT IN (:incomingMediaIds)
-""")
-    suspend fun getMediaIdsToDelete(
-        memoryId: String,
-        incomingMediaIds: List<String>
-    ): List<String>
+        SELECT media_id FROM MediaEntity
+        WHERE memory_id = :memoryId AND media_id NOT IN (:incomingMediaIds)
+    """)
+    suspend fun getMediaIdsToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>
 
     @Query("""
-    SELECT tag_id
-    FROM MemoryTagCrossRef
-    WHERE memory_id = :memoryId
-    AND tag_id NOT IN (:incomingTagIds)
-""")
-    suspend fun getTagIdsToRemove(
-        memoryId: String,
-        incomingTagIds: List<String>
-    ): List<String>
+        SELECT tag_id FROM MemoryTagCrossRef
+        WHERE memory_id = :memoryId AND tag_id NOT IN (:incomingTagIds)
+    """)
+    suspend fun getTagIdsToRemove(memoryId: String, incomingTagIds: List<String>): List<String>
 
-    @Query("""
-    DELETE FROM MemoryTagCrossRef
-    WHERE memory_id = :memoryId
-    AND tag_id IN (:tagIds)
-""")
+    @Query("DELETE FROM MemoryTagCrossRef WHERE memory_id = :memoryId AND tag_id IN (:tagIds)")
     suspend fun deleteCrossRefs(memoryId: String, tagIds: List<String>)
 
-    @Query("""
-    DELETE FROM MemoryTagCrossRef
-    WHERE memory_id = :memoryId
-""")
+    @Query("DELETE FROM MemoryTagCrossRef WHERE memory_id = :memoryId")
     suspend fun deleteAllTagsForMemory(memoryId: String)
 
-    @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 0 ORDER BY time_stamp DESC")
-    fun getAllMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+    // ==================== PAGED QUERIES - ALL MEMORIES ====================
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 0 ORDER BY time_stamp ASC")
-    fun getAllMemoriesWithMediaAscending(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp DESC")
+    fun getAllMemoriesWithMedia(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MEMORYENTITY WHERE hidden = 0 ORDER BY memory_for_time_stamp DESC")
-    fun getAllMemoriesWithMediaByMemoryForTimeStamp() : Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp ASC")
+    fun getAllMemoriesWithMediaAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MEMORYENTITY WHERE hidden = 0 ORDER BY memory_for_time_stamp ASC")
-    fun getAllMemoriesWithMediaByMemoryForTimeStampAscending() : Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY memory_for_time_stamp DESC")
+    fun getAllMemoriesWithMediaByMemoryForTimeStamp(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MEMORYENTITY WHERE hidden = 0 ORDER BY title COLLATE NOCASE DESC")
-    fun getAllMemoriesWithMediaByTitle() : Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY memory_for_time_stamp ASC")
+    fun getAllMemoriesWithMediaByMemoryForTimeStampAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MEMORYENTITY WHERE hidden = 0 ORDER BY title COLLATE NOCASE ASC")
-    fun getAllMemoriesWithMediaByTitleAscending() : Flow<List<MemoryWithMedia>>
-    @Transaction
-    @Query("SELECT * FROM MemoryEntity WHERE memory_id IN (:memoryIds) and hidden =0")
-    fun getAllMemoriesWithMediaByTag(memoryIds : List<String>) : Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY title COLLATE NOCASE DESC")
+    fun getAllMemoriesWithMediaByTitle(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY time_stamp DESC")
-    fun getAllFavouriteMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY title COLLATE NOCASE ASC")
+    fun getAllMemoriesWithMediaByTitleAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY time_stamp ASC")
-    fun getAllFavouriteMemoriesWithMediaAscending(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE memory_id IN (:memoryIds) AND hidden = 0")
+    fun getAllMemoriesWithMediaByTag(memoryIds: List<String>): PagingSource<Int, MemoryWithMedia>
+
+    // ==================== PAGED QUERIES - FAVOURITES ====================
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY memory_for_time_stamp DESC")
-    fun getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY time_stamp DESC")
+    fun getAllFavouriteMemoriesWithMedia(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY memory_for_time_stamp ASC")
-    fun getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending(): Flow<List<MemoryWithMedia>>
-
-
-    @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY title COLLATE NOCASE DESC")
-    fun getAllFavouriteMemoriesWithMediaByTitle(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY time_stamp ASC")
+    fun getAllFavouriteMemoriesWithMediaAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where favourite = 1 and hidden = 0 ORDER BY title COLLATE NOCASE ASC")
-    fun getAllFavouriteMemoriesWithMediaByTitleAscending(): Flow<List<MemoryWithMedia>>
-    @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY time_stamp DESC")
-    fun getAllHiddenMemoriesWithMedia(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY memory_for_time_stamp DESC")
+    fun getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY time_stamp ASC")
-    fun getAllHiddenMemoriesWithMediaAscending(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY memory_for_time_stamp ASC")
+    fun getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY memory_for_time_stamp DESC")
-    fun getAllHiddenMemoriesWithMediaByMemoryForTimeStamp(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY title COLLATE NOCASE DESC")
+    fun getAllFavouriteMemoriesWithMediaByTitle(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY memory_for_time_stamp ASC")
-    fun getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE favourite = 1 AND hidden = 0 ORDER BY title COLLATE NOCASE ASC")
+    fun getAllFavouriteMemoriesWithMediaByTitleAscending(): PagingSource<Int, MemoryWithMedia>
+
+    // ==================== PAGED QUERIES - HIDDEN ====================
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY title COLLATE NOCASE DESC")
-    fun getAllHiddenMemoriesWithMediaByTitle(): Flow<List<MemoryWithMedia>>
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY time_stamp DESC")
+    fun getAllHiddenMemoriesWithMedia(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where hidden = 1 ORDER BY title COLLATE NOCASE ASC")
-    fun getAllHiddenMemoriesWithMediaByTitleAscending(): Flow<List<MemoryWithMedia>>
-    @Transaction
-    @Query("SELECT * FROM MemoryEntity where title LIKE '%' || :query || '%' order by time_stamp desc")
-    fun getAllMemoriesWithMediaByTitle(query : String): Flow<List<MemoryWithMedia>>
-
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY time_stamp ASC")
+    fun getAllHiddenMemoriesWithMediaAscending(): PagingSource<Int, MemoryWithMedia>
 
     @Transaction
-    @Query("SELECT * FROM MemoryEntity where memory_id = :id")
-    suspend fun getMemoryById(id : String): MemoryWithMedia?
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY memory_for_time_stamp DESC")
+    fun getAllHiddenMemoriesWithMediaByMemoryForTimeStamp(): PagingSource<Int, MemoryWithMedia>
 
-    @Query("UPDATE memoryentity set hidden = :isHidden where memory_id = :id")
-    suspend fun updateHidden(id:String,isHidden : Boolean)
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY memory_for_time_stamp ASC")
+    fun getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending(): PagingSource<Int, MemoryWithMedia>
 
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY title COLLATE NOCASE DESC")
+    fun getAllHiddenMemoriesWithMediaByTitle(): PagingSource<Int, MemoryWithMedia>
 
-    @Query("UPDATE memoryentity set favourite = :isFavourite where memory_id = :id")
-    suspend fun updateFavourite(id:String,isFavourite : Boolean)
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 1 ORDER BY title COLLATE NOCASE ASC")
+    fun getAllHiddenMemoriesWithMediaByTitleAscending(): PagingSource<Int, MemoryWithMedia>
 
+    // ==================== PAGED QUERY - SEARCH ====================
 
-//    @Query("DELETE FROM memoryentity where memory_id = :id")
-//    suspend fun deleteById(id : String)
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE title LIKE '%' || :query || '%' ORDER BY time_stamp DESC")
+    fun getAllMemoriesWithMediaBySearch(query: String): Flow<List<MemoryWithMedia>>
+
+    // ==================== NON-PAGED QUERIES ====================
+
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE memory_id = :id")
+    suspend fun getMemoryById(id: String): MemoryWithMedia?
+
+    @Query("UPDATE MemoryEntity SET hidden = :isHidden WHERE memory_id = :id")
+    suspend fun updateHidden(id: String, isHidden: Boolean)
+
+    @Query("UPDATE MemoryEntity SET favourite = :isFavourite WHERE memory_id = :id")
+    suspend fun updateFavourite(id: String, isFavourite: Boolean)
 
     @Delete
-    suspend fun deleteMemory(memory: MemoryEntity) : Int
-
+    suspend fun deleteMemory(memory: MemoryEntity): Int
 
     @Query("SELECT MIN(memory_for_time_stamp) FROM MemoryEntity WHERE hidden = 0")
     suspend fun getEarliestMemoryTimestamp(): Long?
 
-    // Get memories within a date range
     @Transaction
     @Query("""
-      SELECT * FROM MemoryEntity 
-      WHERE hidden = 0 
-      AND memory_for_time_stamp >= :startTimestamp 
-      AND memory_for_time_stamp < :endTimestamp
-      ORDER BY memory_for_time_stamp DESC
-  """)
-    suspend fun getMemoriesBetweenTimestamps(
-        startTimestamp: Long,
-        endTimestamp: Long
-    ): List<MemoryWithMedia>
-
-
+        SELECT * FROM MemoryEntity 
+        WHERE hidden = 0 
+        AND memory_for_time_stamp >= :startTimestamp 
+        AND memory_for_time_stamp < :endTimestamp
+        ORDER BY memory_for_time_stamp DESC
+    """)
+    suspend fun getMemoriesBetweenTimestamps(startTimestamp: Long, endTimestamp: Long): List<MemoryWithMedia>
 }

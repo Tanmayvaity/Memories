@@ -20,6 +20,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.AppTopBar
@@ -27,6 +31,7 @@ import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun TagWithMemoryRoot(
@@ -36,12 +41,13 @@ fun TagWithMemoryRoot(
     onNavigateToMemory : (AppScreen.MemoryDetail) -> Unit
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
-
+    val memories =  viewmodel.memoriesForTag.collectAsLazyPagingItems()
     TagWithMemoryScreen(
         state = state,
         onEvent = viewmodel::onEvent,
         onBack = onBack,
-        onNavigateToMemory = onNavigateToMemory
+        onNavigateToMemory = onNavigateToMemory,
+        memories = memories
     )
 }
 
@@ -52,7 +58,8 @@ fun TagWithMemoryScreen(
     state : TagWithMemoryState = TagWithMemoryState(),
     onEvent : (TagWithMemoryEvents) -> Unit = {},
     onBack : () -> Unit = {},
-    onNavigateToMemory: (AppScreen.MemoryDetail) -> Unit = {}
+    onNavigateToMemory: (AppScreen.MemoryDetail) -> Unit = {},
+    memories : LazyPagingItems<MemoryWithMediaModel>
 ) {
     Scaffold(
         modifier = modifier,
@@ -69,13 +76,13 @@ fun TagWithMemoryScreen(
         }
     ) { innerPadding ->
 
-        if(state.isLoading){
+        if(memories.loadState.append == LoadState.Loading){
             LoadingIndicator(
                 showText = true
             )
         }
 
-        if(!state.isLoading && state.memories.isEmpty()){
+        if(memories.loadState.append != LoadState.Loading && memories.itemCount <=0){
             Box(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -95,8 +102,9 @@ fun TagWithMemoryScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(8.dp)
         ) {
-            if (!state.isLoading && state.memories.isNotEmpty()) {
-                items(state.memories) { item ->
+            if (memories.loadState.append != LoadState.Loading && memories.itemCount > 0) {
+                items(count = memories.itemCount) { index ->
+                    val item = memories[index] ?: return@items
                     MemoryCard(
                         memory = item,
                         onClick = {
@@ -119,6 +127,7 @@ fun TagWithMemoryScreen(
 @Composable
 fun TagWithMemoryScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
+        val previewMemories = List(30) { MemoryWithMediaModel() }
         TagWithMemoryScreen(
             state = TagWithMemoryState(
                 memories = listOf(
@@ -129,7 +138,8 @@ fun TagWithMemoryScreenPreview(modifier: Modifier = Modifier) {
                         )
                     ),
                 )
-            )
+            ),
+            memories = flowOf(PagingData.from(previewMemories)).collectAsLazyPagingItems()
 
         )
     }

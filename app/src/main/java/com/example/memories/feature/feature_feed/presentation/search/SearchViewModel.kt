@@ -6,6 +6,8 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.SearchModel
@@ -21,11 +23,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -69,6 +73,22 @@ class SearchViewModel @Inject constructor(
         _state.update { it.copy(data = results) }
     }
     .launchIn(viewModelScope)
+
+    val tags = MutableStateFlow(emptyList<TagModel>())
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val memoriesForTag: Flow<PagingData<MemoryWithMediaModel>> = _state
+        .map { it.currentTag }
+        .distinctUntilChanged()
+        .flatMapLatest { tag ->
+            if(tag == null){
+                flowOf(PagingData.empty())
+            }else{
+                feedUseCase.fetchMemoryByTagUseCase(tag.tagId)
+            }
+        }
+        .cachedIn(viewModelScope)
 
 
 //    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -180,8 +200,8 @@ class SearchViewModel @Inject constructor(
                                 initialSelectDone = true
                             }
                         }
-//                        if(state.value.tags.isEmpty())return@launch
-//                        _state.update { it.copy(currentTag = state.value.tags.first()) }
+                        if(state.value.tags.isEmpty())return@launch
+                        _state.update { it.copy(currentTag = state.value.tags.first()) }
 //                        onEvent(SearchEvents.SelectTag(state.value.currentTag!!))
                     }
                 }
@@ -222,12 +242,12 @@ class SearchViewModel @Inject constructor(
 
             is SearchEvents.SelectTag -> {
                 _state.update { it.copy(currentTag = event.tag, isMemoriesTagLoading = true) }
-                viewModelScope.launch {
-                    feedUseCase.fetchMemoryByTagUseCase(event.tag.tagId).collect { memories ->
-                        _state.update { it.copy(memories = memories, isMemoriesTagLoading = false) }
-//                        Log.d(TAG, "onEvent: SelectTag ${memories}")
-                    }
-                }
+//                viewModelScope.launch {
+//                    feedUseCase.fetchMemoryByTagUseCase(event.tag.tagId).collect { memories ->
+//                        _state.update { it.copy(memories = memories, isMemoriesTagLoading = false) }
+////                        Log.d(TAG, "onEvent: SelectTag ${memories}")
+//                    }
+//                }
             }
         }
     }

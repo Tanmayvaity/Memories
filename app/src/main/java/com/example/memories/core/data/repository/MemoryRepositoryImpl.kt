@@ -1,6 +1,11 @@
 package com.example.memories.core.data.repository
 
 import android.net.Uri
+import android.util.Log
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import androidx.room.Query
 import androidx.room.Transaction
 import com.example.memories.core.data.data_source.MediaManager
@@ -30,6 +35,10 @@ class MemoryRepositoryImpl @Inject constructor(
     val memoryDao: MemoryDao,
     val tagDao: TagDao,
 ) : MemoryRepository {
+    companion object{
+        private const val TAG = "MemoryRepositoryImpl"
+    }
+
     override suspend fun saveToInternalStorage(uriList: List<Uri>): Result<List<Uri>> {
         return mediaManager.saveToInternalStorage(uriList)
     }
@@ -69,91 +78,86 @@ class MemoryRepositoryImpl @Inject constructor(
         memoryDao.insertMemoryTagCrossRef(refs.map { it -> it.toEntity() })
     }
 
-    override suspend fun getMemories(
+    override fun getMemories(
         type: FetchType,
         sortType: SortType,
         orderByType: OrderByType
-    ): Flow<List<MemoryWithMediaModel>> {
-        return when (type) {
-            FetchType.ALL -> {
-                when (sortType) {
-                    SortType.DateAdded -> {
-                        when (orderByType) {
-                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMedia()
-                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaAscending()
+    ): Flow<PagingData<MemoryWithMediaModel>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 5,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+//                Log.d(TAG, "Creating new PagingSource")
+                when (type) {
+                    FetchType.ALL -> {
+                        when (sortType) {
+                            SortType.DateAdded -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllMemoriesWithMedia()
+                                OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaAscending()
+                            }
+
+                            SortType.CreatedForDate -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStamp()
+                                OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStampAscending()
+                            }
+
+                            SortType.Title -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByTitle()
+                                OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByTitleAscending()
+                            }
                         }
                     }
 
-                    SortType.CreatedForDate -> {
-                        when (orderByType) {
-                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStamp()
-                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByMemoryForTimeStampAscending()
+                    FetchType.FAVORITE -> {
+                        when (sortType) {
+                            SortType.DateAdded -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMedia()
+                                OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaAscending()
+                            }
+
+                            SortType.CreatedForDate -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp()
+                                OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending()
+                            }
+
+                            SortType.Title -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitle()
+                                OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitleAscending()
+                            }
                         }
                     }
 
-                    SortType.Title -> {
-                        when (orderByType) {
-                            OrderByType.Descending -> memoryDao.getAllMemoriesWithMediaByTitle()
-                            OrderByType.Ascending -> memoryDao.getAllMemoriesWithMediaByTitleAscending()
-                        }
+                    FetchType.HIDDEN -> {
+                        when (sortType) {
+                            SortType.DateAdded -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
+                                OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
+                            }
 
-                    }
+                            SortType.CreatedForDate -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
+                                OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
+                            }
 
-                }
-            }
-
-            FetchType.FAVORITE -> {
-                when (sortType) {
-                    SortType.CreatedForDate -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStampAscending()
-                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByMemoryForTimeStamp()
-                        }
-                    }
-
-                    SortType.DateAdded -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaAscending()
-                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMedia()
-                        }
-                    }
-
-                    SortType.Title -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitleAscending()
-                            OrderByType.Descending -> memoryDao.getAllFavouriteMemoriesWithMediaByTitle()
-                        }
-                    }
-
-                }
-            }
-
-            FetchType.HIDDEN -> {
-                when (sortType) {
-                    SortType.CreatedForDate -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
-                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
-                        }
-                    }
-
-                    SortType.DateAdded -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
-                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
-                        }
-                    }
-
-                    SortType.Title -> {
-                        when (orderByType) {
-                            OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
-                            OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
+                            SortType.Title -> when (orderByType) {
+                                OrderByType.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
+                                OrderByType.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
+                            }
                         }
                     }
                 }
             }
-        }.map { memoryList -> memoryList.map { it -> it.toDomain() } }
+        ).flow.map { pagingData ->
+            pagingData.map {
+//                Log.d(TAG, "Paging : loading items ${it.memory.memoryId}")
+                it.toDomain()
+            }
+        }
     }
+
 
     override suspend fun updateFavouriteState(id: String, isFavourite: Boolean) {
         return memoryDao.updateFavourite(id, isFavourite)
@@ -172,20 +176,43 @@ class MemoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMemoryByTitle(query: String): Flow<List<MemoryWithMediaModel>> {
-        return memoryDao.getAllMemoriesWithMediaByTitle(query).map { memoryList ->
+        return memoryDao.getAllMemoriesWithMediaBySearch(query).map { memoryList ->
             memoryList.map { it -> it.toDomain() }
         }
     }
 
+//    @OptIn(ExperimentalCoroutinesApi::class)
+//    override suspend fun getMemoryByTag(id: String): Flow<List<MemoryWithMediaModel>> {
+//        return tagDao.getMemoryByTag(id).flatMapLatest { tagWithMemories ->
+//            val ids = tagWithMemories.memories.map { it.memoryId }
+//            memoryDao.getAllMemoriesWithMediaByTag(ids).map { it ->
+//                it.map { it -> it.toDomain() }
+//
+//            }
+//
+//        }
+//    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getMemoryByTag(id: String): Flow<List<MemoryWithMediaModel>> {
+    override fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>> {
         return tagDao.getMemoryByTag(id).flatMapLatest { tagWithMemories ->
             val ids = tagWithMemories.memories.map { it.memoryId }
-            memoryDao.getAllMemoriesWithMediaByTag(ids).map { it ->
-                it.map { it -> it.toDomain() }
-
+            Pager(
+                config = PagingConfig(
+                    pageSize = 20,
+                    prefetchDistance = 5,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    Log.d(TAG, "Creating new PagingSource for tag memory")
+                    memoryDao.getAllMemoriesWithMediaByTag(ids)
+                }
+            ).flow.map { pagingData ->
+                pagingData.map {
+                    Log.d(TAG, "Paging : loading items tag memory ${it.memory.memoryId}")
+                    it.toDomain()
+                }
             }
-
         }
     }
 
@@ -194,11 +221,8 @@ class MemoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMemoriesWithinRange(min: Long, max: Long): List<MemoryWithMediaModel> {
-        return memoryDao.getMemoriesBetweenTimestamps(min,max).map {  it -> it.toDomain() }
+        return memoryDao.getMemoriesBetweenTimestamps(min, max).map { it -> it.toDomain() }
     }
-
-
-
 
 
 }
