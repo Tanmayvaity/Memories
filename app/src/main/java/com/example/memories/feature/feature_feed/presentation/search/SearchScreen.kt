@@ -1,6 +1,8 @@
 package com.example.memories.feature.feature_feed.presentation.search
 
 import android.content.res.Configuration
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +35,7 @@ import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +54,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +92,7 @@ import com.google.common.collect.Multimaps.index
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SearchRoot(
     modifier: Modifier = Modifier,
@@ -117,16 +123,18 @@ fun SearchScreen(
     memoriesForTag: LazyPagingItems<MemoryWithMediaModel>
 ) {
     val theme = LocalTheme.current
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var tagClickIndex by rememberSaveable { mutableStateOf(0) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val screenWidth = LocalWindowInfo.current.containerDpSize.width
     val allMemories = state.onThisDateMemories.flatMap { it.memories }
     val carouselState = rememberCarouselState() { allMemories.size }
     val configuration = LocalConfiguration.current
     val pagerState = rememberPagerState { allMemories.size }
-
-    val lazyGridState = rememberLazyGridState()
+    val lazyRowState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val lazyGridState = rememberLazyGridState()
+
+
 
     Scaffold(
         topBar = {
@@ -282,13 +290,13 @@ fun SearchScreen(
                                 tagClickIndex = index
                                 onEvent(SearchEvents.SelectTag(tag))
                                 scope.launch {
-                                    lazyGridState.scrollToItem(
+                                    lazyGridState.animateScrollToItem(
                                         index = lazyGridState.layoutInfo.visibleItemsInfo
                                             .firstOrNull { it.key == "tags" }?.index
                                             ?: 0
                                     )
                                 }
-                            }
+                            },
                         )
 
 
@@ -304,7 +312,10 @@ fun SearchScreen(
                             LoadingIndicator()
                         }
                     } else if (memoriesForTag.itemCount > 0) {
-                        items(count = memoriesForTag.itemCount) { index ->
+                        items(
+                            key = {index -> memoriesForTag[index]?.memory?.memoryId ?: index},
+                            count = memoriesForTag.itemCount
+                        ) { index ->
 //                            MemoryItemForCategory(
 //                                item = item,
 //                                onClick = { id ->

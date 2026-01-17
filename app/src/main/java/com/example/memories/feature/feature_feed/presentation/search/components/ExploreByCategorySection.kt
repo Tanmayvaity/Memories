@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +27,7 @@ fun ExploreByCategorySection(
     tags: List<TagModel>,                 // your tag model
     selectedIndex: Int,                   // current selected tag index
     onTagSelected: (Int, TagModel) -> Unit = { _, _ -> }, // callback when a tag is clicked
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -70,7 +72,7 @@ fun ExploreByCategorySectionPreview(modifier: Modifier = Modifier) {
                 TagModel(label = "Anime"),
                 TagModel(label = "Another")
             ),
-            selectedIndex = 0
+            selectedIndex = 0,
         )
     }
 }

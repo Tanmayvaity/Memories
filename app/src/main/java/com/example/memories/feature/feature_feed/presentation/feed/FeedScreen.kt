@@ -437,13 +437,13 @@ fun FeedScreen(
 
 
             items(
-//                key = {index : Int,it : MemoryWithMediaModel -> it.memory.memoryId },
+                key = { index: Int -> memories[index]?.memory?.memoryId ?: index },
                 count = memories.itemCount,
+                contentType = { "memory_item" }
             ) { index ->
+//                val memory = memories[index] ?: return@items
                 val memory = memories[index]
-                if (memory == null) return@items
                 MemoryItemCard(
-                    state = lazyListState,
                     modifier = Modifier
                         .animateItem()
                         .padding(16.dp),
@@ -484,7 +484,7 @@ fun FeedScreen(
                 )
             }
 
-            if (memories.loadState.append is LoadState.Loading) {
+            if (memories.loadState.append == LoadState.Loading) {
                 item {
                     Box(
                         modifier = Modifier
@@ -681,10 +681,7 @@ fun FeedScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         val previewMemories = List(30) { MemoryWithMediaModel() }
         FeedScreen(
-            state = FeedState(
-                memories = List(30) { MemoryWithMediaModel() }
-//                memories = emptyList()
-            ),
+            state = FeedState(),
             loadState = false,
             onEvent = {},
             memories = flowOf(PagingData.from(previewMemories)).collectAsLazyPagingItems()

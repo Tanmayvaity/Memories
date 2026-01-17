@@ -89,12 +89,13 @@ fun MemoryItemCard(
     onDeleteButtonClick: () -> Unit = {},
     elevation: Int = 25,
     shape: Shape = RoundedCornerShape(8.dp),
-    state: LazyListState = rememberLazyListState(),
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
-    val pager =
-        rememberPagerState(pageCount = { if (isPreviewModeOn) 5 else memoryItem.mediaList.size })
+
+    val pager = if (memoryItem.mediaList.isNotEmpty()) {
+        rememberPagerState(pageCount = { if(isPreviewModeOn) 5 else memoryItem.mediaList.size })
+    } else null
 
     Card(
         elevation = CardDefaults.cardElevation(
@@ -115,7 +116,7 @@ fun MemoryItemCard(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            if(memoryItem.mediaList.isNotEmpty()){
+            if (pager != null) {
                 MediaPager(
                     mediaUris = null,
                     pagerState = pager,

@@ -62,7 +62,8 @@ const val TAG = "OtherScreen"
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun OtherScreen(
-    onNavigateToTags: (AppScreen.Tags) -> Unit = {}
+    onNavigateToTags: (AppScreen.Tags) -> Unit = {},
+    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -81,7 +82,9 @@ fun OtherScreen(
             iconContentDescription = "Notifications Icon",
             title = "Notifications",
             content = "Manage Your Notifications",
-            onClick = {}
+            onClick = {
+                onNavigateToSettingsScreen(AppScreen.NotificationSettings)
+            }
         ),
         MenuItem(
             icon = R.drawable.ic_storage,

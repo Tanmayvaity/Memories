@@ -50,19 +50,19 @@ class FeedViewModel @Inject constructor(
     )
 
     private val _state = MutableStateFlow<FeedState>(FeedState())
-    val state = _state
-        .onStart { onEvent(FeedEvents.FetchFeed) }
-        .onEach {it ->
-            Log.d(TAG, "${it.memories}")
-        }
-        .onCompletion {
-            _state.update { it.copy(isLoading = false) }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = FeedState()
-        )
+    val state = _state.asStateFlow()
+//        .onStart { onEvent(FeedEvents.FetchFeed) }
+//        .onEach {it ->
+//            Log.d(TAG, "${it.memories}")
+//        }
+//        .onCompletion {
+//            _state.update { it.copy(isLoading = false) }
+//        }
+//        .stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.WhileSubscribed(5000),
+//            initialValue = FeedState()
+//        )
 
     private val _appliedFilters = MutableStateFlow(
         FilterState(

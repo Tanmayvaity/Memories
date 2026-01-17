@@ -31,7 +31,7 @@ sealed class AppScreen(val route: String) {
 //    ) : AppScreen("MediaEdit")
 
     @Serializable
-    data object MediaEdit: AppScreen("MediaEdit")
+    data object MediaEdit : AppScreen("MediaEdit")
 
 
     @Serializable
@@ -59,5 +59,8 @@ sealed class AppScreen(val route: String) {
         val id: String,
         val tagLabel: String
     ) : AppScreen("TagWithMemories")
+
+    @Serializable
+    object NotificationSettings : AppScreen("NotificationSettings")
 }
 
