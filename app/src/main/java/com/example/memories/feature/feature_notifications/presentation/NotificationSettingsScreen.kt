@@ -1,6 +1,11 @@
 package com.example.memories.feature.feature_notifications.presentation
 
-import android.R.attr.checked
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,38 +29,54 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.airbnb.lottie.L
-import com.example.memories.LocalTheme
+import com.example.memories.R
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.util.createSettingsIntent
+import com.example.memories.core.util.formatTime
+import com.example.memories.feature.feature_notifications.presentation.components.ReminderTimePickerDialog
 import com.example.memories.ui.theme.MemoriesTheme
-
 
 @Composable
 fun NotificationSettingsRoot(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    viewmodel : NotificationsScreenViewModel = hiltViewModel()
+    viewmodel: NotificationsScreenViewModel = hiltViewModel()
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
 
@@ -65,36 +87,47 @@ fun NotificationSettingsRoot(
     )
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
     onBack: () -> Unit = {},
-    state : NotificationsScreenState = NotificationsScreenState(),
-    onEvent : (NotificationsEvents) -> Unit = {}
+    state: NotificationsScreenState = NotificationsScreenState(),
+    onEvent: (NotificationsEvents) -> Unit = {}
 ) {
-
-    val isDark = LocalTheme.current
-    val color = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f)
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    var canScheduleExactAlarms by remember { mutableStateOf(false) }
+    var isCheckingPermission by remember { mutableStateOf(true) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                canScheduleExactAlarms = canScheduleExactAlarmsCompat(context)
+                isCheckingPermission = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     Scaffold(
         topBar = {
-
             AppTopBar(
                 showDivider = false,
                 title = {
                     Text(
                         text = "Notification Settings",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium
                     )
                 },
                 showNavigationIcon = true,
                 onNavigationIconClick = onBack
             )
-
         },
         containerColor = MaterialTheme.colorScheme.background
-//        containerColor = Color(0xFFF8F9FB) // Light grayish background for better contrast with cards
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -107,118 +140,88 @@ fun NotificationSettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Enable All Notifications
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = color),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
+            NotificationCard(containerColor = cardColor) {
                 NotificationToggleRow(
                     title = "Enable All Notifications",
                     description = "Globally pause or resume all alerts",
-                    initialValue = state.allNotificationsEnabled,
+                    checked = state.allNotificationsEnabled,
                     showDivider = false,
-                    onValueChange = { enabled ->
-                        onEvent(NotificationsEvents.SetAllNotifications(enabled))
-                    }
+                    onCheckedChange = { onEvent(NotificationsEvents.SetAllNotifications(it)) }
                 )
             }
 
             // My Memories Section
             SectionHeader(title = "MY MEMORIES")
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = color),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column {
-                    NotificationToggleRow(
-                        title = "Reminders",
-                        description = "Get nudged to record a memory if you haven't in a while.",
-                        initialValue = state.reminderNotificationEnabled,
-                        onValueChange = { enabled ->
-                            onEvent(NotificationsEvents.SetReminderNotification(enabled))
-                        }
-                    )
-                    NotificationToggleRow(
-                        title = "On This Day",
-                        description = "See what happened on this date in previous years.",
-                        initialValue = state.onThisDayNotificationEnabled,
-                        showDivider = false,
-                        onValueChange = { enabled ->
-                            onEvent(NotificationsEvents.SetOnThisDayNotification(enabled))
-                        }
-                    )
-                }
+            NotificationCard(containerColor = cardColor) {
+                NotificationToggleRow(
+                    title = "Reminders",
+                    description = "Get nudged to record a memory if you haven't in a while.",
+                    checked = state.reminderNotificationEnabled,
+                    enabled = !isCheckingPermission && canScheduleExactAlarms,
+                    showTimeChip = true,
+                    timeChipValue = formatTime(state.reminderHour, state.reminderMinute),
+                    onTimeChipClick = { showTimePicker = true },
+                    showPermissionAlert = !isCheckingPermission && !canScheduleExactAlarms,
+                    onCheckedChange = { onEvent(NotificationsEvents.SetReminderNotification(it)) }
+                )
+                NotificationToggleRow(
+                    title = "On This Day",
+                    description = "See what happened on this date in previous years.",
+                    checked = state.onThisDayNotificationEnabled,
+                    showDivider = false,
+                    onCheckedChange = { onEvent(NotificationsEvents.SetOnThisDayNotification(it)) }
+                )
             }
-
-            // Social Section
-//            SectionHeader(title = "SOCIAL")
-//            Card(
-//                shape = RoundedCornerShape(16.dp),
-//                colors = CardDefaults.cardColors(containerColor = Color.White),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-//            ) {
-//                NotificationToggleRow(
-//                    title = "Friend Updates",
-//                    description = "Be notified when friends share new moments with you.",
-//                    initialValue = true,
-//                    icon = Icons.Default.Check,
-//                    showDivider = false
-//                )
-//            }
 
             // Updates & Offers Section
             SectionHeader(title = "UPDATES & OFFERS")
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = color),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column {
-                    NotificationToggleRow(
-                        title = "App Updates",
-                        description = "Stay informed about new features and improvements.",
-                        initialValue = false,
-                        showDivider = false,
-                        onValueChange = { enabled ->
-
-                        }
-                    )
-//                    NotificationToggleRow(
-//                        title = "Promotional Offers",
-//                        description = "Exclusive deals on premium features or printing services.",
-//                        initialValue = false,
-//                        showDivider = false
-//                    )
-                }
+            NotificationCard(containerColor = cardColor) {
+                NotificationToggleRow(
+                    title = "App Updates",
+                    description = "Stay informed about new features and improvements.",
+                    checked = false,
+                    showDivider = false,
+                    onCheckedChange = { /* TODO */ }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Manage in System Settings
-            TextButton(
-                onClick = {
-                    createSettingsIntent(context)
-                },
+            ManageInSystemSettingsButton(
+                onClick = { createSettingsIntent(context) },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Manage in System Settings",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
         }
+
+        if (showTimePicker) {
+            ReminderTimePicker(
+                initialHour = state.reminderHour,
+                initialMinute = state.reminderMinute,
+                onDismiss = { showTimePicker = false },
+                onConfirm = { hour, minute ->
+                    onEvent(NotificationsEvents.SetReminderTime(hour, minute))
+                    showTimePicker = false
+                }
+            )
+        }
+    }
+}
+
+// region Components
+
+@Composable
+private fun NotificationCard(
+    containerColor: Color,
+    content: @Composable () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column { content() }
     }
 }
 
@@ -237,61 +240,233 @@ fun SectionHeader(title: String) {
 fun NotificationToggleRow(
     title: String,
     description: String,
-    initialValue: Boolean,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
     showDivider: Boolean = true,
-    onValueChange : (Boolean) -> Unit
+    showTimeChip: Boolean = false,
+    timeChipValue: String = "",
+    onTimeChipClick: () -> Unit = {},
+    showPermissionAlert: Boolean = false
 ) {
-
-    Column {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = if (showTimeChip) 0.dp else 16.dp
+                ),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (icon != null) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = Color(0xFF00A2E8),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                TitleRow(icon = icon, title = title)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    lineHeight = 16.sp
-                )
+                DescriptionText(description = description)
+
+                if (showPermissionAlert) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    PermissionAlert()
+                }
             }
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Switch(
-                checked = initialValue,
-                onCheckedChange = onValueChange
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
             )
         }
+
+        if (showTimeChip) {
+            TimeChip(
+                value = timeChipValue,
+                enabled = enabled,
+                onClick = onTimeChipClick
+            )
+        }
+
         if (showDivider) {
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.3f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
             )
         }
     }
 }
+
+@Composable
+private fun TitleRow(icon: ImageVector?, title: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        icon?.let {
+            Icon(
+                imageVector = it,
+                contentDescription = null,
+                tint = Color(0xFF00A2E8),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun DescriptionText(description: String) {
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        lineHeight = 16.sp
+    )
+}
+
+@Composable
+private fun TimeChip(
+    value: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    AssistChip(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        onClick = onClick,
+        enabled = enabled,
+        label = { Text(text = value) },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_timer),
+                contentDescription = "Reminder time"
+            )
+        }
+    )
+}
+
+@Composable
+private fun PermissionAlert() {
+    val context = LocalContext.current
+
+    val alertText = buildAnnotatedString {
+        append("Exact alarm permission is required. ")
+        withLink(
+            LinkAnnotation.Clickable(
+                tag = "fix",
+                styles = TextLinkStyles(
+                    style = SpanStyle(
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        textDecoration = TextDecoration.Underline,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            ) {
+                openExactAlarmSettings(context)
+            }
+        ) {
+            append("Tap to fix")
+        }
+    }
+
+    AnimatedVisibility(visible = true) {
+        Surface(
+            color = MaterialTheme.colorScheme.errorContainer,
+            shape = RoundedCornerShape(8.dp),
+            tonalElevation = 2.dp
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_warning),
+                    contentDescription = "Warning",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = alertText,
+                    modifier = Modifier.padding(start = 8.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Start
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManageInSystemSettingsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TextButton(onClick = onClick, modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Manage in System Settings",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderTimePicker(
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = false
+    )
+
+    ReminderTimePickerDialog(
+        onDismiss = onDismiss,
+        onConfirm = { onConfirm(timePickerState.hour, timePickerState.minute) },
+        timePickerState = timePickerState
+    )
+}
+
+// endregion
+
+// region Utils
+
+private fun canScheduleExactAlarmsCompat(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.canScheduleExactAlarms()
+    } else {
+        true
+    }
+}
+
+private fun openExactAlarmSettings(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+        context.startActivity(intent)
+    }
+}
+
+// endregion
 
 @Preview(showBackground = true)
 @PreviewDynamicColors
