@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.feature.feature_feed.domain.model.MediaObject
 
 class SharedPagingSource(

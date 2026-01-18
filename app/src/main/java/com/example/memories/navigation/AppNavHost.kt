@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.example.memories.feature.feature_notifications.presentation.navigation.createNotificationGraph
 import com.example.memories.feature.feature_camera.presentation.camera.navigation.createCameraGraph
 import com.example.memories.feature.feature_feed.presentation.navigation.createFeedGraph
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.navigation.createMediaEditGraph
@@ -50,6 +51,12 @@ fun AppNavHost(
         )
 
         createMemoryGraph(
+            navController = navController,
+            onBottomBarVisibilityChange = onBottomBarVisibilityChange,
+            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
+        )
+
+        createNotificationGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
             onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange

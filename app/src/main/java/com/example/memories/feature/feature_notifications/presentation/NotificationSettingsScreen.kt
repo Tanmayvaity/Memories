@@ -1,6 +1,6 @@
-package com.example.memories.feature.feature_other.presentation.screens
+package com.example.memories.feature.feature_notifications.presentation
 
-import androidx.compose.foundation.background
+import android.R.attr.checked
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,23 +15,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,16 +41,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.L
 import com.example.memories.LocalTheme
 import com.example.memories.core.presentation.components.AppTopBar
-import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.ui.theme.MemoriesTheme
+
+
+@Composable
+fun NotificationSettingsRoot(
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
+    viewmodel : NotificationsScreenViewModel = hiltViewModel()
+) {
+    val state by viewmodel.state.collectAsStateWithLifecycle()
+
+    NotificationSettingsScreen(
+        onBack = onBack,
+        state = state,
+        onEvent = viewmodel::onEvent
+    )
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    state : NotificationsScreenState = NotificationsScreenState(),
+    onEvent : (NotificationsEvents) -> Unit = {}
 ) {
 
     val isDark = LocalTheme.current
@@ -100,8 +115,11 @@ fun NotificationSettingsScreen(
                 NotificationToggleRow(
                     title = "Enable All Notifications",
                     description = "Globally pause or resume all alerts",
-                    initialValue = true,
-                    showDivider = false
+                    initialValue = state.allNotificationsEnabled,
+                    showDivider = false,
+                    onValueChange = { enabled ->
+                        onEvent(NotificationsEvents.SetAllNotifications(enabled))
+                    }
                 )
             }
 
@@ -116,13 +134,19 @@ fun NotificationSettingsScreen(
                     NotificationToggleRow(
                         title = "Reminders",
                         description = "Get nudged to record a memory if you haven't in a while.",
-                        initialValue = true
+                        initialValue = state.reminderNotificationEnabled,
+                        onValueChange = { enabled ->
+                            onEvent(NotificationsEvents.SetReminderNotification(enabled))
+                        }
                     )
                     NotificationToggleRow(
                         title = "On This Day",
                         description = "See what happened on this date in previous years.",
-                        initialValue = true,
-                        showDivider = false
+                        initialValue = state.onThisDayNotificationEnabled,
+                        showDivider = false,
+                        onValueChange = { enabled ->
+                            onEvent(NotificationsEvents.SetOnThisDayNotification(enabled))
+                        }
                     )
                 }
             }
@@ -155,7 +179,10 @@ fun NotificationSettingsScreen(
                         title = "App Updates",
                         description = "Stay informed about new features and improvements.",
                         initialValue = false,
-                        showDivider = false
+                        showDivider = false,
+                        onValueChange = { enabled ->
+
+                        }
                     )
 //                    NotificationToggleRow(
 //                        title = "Promotional Offers",
@@ -212,9 +239,9 @@ fun NotificationToggleRow(
     description: String,
     initialValue: Boolean,
     icon: ImageVector? = null,
-    showDivider: Boolean = true
+    showDivider: Boolean = true,
+    onValueChange : (Boolean) -> Unit
 ) {
-    var isChecked by remember { mutableStateOf(initialValue) }
 
     Column {
         Row(
@@ -252,8 +279,8 @@ fun NotificationToggleRow(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Switch(
-                checked = isChecked,
-                onCheckedChange = { isChecked = it }
+                checked = initialValue,
+                onCheckedChange = onValueChange
             )
         }
         if (showDivider) {

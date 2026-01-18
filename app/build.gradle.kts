@@ -134,4 +134,10 @@ dependencies {
     implementation(libs.dotlottie.android)
 
 
+    // work manager
+
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+
+    ksp(libs.androidx.hilt.work.compiler)
 }

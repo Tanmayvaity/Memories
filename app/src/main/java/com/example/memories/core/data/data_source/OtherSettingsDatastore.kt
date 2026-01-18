@@ -19,18 +19,52 @@ class OtherSettingsDatastore(
         private const val TAG = "OtherSettingsDatastore"
         private val Context.datastore : DataStore<Preferences> by preferencesDataStore(name = "other_settings")
         val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
+        val ALL_NOTIFICATIONS_ALLOWED = booleanPreferencesKey("all_notifications_allowed")
+        val REMINDER_NOTIFICATION_ALLOWED = booleanPreferencesKey("reminder_notification_allowed")
+        val ON_THIS_DAY_NOTIFICATION_ALLOWED = booleanPreferencesKey("on_this_day_notification_allowed")
+
     }
 
      val isDarkModeEnabled = context.datastore.data.map { preferences ->
          preferences[DARK_MODE_KEY]?: false
     }
 
+    val allNotificationAllowed = context.datastore.data.map { preferences ->
+        preferences[ALL_NOTIFICATIONS_ALLOWED]?: true
+    }
+
+    val reminderNotificationAllowed = context.datastore.data.map { preferences ->
+        preferences[REMINDER_NOTIFICATION_ALLOWED]?: true
+    }
+
+    val onThisDayNotificationAllowed = context.datastore.data.map { preferences ->
+        preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED]?: true
+    }
 
     suspend fun setDarkMode(toDarkMode : Boolean){
         context.datastore.edit { preferences ->
 //            val enable = preferences[DARK_MODE_KEY] ?: false
             preferences[DARK_MODE_KEY] = toDarkMode
 //            Log.d(TAG, "setDarkMode: ${!enable} ")
+        }
+    }
+
+    suspend fun enableAllNotifications(enabled : Boolean){
+        Log.d(TAG, "enableAllNotifications: ${enabled}")
+        context.datastore.edit{ preferences ->
+            preferences[ALL_NOTIFICATIONS_ALLOWED] = enabled
+        }
+    }
+    suspend fun enableReminderNotification(enabled : Boolean){
+        Log.d(TAG, "enableAllNotifications: ${enabled}")
+        context.datastore.edit{ preferences ->
+            preferences[REMINDER_NOTIFICATION_ALLOWED] = enabled
+        }
+    }
+    suspend fun enableOnThisDayNotification(enabled : Boolean){
+        Log.d(TAG, "enableAllNotifications: ${enabled}")
+        context.datastore.edit{ preferences ->
+            preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED] = enabled
         }
     }
 

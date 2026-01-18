@@ -8,7 +8,7 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import androidx.room.Query
 import androidx.room.Transaction
-import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.TagDao

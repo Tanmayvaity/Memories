@@ -1,14 +1,10 @@
-package com.example.memories.core.data.data_source
+package com.example.memories.core.data.data_source.media
 
-import android.R.attr.bitmap
-import android.R.attr.mimeType
-import android.R.attr.scheme
-import android.R.attr.type
+import android.R
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
-import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
@@ -21,33 +17,24 @@ import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
-import androidx.annotation.RequiresApi
-import androidx.core.net.toUri
 import android.webkit.MimeTypeMap
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.text.TextPainter.paint
+import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.Type
-import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
 import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_feed.domain.model.MediaObject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import okio.`-DeprecatedOkio`.source
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.UnsupportedOperationException
-import java.net.URLConnection
-import kotlin.math.log
 
 class MediaManager(
     val context: Context
@@ -97,7 +84,7 @@ class MediaManager(
             try {
                 Log.d(TAG, "saveToInternalStorage: ${uriList == null}")
                 uriList.forEach { uri ->
-                    Log.d(TAG, "saveToInternalStorage: ${uri} ${type}")
+                    Log.d(TAG, "saveToInternalStorage: ${uri} ${R.attr.type}")
                     val type = uri.mapToType()
                     val file = if (type == Type.IMAGE_JPG || type == Type.IMAGE_PNG) {
                         createTempFile(
@@ -344,7 +331,7 @@ class MediaManager(
         uri: Uri,
         degrees: Float = 0f
     ): Result<Bitmap> = withContext(Dispatchers.IO) {
-        if(uri == null) throw IllegalArgumentException("Uri is null")
+        if (uri == null) throw IllegalArgumentException("Uri is null")
 
         try {
             val source = if (Build.VERSION.SDK_INT < 28) {
@@ -374,7 +361,7 @@ class MediaManager(
                     matrix,
                     true
                 )
-                if(rotated != source ) source.recycle()
+                if (rotated != source) source.recycle()
 
                 rotated
 

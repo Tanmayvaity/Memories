@@ -1,10 +1,14 @@
 package com.example.memories
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
@@ -18,7 +22,12 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.with
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -39,10 +49,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.GeneralAlertSheet
+import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.ui.theme.MemoriesTheme
 import dagger.hilt.android.AndroidEntryPoint
-
 
 
 val LocalTheme = compositionLocalOf { false }
@@ -54,10 +66,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-
             val viewmodel = hiltViewModel<ThemeViewModel>()
             val isDarkModeEnabled by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
             val navController = rememberNavController()
+            var showPermissionDeniedDialog by remember {
+                mutableStateOf(false)
+            }
+            val context = LocalContext.current
+            val notificationLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+            ) { granted ->
+                if (!granted) {
+                    showPermissionDeniedDialog = true
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+
+            }
             LaunchedEffect(isDarkModeEnabled) {
                 Log.d("MainActivity", "onCreate: isDarkModeEnabled : ${isDarkModeEnabled}")
             }
@@ -85,6 +116,46 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+            }
+            if (showPermissionDeniedDialog) {
+                GeneralAlertDialog(
+                    title = "Permission Denied",
+                    text = "Please grant the permission to use this feature",
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    onDismiss = {
+                        showPermissionDeniedDialog = false
+                    },
+                    onConfirm = {
+
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                createSettingsIntent(context)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                text = "Settings"
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showPermissionDeniedDialog = false
+                            }
+                        ) {
+                            Text(
+                                text = "Dismiss"
+                            )
+                        }
+                    }
+
+                )
             }
 
         }

@@ -3,9 +3,11 @@ package com.example.memories.di
 import android.content.Context
 import android.util.Log
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
-import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
+import com.example.memories.core.data.data_source.notification.NotificationServiceImpl
 import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.MemoryTagCrossRefDao
@@ -74,6 +76,7 @@ import com.example.memories.core.domain.usecase.AddTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
+import com.example.memories.core.domain.repository.NotificationService
 import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
@@ -87,6 +90,14 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCach
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
+import com.example.memories.feature.feature_notifications.data.MemoryNotificationSchedulerImpl
+import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
+import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
+import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
+import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
+import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
+import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
+import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderNotificationUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -392,4 +403,67 @@ object AppModule {
             deleteTagUseCase = DeleteTagUseCase(tagRepository)
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideNotificationRepository(
+        otherSettingsDatastore: OtherSettingsDatastore
+    ): NotificationRepository {
+        return NotificationRepositoryImpl(otherSettingsDatastore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationUseCase(
+        repository : NotificationRepository,
+        scheduler: MemoryNotificationScheduler
+    ): NotificationUseCase {
+        return NotificationUseCase(
+            setAllNotificationsUseCase = SetAllNotificationsUseCase(repository),
+            setReminderNotificationUseCase = SetReminderNotificationUseCase(repository),
+            setOnThisDayNotificationUseCase = SetOnThisDayNotificationUseCase(
+                repository,
+                scheduler
+            )
+        )
+
+    }
+
+    @Provides
+    @Singleton
+    fun provideMemoryNotificationScheduler(
+        workManager : WorkManager
+    ) : MemoryNotificationScheduler{
+        return MemoryNotificationSchedulerImpl(
+            workManager = workManager
+        )
+
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationService(
+        @ApplicationContext context : Context
+    ) : NotificationService {
+        return NotificationServiceImpl(
+            context = context
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(
+        @ApplicationContext context: Context
+    ): WorkManager {
+        return WorkManager.getInstance(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideContext(
+        @ApplicationContext context : Context
+    ) : Context {
+        return context;
+    }
+
 }

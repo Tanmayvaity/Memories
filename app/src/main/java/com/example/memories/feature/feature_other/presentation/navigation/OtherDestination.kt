@@ -1,12 +1,9 @@
 package com.example.memories.feature.feature_other.presentation.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.memories.feature.feature_other.presentation.screens.CameraSettingsScreen
-import com.example.memories.feature.feature_other.presentation.screens.NotificationSettingsScreen
 import com.example.memories.feature.feature_other.presentation.screens.OtherScreen
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
@@ -33,15 +30,6 @@ fun NavGraphBuilder.createOtherGraph(
         onBottomBarVisibilityChange(false)
         onFloatingActionBtnVisibilityChange(false)
         CameraSettingsScreen(
-            onBack = {
-                navController.popBackStack()
-            }
-        )
-    }
-
-    composable<AppScreen.NotificationSettings> {
-        onBottomBarVisibilityChange(false)
-        NotificationSettingsScreen(
             onBack = {
                 navController.popBackStack()
             }

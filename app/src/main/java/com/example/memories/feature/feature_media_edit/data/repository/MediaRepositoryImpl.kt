@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.example.memories.core.data.data_source.FilterShaders
-import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.media.FilterShaders
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType

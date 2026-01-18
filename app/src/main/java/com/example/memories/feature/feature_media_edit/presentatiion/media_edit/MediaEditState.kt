@@ -11,7 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.memories.R
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
-import com.example.memories.core.data.data_source.FilterShaders
+import com.example.memories.core.data.data_source.media.FilterShaders
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType

@@ -1,4 +1,4 @@
-package com.example.memories.core.data.data_source
+package com.example.memories.core.data.data_source.media
 
 object FilterShaders {
     const val GRAYSCALE_SHADER = """

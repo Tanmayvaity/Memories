@@ -1,9 +1,11 @@
 package com.example.memories.core.util
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -139,6 +141,18 @@ fun getExoPlayer(
         setMediaItem(mediaItem)
         this.playWhenReady = playWhenReady
         prepare()
+    }
+}
+
+
+fun Context.hasPostNotificationPermission(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true // Granted by default on API < 33
     }
 }
 

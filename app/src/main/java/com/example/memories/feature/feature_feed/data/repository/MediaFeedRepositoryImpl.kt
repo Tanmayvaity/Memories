@@ -8,7 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.example.memories.core.data.data_source.MediaManager
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.MediaObject
 import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
