@@ -7,7 +7,7 @@ import androidx.work.WorkManager
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
-import com.example.memories.core.data.data_source.notification.NotificationServiceImpl
+import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.MemoryTagCrossRefDao
@@ -76,7 +76,6 @@ import com.example.memories.core.domain.usecase.AddTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
-import com.example.memories.core.domain.repository.NotificationService
 import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
@@ -90,6 +89,8 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCach
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
+import com.example.memories.feature.feature_notifications.data.AlarmManagerService
+import com.example.memories.feature.feature_notifications.data.AlarmReceiver
 import com.example.memories.feature.feature_notifications.data.MemoryNotificationSchedulerImpl
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
 import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
@@ -98,6 +99,7 @@ import com.example.memories.feature.feature_notifications.domain.usecase.Notific
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderNotificationUseCase
+import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderTimeUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -160,7 +162,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRecentSearchRepository(search : SearchDao): RecentSearchRepository {
+    fun provideRecentSearchRepository(search: SearchDao): RecentSearchRepository {
         return RecentSearchRepositoryImpl(search)
     }
 
@@ -297,12 +299,13 @@ object AppModule {
     fun providesMemoryTagCrossRefDao(
         database: MemoryDatabase
     ): MemoryTagCrossRefDao = database.memoryTagCrossRefDao
+
     @Provides
     @Singleton
     fun providesMemoryRepository(
-         mediaManager : MediaManager,
-         memoryDao: MemoryDao,
-         tagDao: TagDao,
+        mediaManager: MediaManager,
+        memoryDao: MemoryDao,
+        tagDao: TagDao,
     ): MemoryRepository {
         return MemoryRepositoryImpl(
             mediaManager = mediaManager,
@@ -316,7 +319,7 @@ object AppModule {
     @Singleton
     fun providesTagRepository(
         tagDao: TagDao
-    ) : TagRepository{
+    ): TagRepository {
         return TagRepositoryImpl(tagDao)
     }
 
@@ -325,7 +328,7 @@ object AppModule {
     fun providesMemoryUseCase(
         memoryRepository: MemoryRepository,
         tagRepository: TagRepository
-    ): MemoryUseCase{
+    ): MemoryUseCase {
         return MemoryUseCase(
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
@@ -349,16 +352,16 @@ object AppModule {
     @Provides
     @Singleton
     fun providesFeedUseCases(
-        repository : MemoryRepository,
+        repository: MemoryRepository,
         tagRepository: TagRepository,
         mediaRepository: MediaRepository
-    ): FeedUseCaseWrapper{
+    ): FeedUseCaseWrapper {
         return FeedUseCaseWrapper(
             getFeedUseCase = GetFeedUseCase(repository),
             toggleFavouriteUseCase = ToggleFavouriteUseCase(repository),
             toggleHiddenUseCase = ToggleHiddenUseCase(repository),
             getMemoryByIdUseCase = GetMemoryByIdUseCase(repository),
-            deleteMemoryUseCase = DeleteUseCase(repository,mediaRepository),
+            deleteMemoryUseCase = DeleteUseCase(repository, mediaRepository),
             searchByTitleUseCase = SearchByTitleUseCase(repository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository),
@@ -370,8 +373,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRecentSearchWrapper(
-        repository : RecentSearchRepository
-    ): RecentSearchWrapper{
+        repository: RecentSearchRepository
+    ): RecentSearchWrapper {
         return RecentSearchWrapper(
             saveSearchIdUseCase = SaveSearchIdUseCase(repository),
             fetchRecentSearchUseCase = FetchRecentSearchUseCase(repository)
@@ -383,7 +386,7 @@ object AppModule {
     @Singleton
     fun provideTagsUseCaseWrapper(
         repository: TagRepository
-    ) : TagUseCaseWrapper {
+    ): TagUseCaseWrapper {
         return TagUseCaseWrapper(
             getTagsWithMemoryCountUseCase = GetTagsWithMemoryCountUseCase(repository),
             deleteTagUseCase = DeleteTagUseCase(repository),
@@ -396,8 +399,8 @@ object AppModule {
     @Singleton
     fun provideTagWithMemoryUseCaseWrapper(
         tagRepository: TagRepository,
-        memoryRepository : MemoryRepository
-    ) : TagWithMemoryUseCaseWrapper {
+        memoryRepository: MemoryRepository
+    ): TagWithMemoryUseCaseWrapper {
         return TagWithMemoryUseCaseWrapper(
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(memoryRepository),
             deleteTagUseCase = DeleteTagUseCase(tagRepository)
@@ -415,16 +418,17 @@ object AppModule {
     @Provides
     @Singleton
     fun provideNotificationUseCase(
-        repository : NotificationRepository,
+        repository: NotificationRepository,
         scheduler: MemoryNotificationScheduler
     ): NotificationUseCase {
         return NotificationUseCase(
-            setAllNotificationsUseCase = SetAllNotificationsUseCase(repository),
-            setReminderNotificationUseCase = SetReminderNotificationUseCase(repository),
+            setAllNotificationsUseCase = SetAllNotificationsUseCase(repository, scheduler),
+            setReminderNotificationUseCase = SetReminderNotificationUseCase(repository, scheduler),
             setOnThisDayNotificationUseCase = SetOnThisDayNotificationUseCase(
                 repository,
                 scheduler
-            )
+            ),
+            setReminderTimeUseCase = SetReminderTimeUseCase(repository, scheduler)
         )
 
     }
@@ -432,20 +436,30 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMemoryNotificationScheduler(
-        workManager : WorkManager
-    ) : MemoryNotificationScheduler{
+        workManager: WorkManager,
+        alarmManagerService: AlarmManagerService
+    ): MemoryNotificationScheduler {
         return MemoryNotificationSchedulerImpl(
-            workManager = workManager
+            workManager = workManager,
+            alarmManagerService = alarmManagerService
         )
 
     }
 
     @Provides
     @Singleton
+    fun provideAlarmManagerService(
+        @ApplicationContext context: Context
+    ): AlarmManagerService{
+        return AlarmManagerService(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideNotificationService(
-        @ApplicationContext context : Context
-    ) : NotificationService {
-        return NotificationServiceImpl(
+        @ApplicationContext context: Context
+    ): NotificationService {
+        return NotificationService(
             context = context
         )
     }
@@ -461,8 +475,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideContext(
-        @ApplicationContext context : Context
-    ) : Context {
+        @ApplicationContext context: Context
+    ): Context {
         return context;
     }
 

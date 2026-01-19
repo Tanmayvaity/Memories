@@ -16,6 +16,8 @@ import com.example.memories.core.domain.model.Type
 import java.io.File
 import java.net.URLConnection
 import java.text.SimpleDateFormat
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.text.startsWith
@@ -130,6 +132,12 @@ fun Long.formatTime(format : String = "dd/MMM/yyyy"):String{
     val format = SimpleDateFormat(format, Locale.getDefault())
     return format.format(date)
 }
+
+fun formatTime(hour : Int, minute : Int, format : String = "hh:mm a"):String{
+    val time = LocalTime.of(hour, minute)
+    return time.format(DateTimeFormatter.ofPattern(format, Locale.getDefault()))
+}
+
 
 fun getExoPlayer(
     context : Context,

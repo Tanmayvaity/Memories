@@ -9,7 +9,7 @@ import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.example.memories.core.data.data_source.notification.NotificationServiceImpl.Companion.ON_THIS_DAY_CHANNEL
+import com.example.memories.core.data.data_source.notification.NotificationService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -37,7 +37,7 @@ class MemoriesApplication : Application(), Configuration.Provider{
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val onThisDayReminderChannel = NotificationChannel(
-            ON_THIS_DAY_CHANNEL,
+            NotificationService.ON_THIS_DAY_CHANNEL,
             "On This Day Reminder",
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
@@ -45,8 +45,17 @@ class MemoriesApplication : Application(), Configuration.Provider{
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
 
+        val dailyReminderChannel = NotificationChannel(
+            NotificationService.DAILY_REMINDER_CHANNEL,
+            "Daily Reminder",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Reminds you to create new memory"
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        }
+
         notificationManager.createNotificationChannels(
-            listOf(onThisDayReminderChannel)
+            listOf(onThisDayReminderChannel,dailyReminderChannel)
         )
 
     }

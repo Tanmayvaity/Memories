@@ -15,7 +15,8 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 class MemoryNotificationSchedulerImpl @Inject constructor(
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val alarmManagerService: AlarmManagerService
 ) : MemoryNotificationScheduler {
 
     companion object {
@@ -69,6 +70,14 @@ class MemoryNotificationSchedulerImpl @Inject constructor(
     override fun cancelWork() {
         Log.d(TAG, "cancelWork: cancelling work ${ON_THIS_DAY_NOTIFICATION_WORKER}")
         workManager.cancelAllWorkByTag(ON_THIS_DAY_NOTIFICATION_WORKER)
+    }
+
+    override fun scheduleAlarm(hour: Int, minute: Int) {
+        alarmManagerService.scheduleAlarm(hour,minute)
+    }
+
+    override fun cancelAlarm() {
+        alarmManagerService.cancelAlarm()
     }
 
 }

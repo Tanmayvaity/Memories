@@ -21,13 +21,16 @@ class NotificationsScreenViewModel @Inject constructor(
     val state = combine(
         repository.allNotificationAllowed,
         repository.reminderNotificationAllowed,
-        repository.onThisDayNotificationAllowed
+        repository.onThisDayNotificationAllowed,
+        repository.reminderTime
 
-    ){ all, reminder, onThisDay ->
+    ) { all, reminder, onThisDay, reminderTime ->
         NotificationsScreenState(
             allNotificationsEnabled = all,
             reminderNotificationEnabled = reminder,
-            onThisDayNotificationEnabled = onThisDay
+            onThisDayNotificationEnabled = onThisDay,
+            reminderHour = reminderTime / 60,
+            reminderMinute = reminderTime % 60
         )
     }
         .stateIn(
@@ -37,32 +40,50 @@ class NotificationsScreenViewModel @Inject constructor(
         )
 
 
-
-    fun onEvent(event : NotificationsEvents){
-        when(event){
+    fun onEvent(event: NotificationsEvents) {
+        when (event) {
             is NotificationsEvents.SetAllNotifications -> {
                 viewModelScope.launch {
-                    notificationUseCase.setAllNotificationsUseCase(event.enabled)
+                    notificationUseCase.setAllNotificationsUseCase(
+                        event.enabled,
+                        state.value.reminderHour,
+                        state.value.reminderMinute
+                    )
                 }
             }
+
             is NotificationsEvents.SetReminderNotification -> {
                 viewModelScope.launch {
-                    notificationUseCase.setReminderNotificationUseCase(event.enabled)
+                    notificationUseCase.setReminderNotificationUseCase(
+                        event.enabled,
+                        state.value.reminderHour,
+                        state.value.reminderMinute
+                    )
                 }
             }
+
             is NotificationsEvents.SetOnThisDayNotification -> {
                 viewModelScope.launch {
                     notificationUseCase.setOnThisDayNotificationUseCase(event.enabled)
                 }
             }
 
+            is NotificationsEvents.SetReminderTime -> {
+                viewModelScope.launch {
+                    notificationUseCase.setReminderTimeUseCase(event.hour, event.minute)
+                }
+            }
         }
     }
+
+
 }
 
 
 data class NotificationsScreenState(
-    val allNotificationsEnabled : Boolean = false,
-    val reminderNotificationEnabled : Boolean = false,
-    val onThisDayNotificationEnabled : Boolean = false
+    val allNotificationsEnabled: Boolean = false,
+    val reminderNotificationEnabled: Boolean = false,
+    val onThisDayNotificationEnabled: Boolean = false,
+    val reminderHour: Int = 22,
+    val reminderMinute: Int = 0,
 )

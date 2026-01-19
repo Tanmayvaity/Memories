@@ -5,4 +5,5 @@ sealed class NotificationsEvents {
     data class SetReminderNotification(val enabled : Boolean) : NotificationsEvents()
     data class SetOnThisDayNotification(val enabled : Boolean) : NotificationsEvents()
 
+    data class SetReminderTime(val hour : Int, val minute : Int) : NotificationsEvents()
 }

@@ -1,6 +1,9 @@
 package com.example.memories.feature.feature_notifications.presentation
 
+import android.Manifest
+import android.R.attr.end
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -24,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -66,7 +70,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
+import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.presentation.components.AppTopBar
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_notifications.presentation.components.ReminderTimePickerDialog
@@ -101,12 +107,34 @@ fun NotificationSettingsScreen(
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var canScheduleExactAlarms by remember { mutableStateOf(false) }
     var isCheckingPermission by remember { mutableStateOf(true) }
+    var isDailyReminderChannelAllowed by remember { mutableStateOf(true) }
+    var isOnThisDayChannelAllowed by remember { mutableStateOf(true) }
+    var isNotificationPermissionAllowed by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 canScheduleExactAlarms = canScheduleExactAlarmsCompat(context)
+                isDailyReminderChannelAllowed = isChannelAllowed(context, NotificationService.DAILY_REMINDER_CHANNEL)
+                isOnThisDayChannelAllowed = isChannelAllowed(context, NotificationService.ON_THIS_DAY_CHANNEL)
                 isCheckingPermission = false
+                isNotificationPermissionAllowed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+                            android.content.pm.PackageManager.PERMISSION_GRANTED
+                } else true
+
+                if(!isNotificationPermissionAllowed){
+                    onEvent(NotificationsEvents.SetAllNotifications(false))
+                    return@LifecycleEventObserver
+                }
+
+                if(!isDailyReminderChannelAllowed){
+                    onEvent(NotificationsEvents.SetReminderNotification(false))
+                }
+                if(!isOnThisDayChannelAllowed){
+                    onEvent(NotificationsEvents.SetOnThisDayNotification(false))
+                }
+
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -124,7 +152,18 @@ fun NotificationSettingsScreen(
                     )
                 },
                 showNavigationIcon = true,
-                onNavigationIconClick = onBack
+                onNavigationIconClick = onBack,
+                showAction = true,
+                actionContent = {
+                    AnimatedVisibility(isCheckingPermission){
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp).padding(end = 3.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 3.dp
+                        )
+                    }
+
+                }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -146,7 +185,8 @@ fun NotificationSettingsScreen(
                     description = "Globally pause or resume all alerts",
                     checked = state.allNotificationsEnabled,
                     showDivider = false,
-                    onCheckedChange = { onEvent(NotificationsEvents.SetAllNotifications(it)) }
+                    onCheckedChange = { onEvent(NotificationsEvents.SetAllNotifications(it)) },
+                    enabled = isNotificationPermissionAllowed
                 )
             }
 
@@ -157,7 +197,7 @@ fun NotificationSettingsScreen(
                     title = "Reminders",
                     description = "Get nudged to record a memory if you haven't in a while.",
                     checked = state.reminderNotificationEnabled,
-                    enabled = !isCheckingPermission && canScheduleExactAlarms,
+                    enabled = !isCheckingPermission && canScheduleExactAlarms && isDailyReminderChannelAllowed && isNotificationPermissionAllowed,
                     showTimeChip = true,
                     timeChipValue = formatTime(state.reminderHour, state.reminderMinute),
                     onTimeChipClick = { showTimePicker = true },
@@ -169,6 +209,7 @@ fun NotificationSettingsScreen(
                     description = "See what happened on this date in previous years.",
                     checked = state.onThisDayNotificationEnabled,
                     showDivider = false,
+                    enabled  = isNotificationPermissionAllowed && isOnThisDayChannelAllowed && !isCheckingPermission,
                     onCheckedChange = { onEvent(NotificationsEvents.SetOnThisDayNotification(it)) }
                 )
             }
@@ -185,7 +226,38 @@ fun NotificationSettingsScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AnimatedVisibility(!isNotificationPermissionAllowed && !isCheckingPermission){
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    tonalElevation = 2.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_warning),
+                            contentDescription = "Warning",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = "Notification Permission has not been granted",
+                            modifier = Modifier.padding(start = 8.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+            }
+
+
             Spacer(modifier = Modifier.weight(1f))
+
 
             ManageInSystemSettingsButton(
                 onClick = { createSettingsIntent(context) },
@@ -268,7 +340,7 @@ fun NotificationToggleRow(
                 Spacer(modifier = Modifier.height(4.dp))
                 DescriptionText(description = description)
 
-                if (showPermissionAlert) {
+                AnimatedVisibility(showPermissionAlert) {
                     Spacer(modifier = Modifier.height(8.dp))
                     PermissionAlert()
                 }
@@ -376,28 +448,26 @@ private fun PermissionAlert() {
         }
     }
 
-    AnimatedVisibility(visible = true) {
-        Surface(
-            color = MaterialTheme.colorScheme.errorContainer,
-            shape = RoundedCornerShape(8.dp),
-            tonalElevation = 2.dp
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = RoundedCornerShape(8.dp),
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_warning),
-                    contentDescription = "Warning",
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Text(
-                    text = alertText,
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.Start
-                )
-            }
+            Icon(
+                painter = painterResource(id = R.drawable.ic_warning),
+                contentDescription = "Warning",
+                tint = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = alertText,
+                modifier = Modifier.padding(start = 8.dp),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Start
+            )
         }
     }
 }
@@ -446,10 +516,6 @@ private fun ReminderTimePicker(
     )
 }
 
-// endregion
-
-// region Utils
-
 private fun canScheduleExactAlarmsCompat(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -466,7 +532,13 @@ private fun openExactAlarmSettings(context: Context) {
     }
 }
 
-// endregion
+private fun isChannelAllowed(context : Context,channel : String) : Boolean{
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val channel = notificationManager.getNotificationChannel(channel)
+
+    return channel?.importance != NotificationManager.IMPORTANCE_NONE
+}
+
 
 @Preview(showBackground = true)
 @PreviewDynamicColors

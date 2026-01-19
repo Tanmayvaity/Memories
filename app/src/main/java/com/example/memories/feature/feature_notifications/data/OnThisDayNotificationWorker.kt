@@ -12,7 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
-import com.example.memories.core.data.data_source.notification.NotificationServiceImpl
+import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.core.util.hasPostNotificationPermission
 import com.example.memories.core.util.mapContentUriToType
@@ -34,7 +34,7 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
     @Assisted val workerParams: WorkerParameters,
     val otherSettingsDatastore: OtherSettingsDatastore,
     val workManager: WorkManager,
-    val notificationService: NotificationServiceImpl,
+    val notificationService: NotificationService,
     val memoryRepository: MemoryRepository,
     val mediaManager: MediaManager
 ) : CoroutineWorker(appContext, workerParams) {
@@ -67,7 +67,7 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
 
         if(!notificationService.isOnThisDayChannelEnabled){
             workManager.cancelAllWorkByTag(ON_THIS_DAY_NOTIFICATION_WORKER)
-            Log.i(TAG, "doWork: ${NotificationServiceImpl.ON_THIS_DAY_CHANNEL} channel disabled by the user")
+            Log.i(TAG, "doWork: ${NotificationService.ON_THIS_DAY_CHANNEL} channel disabled by the user")
             return@withContext Result.success()
         }
 

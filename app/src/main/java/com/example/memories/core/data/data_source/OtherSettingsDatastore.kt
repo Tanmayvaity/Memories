@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
@@ -23,6 +24,7 @@ class OtherSettingsDatastore(
         val REMINDER_NOTIFICATION_ALLOWED = booleanPreferencesKey("reminder_notification_allowed")
         val ON_THIS_DAY_NOTIFICATION_ALLOWED = booleanPreferencesKey("on_this_day_notification_allowed")
 
+        val REMINDER_TIME = intPreferencesKey("reminder_time")
     }
 
      val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -41,11 +43,21 @@ class OtherSettingsDatastore(
         preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED]?: true
     }
 
+    val reminderTime = context.datastore.data.map{ preferences ->
+        preferences[REMINDER_TIME] ?: (22 * 60 + 0)
+    }
+
     suspend fun setDarkMode(toDarkMode : Boolean){
         context.datastore.edit { preferences ->
 //            val enable = preferences[DARK_MODE_KEY] ?: false
             preferences[DARK_MODE_KEY] = toDarkMode
 //            Log.d(TAG, "setDarkMode: ${!enable} ")
+        }
+    }
+
+    suspend fun setReminderTime(hour : Int, minute : Int){
+        context.datastore.edit { preferences ->
+            preferences[REMINDER_TIME] = hour * 60 + minute
         }
     }
 
