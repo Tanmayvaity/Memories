@@ -40,6 +40,11 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <data android:scheme="memories" />
+                <data android:host="app" />
+
+            </intent-filter>
         </activity>
 
         <provider

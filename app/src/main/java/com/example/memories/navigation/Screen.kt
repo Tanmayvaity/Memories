@@ -1,8 +1,8 @@
 package com.example.memories.navigation
-
-import com.airbnb.lottie.L
 import com.example.memories.core.domain.model.UriType
 import kotlinx.serialization.Serializable
+
+const val BASE_URL = "memories://app"
 
 
 @Serializable
@@ -37,7 +37,7 @@ sealed class AppScreen(val route: String) {
     @Serializable
     data class Memory(
         val memoryId: String? = null,
-        val uriTypeWrapperList: List<UriType>
+        val uriTypeWrapperList: List<UriType> = emptyList()
     ) : AppScreen("Memory")
 
     @Serializable

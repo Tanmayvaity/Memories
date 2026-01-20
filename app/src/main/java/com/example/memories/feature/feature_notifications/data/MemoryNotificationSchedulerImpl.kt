@@ -65,6 +65,12 @@ class MemoryNotificationSchedulerImpl @Inject constructor(
             workRequest
         )
 
+
+//        val workRequest = OneTimeWorkRequestBuilder<OnThisDayNotificationWorker>()
+//            .addTag(ON_THIS_DAY_NOTIFICATION_WORKER)
+//            .build()
+//        workManager.enqueue(workRequest)
+
     }
 
     override fun cancelWork() {

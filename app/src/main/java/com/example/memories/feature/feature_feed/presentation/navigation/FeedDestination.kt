@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.example.memories.core.util.isOnBackStack
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
@@ -14,6 +15,7 @@ import com.example.memories.feature.feature_feed.presentation.share.SharedRoute
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
 import com.example.memories.feature.feature_feed.presentation.tags_with_memory.TagWithMemoryRoot
 import com.example.memories.navigation.AppScreen
+import com.example.memories.navigation.BASE_URL
 import com.example.memories.navigation.TopLevelScreen
 
 fun NavGraphBuilder.createFeedGraph(
@@ -42,7 +44,11 @@ fun NavGraphBuilder.createFeedGraph(
             }
         )
     }
-    composable<TopLevelScreen.Search> {
+    composable<TopLevelScreen.Search> (
+        deepLinks = listOf(
+            navDeepLink<TopLevelScreen.Search>(basePath = "${BASE_URL}/search")
+        )
+    ){
         onFloatingActionBtnVisibilityChange(false)
         onBottomBarVisibilityChange(true)
         SearchRoot(
