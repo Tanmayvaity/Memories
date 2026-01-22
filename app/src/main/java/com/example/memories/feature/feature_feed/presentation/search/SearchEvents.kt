@@ -18,4 +18,5 @@ sealed class SearchEvents {
 
     data class SelectTag(val tag : TagModel) : SearchEvents()
 
+    object FetchRecentMemories : SearchEvents()
 }

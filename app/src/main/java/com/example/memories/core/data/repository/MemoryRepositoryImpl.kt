@@ -224,5 +224,9 @@ class MemoryRepositoryImpl @Inject constructor(
         return memoryDao.getMemoriesBetweenTimestamps(min, max).map { it -> it.toDomain() }
     }
 
+    override suspend fun getRecentMemories(limit: Int): Flow<List<MemoryWithMediaModel>> {
+        return memoryDao.getRecentMemories(limit).map { memories -> memories.map { it.toDomain() } }
+    }
+
 
 }

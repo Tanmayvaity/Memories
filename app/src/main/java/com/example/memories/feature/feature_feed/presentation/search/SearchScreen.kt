@@ -3,12 +3,15 @@ package com.example.memories.feature.feature_feed.presentation.search
 import android.content.res.Configuration
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -24,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -56,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -124,15 +131,27 @@ fun SearchScreen(
 ) {
     val theme = LocalTheme.current
     var tagClickIndex by rememberSaveable { mutableStateOf(0) }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val screenWidth = LocalWindowInfo.current.containerDpSize.width
     val allMemories = state.onThisDateMemories.flatMap { it.memories }
     val carouselState = rememberCarouselState() { allMemories.size }
     val configuration = LocalConfiguration.current
-    val pagerState = rememberPagerState { allMemories.size }
-    val lazyRowState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val lazyGridState = rememberLazyGridState()
+
+    val rainbowColorsBrush = remember {
+        Brush.sweepGradient(
+            listOf(
+                Color(0xFF9575CD),
+                Color(0xFFBA68C8),
+                Color(0xFFE57373),
+                Color(0xFFFFB74D),
+                Color(0xFFFFF176),
+                Color(0xFFAED581),
+                Color(0xFF4DD0E1),
+                Color(0xFF9575CD)
+            )
+        )
+    }
 
 
 
@@ -279,6 +298,85 @@ fun SearchScreen(
                         }
                     }
                 }
+
+                if (state.recentMemories.isNotEmpty()) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Recent Memoires",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                state.recentMemories.forEachIndexed { index, item ->
+
+                                    val isMediaValid = item.mediaList.isNotEmpty()
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(64.dp)
+                                            .clip(CircleShape)
+                                            .border(
+                                                BorderStroke(
+                                                    width = 3.dp,
+                                                    brush = rainbowColorsBrush,
+                                                ),
+                                                CircleShape
+                                            )
+                                            .clickable {
+                                                onNavigateToMemoryDetail(
+                                                    AppScreen.MemoryDetail(
+                                                        item.memory.memoryId
+                                                    )
+                                                )
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (isMediaValid) {
+                                            AsyncImage(
+                                                model = item.mediaList[0].uri,
+                                                contentDescription = "recent memories image",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(64.dp)
+                                                    .clip(CircleShape)
+                                                    .border(
+                                                        BorderStroke(
+                                                            width = 3.dp,
+                                                            brush = rainbowColorsBrush,
+                                                        ),
+                                                        CircleShape
+                                                    )
+                                            )
+                                        } else {
+                                            Text(
+                                                text = item.memory.timeStamp.formatTime(format = "MMM dd"),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+
                 if (state.tags.isNotEmpty()) {
                     stickyHeader(
                         key = "tags"
@@ -313,7 +411,7 @@ fun SearchScreen(
                         }
                     } else if (memoriesForTag.itemCount > 0) {
                         items(
-                            key = {index -> memoriesForTag[index]?.memory?.memoryId ?: index},
+                            key = { index -> memoriesForTag[index]?.memory?.memoryId ?: index },
                             count = memoriesForTag.itemCount
                         ) { index ->
 //                            MemoryItemForCategory(
@@ -325,7 +423,7 @@ fun SearchScreen(
 //                                }
 //                            )
                             val item = memoriesForTag[index]
-                            if(item == null)return@items
+                            if (item == null) return@items
                             MemoryCard(
                                 memory = item,
                                 onClick = {

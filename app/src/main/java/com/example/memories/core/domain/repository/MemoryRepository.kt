@@ -61,5 +61,5 @@ interface MemoryRepository {
         max: Long,
     ): List<MemoryWithMediaModel>
 
-
+    suspend fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMediaModel>>
 }

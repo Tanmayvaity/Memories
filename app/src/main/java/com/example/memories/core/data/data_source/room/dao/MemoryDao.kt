@@ -13,6 +13,7 @@ import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.Entity.MemoryTagCrossRef
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.data.data_source.room.Entity.TagEntity
+import com.example.memories.core.domain.model.MemoryWithMediaModel
 import kotlinx.coroutines.flow.Flow
 
 
@@ -86,6 +87,10 @@ interface MemoryDao {
     suspend fun deleteAllTagsForMemory(memoryId: String)
 
     // ==================== PAGED QUERIES - ALL MEMORIES ====================
+
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp DESC limit :limit")
+    fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMedia>>
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp DESC")

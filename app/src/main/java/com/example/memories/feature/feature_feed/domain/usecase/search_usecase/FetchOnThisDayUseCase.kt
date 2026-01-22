@@ -5,12 +5,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
-import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-class FetchOnThisDataUseCase(
+class FetchOnThisDayUseCase(
     private val repository: MemoryRepository
 ){
     @RequiresApi(Build.VERSION_CODES.O)

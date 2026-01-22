@@ -15,7 +15,7 @@ import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.TagsWithMemoryModel
 import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
-import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.RecentSearchWrapper
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -47,8 +48,7 @@ import javax.inject.Inject
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    val feedUseCase: FeedUseCaseWrapper,
-    val recentSearchUseCase: RecentSearchWrapper
+    val searchUseCase: SearchUseCase,
 ) : ViewModel() {
 
 
@@ -66,7 +66,7 @@ class SearchViewModel @Inject constructor(
         if (query.isBlank()) {
             flowOf(_state.value.recentSearch)
         } else {
-            feedUseCase.searchByTitleUseCase(query)
+            searchUseCase.searchByTitleUseCase(query)
         }
     }
     .onEach { results ->
@@ -85,7 +85,7 @@ class SearchViewModel @Inject constructor(
             if(tag == null){
                 flowOf(PagingData.empty())
             }else{
-                feedUseCase.fetchMemoryByTagUseCase(tag.tagId)
+                searchUseCase.fetchMemoryByTagUseCase(tag.tagId)
             }
         }
         .cachedIn(viewModelScope)
@@ -130,6 +130,7 @@ class SearchViewModel @Inject constructor(
         onEvent(SearchEvents.FetchRecentSearch)
         onEvent(SearchEvents.FetchTags)
         onEvent(SearchEvents.FetchOnThisDayData)
+        onEvent(SearchEvents.FetchRecentMemories)
     }
 
 
@@ -140,7 +141,7 @@ class SearchViewModel @Inject constructor(
 
             is SearchEvents.FetchOnThisDayData -> {
                 viewModelScope.launch {
-                    val result = feedUseCase.fetchOnThisDataUseCase()
+                    val result = searchUseCase.fetchOnThisDayUseCase()
                     _state.update { it.copy(
                         onThisDateMemories = result
                     ) }
@@ -173,7 +174,7 @@ class SearchViewModel @Inject constructor(
 
             is SearchEvents.AddSearch -> {
                 viewModelScope.launch {
-                    recentSearchUseCase.saveSearchIdUseCase(event.memoryId)
+                    searchUseCase.saveSearchIdUseCase(event.memoryId)
                 }
             }
 
@@ -187,7 +188,7 @@ class SearchViewModel @Inject constructor(
 
             is SearchEvents.FetchTags -> {
                 viewModelScope.launch {
-                    val result = feedUseCase.fetchTagUseCase()
+                    val result = searchUseCase.fetchTagUseCase()
                     if(result is Result.Success && result.data !=null){
                         var initialSelectDone = false
                         result.data.collect { tags ->
@@ -211,13 +212,13 @@ class SearchViewModel @Inject constructor(
             is SearchEvents.FetchRecentSearch -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isRecentSearchLoading = true) }
-                    val result = recentSearchUseCase.fetchRecentSearchUseCase()
+                    val result = searchUseCase.fetchRecentSearchUseCase()
                     when (result) {
                         is Result.Success -> {
                             result.data!!.collect { searches ->
                                 val list = mutableListOf<MemoryWithMediaModel>()
                                 searches.forEach { search ->
-                                    feedUseCase.getMemoryByIdUseCase(search.memoryId).also { item ->
+                                    searchUseCase.getMemoryByIdUseCase(search.memoryId).also { item ->
 //                                        Log.d("SearchViewModel", "onEvent:FetchRecentSearch ${item}")
                                         list.add(item!!)
 
@@ -249,6 +250,18 @@ class SearchViewModel @Inject constructor(
 //                    }
 //                }
             }
+
+            is SearchEvents.FetchRecentMemories -> {
+                viewModelScope.launch {
+                    val result = searchUseCase.fetchRecentMemoriesUseCase()
+                    result
+                        .catch { e -> Log.e(TAG, "onEvent: error while FetchRecentMemories ${e}", ) }
+                        .collect { memories ->
+                        _state.update { it.copy(recentMemories = memories) }
+                    }
+
+                }
+            }
         }
     }
 
@@ -270,5 +283,6 @@ data class SearchState(
     val currentTag : TagModel? = null,
     val memories : List<MemoryWithMediaModel> = emptyList(),
     val isMemoriesTagLoading : Boolean = false,
-    val onThisDateMemories : List<OnThisDayMemories> = emptyList()
+    val onThisDateMemories : List<OnThisDayMemories> = emptyList(),
+    val recentMemories : List<MemoryWithMediaModel> = emptyList()
 )

@@ -61,7 +61,6 @@ import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.Sea
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentSearchUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.RecentSearchWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SaveSearchIdUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
@@ -79,7 +78,7 @@ import com.example.memories.core.data.repository.TagRepositoryImpl
 import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchOnThisDataUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchOnThisDayUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountBySearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
@@ -94,6 +93,8 @@ import com.example.memories.core.data.data_source.notification.MemoryNotificatio
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
@@ -365,23 +366,10 @@ object AppModule {
             searchByTitleUseCase = SearchByTitleUseCase(repository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository),
-            fetchOnThisDataUseCase = FetchOnThisDataUseCase(repository)
+            fetchOnThisDataUseCase = FetchOnThisDayUseCase(repository)
         )
 
     }
-
-    @Provides
-    @Singleton
-    fun provideRecentSearchWrapper(
-        repository: RecentSearchRepository
-    ): RecentSearchWrapper {
-        return RecentSearchWrapper(
-            saveSearchIdUseCase = SaveSearchIdUseCase(repository),
-            fetchRecentSearchUseCase = FetchRecentSearchUseCase(repository)
-        )
-
-    }
-
     @Provides
     @Singleton
     fun provideTagsUseCaseWrapper(
@@ -489,6 +477,26 @@ object AppModule {
         @ApplicationContext context: Context
     ): Context {
         return context;
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideSearchUseCase(
+        memoryRepository: MemoryRepository,
+        tagRepository: TagRepository,
+        recentSearchRepository: RecentSearchRepository
+    ) : SearchUseCase {
+        return SearchUseCase(
+            fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(memoryRepository),
+            fetchOnThisDayUseCase = FetchOnThisDayUseCase(memoryRepository),
+            fetchRecentSearchUseCase = FetchRecentSearchUseCase(recentSearchRepository),
+            saveSearchIdUseCase = SaveSearchIdUseCase(recentSearchRepository),
+            searchByTitleUseCase = SearchByTitleUseCase(memoryRepository),
+            fetchTagUseCase = FetchTagUseCase(tagRepository),
+            getMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
+            fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository)
+        )
     }
 
 }
