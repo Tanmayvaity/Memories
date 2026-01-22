@@ -128,7 +128,7 @@ fun NotificationSettingsScreen(
                     return@LifecycleEventObserver
                 }
 
-                if(!isDailyReminderChannelAllowed){
+                if(!isDailyReminderChannelAllowed || !canScheduleExactAlarms){
                     onEvent(NotificationsEvents.SetReminderNotification(false))
                 }
                 if(!isOnThisDayChannelAllowed){
@@ -186,7 +186,7 @@ fun NotificationSettingsScreen(
                     checked = state.allNotificationsEnabled,
                     showDivider = false,
                     onCheckedChange = { onEvent(NotificationsEvents.SetAllNotifications(it)) },
-                    enabled = isNotificationPermissionAllowed
+                    enabled = isNotificationPermissionAllowed && isOnThisDayChannelAllowed && isDailyReminderChannelAllowed && !isCheckingPermission
                 )
             }
 

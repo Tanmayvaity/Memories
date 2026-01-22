@@ -1,10 +1,13 @@
 package com.example.memories
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -51,20 +54,32 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.util.createSettingsIntent
+import com.example.memories.core.util.isPermissionGranted
+import com.example.memories.feature.feature_feed.presentation.share.runtimeRequestLogic
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.ui.theme.MemoriesTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 val LocalTheme = compositionLocalOf { false }
 
+
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var invokeNotificationUseCase: InvokeNotificationUseCase
+
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,8 +96,11 @@ class MainActivity : ComponentActivity() {
             val notificationLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
             ) { isGranted ->
-                if(!isGranted){
-                    showPermissionDeniedDialog = true
+
+                if(isGranted){
+                    CoroutineScope(Dispatchers.IO).launch {
+                        invokeNotificationUseCase()
+                    }
                 }
 
             }
@@ -91,12 +109,18 @@ class MainActivity : ComponentActivity() {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
                         Lifecycle.Event.ON_START -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationLauncher.launch(
-                                    Manifest.permission.POST_NOTIFICATIONS,
-                                )
-                            }
+                            requestPermissionLogic(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS,
+                                onGranted = {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        invokeNotificationUseCase()
+                                    }
+                                },
+                                notificationLauncher
+                            )
                         }
+
                         Lifecycle.Event.ON_STOP -> onStop()
                         else -> {}
                     }
@@ -190,6 +214,36 @@ class MainActivity : ComponentActivity() {
 fun AppNavPreview() {
     MemoriesTheme {
         AppNav(navController = rememberNavController())
+    }
+}
+
+
+private fun requestPermissionLogic(
+    context: Context,
+    permission: String,
+    onGranted: () -> Unit = {},
+    launcher: ManagedActivityResultLauncher<String, Boolean>
+) {
+    val activity = context as Activity
+    when {
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> {
+            onGranted()
+        }
+
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && isPermissionGranted(
+            context,
+            permission
+        ) -> {
+            onGranted()
+        }
+
+        activity.shouldShowRequestPermissionRationale(
+            permission
+        ) -> {}
+
+        else -> {
+            launcher.launch(permission)
+        }
     }
 }
 

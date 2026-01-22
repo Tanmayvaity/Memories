@@ -1,28 +1,35 @@
-package com.example.memories.feature.feature_notifications.data
+package com.example.memories.core.data.data_source.notification
 
 import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.memories.core.util.formatTime
-import com.example.memories.feature.feature_notifications.data.OnThisDayNotificationWorker.Companion.ON_THIS_DAY_NOTIFICATION_WORKER
-import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService
+import com.example.memories.core.data.data_source.worker.OnThisDayNotificationWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 class MemoryNotificationSchedulerImpl @Inject constructor(
     private val workManager: WorkManager,
-    private val alarmManagerService: AlarmManagerService
+    private val alarmManagerService: AlarmManagerService,
+    private val notificationService : NotificationService
 ) : MemoryNotificationScheduler {
 
     companion object {
 
         private val TAG = "MemoryNotificationSchedulerImpl"
     }
+
+    override val isOnThisDayChannelAllowed: Boolean
+        get() = notificationService.isOnThisDayChannelEnabled
+
+    override val isReminderChannelAllowed: Boolean
+        get() = notificationService.isDailyReminderChannelEnabled
+
+    override val canAlarmSchedule: Boolean
+        get() = alarmManagerService.canScheduleAlarm
 
 
     override fun scheduleWork() {
@@ -56,33 +63,31 @@ class MemoryNotificationSchedulerImpl @Inject constructor(
                     target.timeInMillis - System.currentTimeMillis(),
                     TimeUnit.MILLISECONDS
                 )
-                .addTag(ON_THIS_DAY_NOTIFICATION_WORKER)
+                .addTag(OnThisDayNotificationWorker.Companion.ON_THIS_DAY_NOTIFICATION_WORKER)
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
-            ON_THIS_DAY_NOTIFICATION_WORKER,
+            OnThisDayNotificationWorker.Companion.ON_THIS_DAY_NOTIFICATION_WORKER,
             ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
 
-
-//        val workRequest = OneTimeWorkRequestBuilder<OnThisDayNotificationWorker>()
-//            .addTag(ON_THIS_DAY_NOTIFICATION_WORKER)
-//            .build()
-//        workManager.enqueue(workRequest)
+        Log.d(TAG, "Work : work  scheduled")
 
     }
 
     override fun cancelWork() {
-        Log.d(TAG, "cancelWork: cancelling work ${ON_THIS_DAY_NOTIFICATION_WORKER}")
-        workManager.cancelAllWorkByTag(ON_THIS_DAY_NOTIFICATION_WORKER)
+        Log.d(TAG, "Work: cancelling work ${OnThisDayNotificationWorker.Companion.ON_THIS_DAY_NOTIFICATION_WORKER}")
+        workManager.cancelAllWorkByTag(OnThisDayNotificationWorker.Companion.ON_THIS_DAY_NOTIFICATION_WORKER)
     }
 
     override fun scheduleAlarm(hour: Int, minute: Int) {
+        Log.d(TAG, "alarm: Alarm may be scheduled")
         alarmManagerService.scheduleAlarm(hour,minute)
     }
 
     override fun cancelAlarm() {
+        Log.d(TAG, "alarm: alarm  cancelled")
         alarmManagerService.cancelAlarm()
     }
 

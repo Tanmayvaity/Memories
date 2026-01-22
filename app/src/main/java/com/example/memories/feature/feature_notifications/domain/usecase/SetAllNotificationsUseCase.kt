@@ -1,7 +1,7 @@
 package com.example.memories.feature.feature_notifications.domain.usecase
 
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
-import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 
 class SetAllNotificationsUseCase (
@@ -16,7 +16,6 @@ class SetAllNotificationsUseCase (
         repository.enableAllNotifications(enabled)
         repository.enableReminderNotification(enabled)
         repository.enableOnThisDayNotification(enabled)
-
         if(enabled){
             scheduler.scheduleWork()
             scheduler.scheduleAlarm(hour, minute)

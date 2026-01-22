@@ -10,15 +10,17 @@ import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.example.memories.core.data.data_source.notification.NotificationService
+import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
 class MemoriesApplication : Application(), Configuration.Provider{
 
     @Inject lateinit var workerFactory : HiltWorkerFactory
-
-
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

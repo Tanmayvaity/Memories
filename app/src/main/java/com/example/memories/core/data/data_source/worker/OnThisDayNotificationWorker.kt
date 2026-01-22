@@ -1,6 +1,5 @@
-package com.example.memories.feature.feature_notifications.data
+package com.example.memories.core.data.data_source.worker
 
-import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -15,18 +14,14 @@ import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.core.util.hasPostNotificationPermission
-import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.core.util.mapToType
-import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -67,51 +62,17 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
             return@withContext Result.success()
         }
 
-        if(!notificationService.isOnThisDayChannelEnabled){
+        if (!notificationService.isOnThisDayChannelEnabled) {
             workManager.cancelAllWorkByTag(ON_THIS_DAY_NOTIFICATION_WORKER)
-            Log.i(TAG, "doWork: ${NotificationService.ON_THIS_DAY_CHANNEL} channel disabled by the user")
+            Log.i(
+                TAG,
+                "doWork: ${NotificationService.Companion.ON_THIS_DAY_CHANNEL} channel disabled by the user"
+            )
             return@withContext Result.success()
         }
-
-//        val zone = ZoneId.systemDefault()
-//        val now = LocalDate.now(zone)
-//            val startOfTheDayTimeStamp = now.atStartOfDay(zone).toInstant().toEpochMilli()
-//            val endOfTheDayTimeStamp =
-//                now.atTime(LocalTime.MAX).atZone(zone).toInstant().toEpochMilli()
-//        val memory =
-//            memoryRepository.getMemoriesWithinRange(
-//                startOfTheDayTimeStamp,
-//                endOfTheDayTimeStamp
-//            )
-//                .firstOrNull()
-//        if(memory == null){
-//            Log.i(TAG, "doWork: memory is null , no memory for this day ")
-//            return@withContext Result.success()
-//        }
-//
-//        Log.i(TAG, "doWork: ${memory}")
-//        val firstMemoryUri = memory?.mediaList?.firstOrNull()?.uri
-//
-//        val type = if (firstMemoryUri != null) {
-//            firstMemoryUri.toUri().mapToType()
-//        } else {
-//            null
-//        }
-//        val bitmap = if (type != null && type.isImageFile() && firstMemoryUri != null) {
-//            mediaManager.uriToBitmap(firstMemoryUri.toUri())
-//        } else {
-//            null
-//        }
-//
-//        // show on ths day notification
-//        notificationService.showOnThisDayNotification(
-//            bitmap?.getOrNull(),
-//            "A memory from this day",
-//            "You have memories to look back on ${now.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}"
-//        )
-
         val today = LocalDate.now()
-        val earliestTimestamp = memoryRepository.getEarliestMemoryTimeStamp() ?: return@withContext Result.success()
+        val earliestTimestamp =
+            memoryRepository.getEarliestMemoryTimeStamp() ?: return@withContext Result.success()
 
         val earliestYear = Instant.ofEpochMilli(earliestTimestamp)
             .atZone(ZoneId.systemDefault())
@@ -135,29 +96,35 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
             buckets.add(label to today.minusYears(yearsAgo.toLong()))
         }
 
-         buckets.mapNotNull { (label, targetDate) ->
+        buckets.mapNotNull { (label, targetDate) ->
             val startOfDay = targetDate.atStartOfDay(ZoneId.systemDefault())
                 .toInstant().toEpochMilli()
             val endOfDay = targetDate.plusDays(1).atStartOfDay(ZoneId.systemDefault())
                 .toInstant().toEpochMilli()
 
             val memories = memoryRepository.getMemoriesWithinRange(startOfDay, endOfDay)
-             if(memories.isNotEmpty() && memories[0].mediaList.isNotEmpty()){
-                 val first = memories[0]
-                 val uri = first.mediaList[0].uri
-                 val isTypeImage = uri.toUri().mapToType().isImageFile()
-                 if(isTypeImage){
-                     val bitmap = mediaManager.uriToBitmap(uri.toUri())
-                     notificationService.showOnThisDayNotification(
-                         bitmap.getOrNull(),
-                         "A memory from this day",
-                         "You have memories to look back on ${today.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}"
-                     )
-                     return@withContext Result.success()
-                 }
-             }else{
-                 Log.e(TAG, "doWork: do memory or media empty", )
-             }
+            if (memories.isNotEmpty() && memories[0].mediaList.isNotEmpty()) {
+                val first = memories[0]
+                val uri = first.mediaList[0].uri
+                val isTypeImage = uri.toUri().mapToType().isImageFile()
+                if (isTypeImage) {
+                    val bitmap = mediaManager.uriToBitmap(uri.toUri())
+                    notificationService.showOnThisDayNotification(
+                        bitmap.getOrNull(),
+                        "A memory from this day",
+                        "You have memories to look back on ${
+                            today.format(
+                                DateTimeFormatter.ofPattern(
+                                    "dd MMM yyyy"
+                                )
+                            )
+                        }"
+                    )
+                    return@withContext Result.success()
+                }
+            } else {
+                Log.e(TAG, "doWork: do memory or media empty",)
+            }
         }
 
 

@@ -74,7 +74,7 @@
                 android:value="" />
         </service>
         <receiver
-            android:name=".feature.feature_notifications.data.AlarmReceiver"
+            android:name=".core.data.data_source.alarm.AlarmReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.memories.ACTION_DAILY_REMINDER" />

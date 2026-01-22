@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_notifications.data
+package com.example.memories.core.data.data_source.alarm
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -41,6 +41,12 @@ class AlarmManagerService @Inject constructor(
         hour: Int,
         minute: Int
     ) {
+
+        if(!canScheduleAlarm) {
+            Log.d(TAG, "scheduleAlarm: Alarm cannot be scheduled due to lack of permission..., cancelling")
+            return
+        }
+
         val triggerTime = calculateAlarmTriggerTime(hour, minute)
         pendingIntent = createPendingIntent(
             receiverClass = AlarmReceiver::class.java,
@@ -48,25 +54,22 @@ class AlarmManagerService @Inject constructor(
             title = "Ready to save today's moment?",
             description = "Don't let today's special memory fade away. It only takes a minute to record"
         )
-        if(canScheduleAlarm){
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-            Log.d(TAG, "scheduleAlarm: Alarm scheduled for ${formatTime(hour, minute)}")
-        }else{
-            Log.i(TAG, "scheduleAlarm: Cannot schedule alarm", )
-        }
-
-
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerTime,
+            pendingIntent
+        )
+        Log.d(TAG, "scheduleAlarm: Alarm scheduled for ${formatTime(hour, minute)}")
 
     }
 
     fun cancelAlarm() {
-        if (pendingIntent == null) return
+        if(!::pendingIntent.isInitialized) return
+
         alarmManager.cancel(pendingIntent)
         Log.i(TAG, "cancelAlarm: Alarm cancelled")
+
+
     }
 
     private fun createPendingIntent(

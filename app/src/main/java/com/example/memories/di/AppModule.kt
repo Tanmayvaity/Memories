@@ -89,11 +89,11 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCach
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
-import com.example.memories.feature.feature_notifications.data.AlarmManagerService
-import com.example.memories.feature.feature_notifications.data.AlarmReceiver
-import com.example.memories.feature.feature_notifications.data.MemoryNotificationSchedulerImpl
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService
+import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
-import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
@@ -435,13 +435,24 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideInvokeNotificationUseCase(
+        repository: NotificationRepository,
+        scheduler: MemoryNotificationScheduler
+    ): InvokeNotificationUseCase {
+        return InvokeNotificationUseCase(repository, scheduler)
+    }
+
+    @Provides
+    @Singleton
     fun provideMemoryNotificationScheduler(
         workManager: WorkManager,
-        alarmManagerService: AlarmManagerService
+        alarmManagerService: AlarmManagerService,
+        notificationService: NotificationService
     ): MemoryNotificationScheduler {
         return MemoryNotificationSchedulerImpl(
             workManager = workManager,
-            alarmManagerService = alarmManagerService
+            alarmManagerService = alarmManagerService,
+            notificationService = notificationService
         )
 
     }

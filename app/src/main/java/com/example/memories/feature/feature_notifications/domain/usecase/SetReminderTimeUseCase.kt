@@ -1,6 +1,6 @@
 package com.example.memories.feature.feature_notifications.domain.usecase
 
-import com.example.memories.feature.feature_notifications.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 
 

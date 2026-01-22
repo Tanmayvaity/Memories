@@ -1,19 +1,16 @@
-package com.example.memories.feature.feature_notifications.data
+package com.example.memories.core.data.data_source.alarm
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_BOOT_COMPLETED
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.hilt.work.HiltWorkerFactory
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.data.data_source.notification.NotificationService
-import com.example.memories.feature.feature_notifications.data.AlarmManagerService.Companion.REMINDER_NOTIFICATION_DESCRIPTION
-import com.example.memories.feature.feature_notifications.data.AlarmManagerService.Companion.REMINDER_NOTIFICATION_HOUR
-import com.example.memories.feature.feature_notifications.data.AlarmManagerService.Companion.REMINDER_NOTIFICATION_MINUTE
-import com.example.memories.feature.feature_notifications.data.AlarmManagerService.Companion.REMINDER_NOTIFICATION_TITLE
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService.Companion.REMINDER_NOTIFICATION_DESCRIPTION
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService.Companion.REMINDER_NOTIFICATION_HOUR
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService.Companion.REMINDER_NOTIFICATION_MINUTE
+import com.example.memories.core.data.data_source.alarm.AlarmManagerService.Companion.REMINDER_NOTIFICATION_TITLE
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +68,9 @@ class AlarmReceiver : BroadcastReceiver() {
                         val minute = reminderTime % 60
 
                         Log.i(TAG, "onReceive: ${hour}h ${minute}m")
-                        if (alarmManagerService.canScheduleAlarm && notificationService.isDailyReminderChannelEnabled ) {
+                        if (alarmManagerService.canScheduleAlarm
+                            && notificationService.isDailyReminderChannelEnabled
+                            && otherSettingsDatastore.reminderNotificationAllowed.first()) {
                             alarmManagerService.scheduleAlarm(hour, minute)
                         }
                     } finally {
