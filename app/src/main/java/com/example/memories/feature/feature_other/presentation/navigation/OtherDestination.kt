@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_other.presentation.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.example.memories.feature.feature_other.presentation.screens.AboutScreen
 import com.example.memories.feature.feature_other.presentation.screens.CameraSettingsScreen
 import com.example.memories.feature.feature_other.presentation.screens.OtherScreen
 import com.example.memories.navigation.AppScreen
@@ -22,6 +23,9 @@ fun NavGraphBuilder.createOtherGraph(
             },
             onNavigateToSettingsScreen = { route ->
                 navController.navigate(route)
+            },
+            onNavigateToAboutScreen = {route ->
+                navController.navigate(route)
             }
         )
     }
@@ -33,6 +37,17 @@ fun NavGraphBuilder.createOtherGraph(
             onBack = {
                 navController.popBackStack()
             }
+        )
+    }
+
+    composable<AppScreen.About> {
+        onBottomBarVisibilityChange(false)
+        onFloatingActionBtnVisibilityChange(false)
+        AboutScreen(
+            onBack = {
+                navController.popBackStack()
+            }
+
         )
     }
 

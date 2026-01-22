@@ -1,20 +1,19 @@
 package com.example.memories.feature.feature_other.presentation.screens
 
-import android.app.ProgressDialog.show
+import android.content.Context
 import android.content.Intent
-import android.util.Log
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -22,15 +21,12 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,17 +40,18 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
-import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.util.getVersionName
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
 import com.example.memories.navigation.AppScreen
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+
 
 const val TAG = "OtherScreen"
 
@@ -63,7 +60,8 @@ const val TAG = "OtherScreen"
 @Composable
 fun OtherScreen(
     onNavigateToTags: (AppScreen.Tags) -> Unit = {},
-    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {}
+    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
+    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -125,24 +123,11 @@ fun OtherScreen(
             icon = R.drawable.ic_app_version,
             iconContentDescription = "App Version Icon",
             title = "App Version",
-            content = "1.0.0",
+            content = context.getVersionName().toString(),
             onClick = {
-                val developerUri = "https://github.com/Tanmayvaity/Memories"
-                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-                context.startActivity(intent)
+//
+                onNavigateToAboutScreen(AppScreen.About)
             }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_terms,
-            iconContentDescription = "Terms of service icon",
-            title = "Terms of service",
-            content = null
-        ),
-        MenuItem(
-            icon = R.drawable.ic_privacy,
-            iconContentDescription = "Privacy Policy Icon",
-            title = "Privacy policy",
-            content = null
         ),
         MenuItem(
             icon = R.drawable.ic_developer,
@@ -355,6 +340,10 @@ fun CustomSettingRow(
 
 
     }
-
-
 }
+
+
+
+
+
+

@@ -3,6 +3,7 @@ package com.example.memories.core.util
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -35,6 +36,18 @@ fun isPermissionGranted(
     return isGranted
 }
 
+fun Context.getVersionName() : String?{
+    return  try {
+        val pInfo: PackageInfo =
+            this.packageManager.getPackageInfo(this.packageName, 0)
+        pInfo.versionName
+    } catch (e: PackageManager.NameNotFoundException) {
+        e.printStackTrace()
+        null
+    }
+
+
+}
 
 fun createTempFile(
     context: Context,
