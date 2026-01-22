@@ -101,6 +101,9 @@ import com.example.memories.feature.feature_notifications.domain.usecase.SetAllN
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderNotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderTimeUseCase
+import com.example.memories.feature.feature_other.data.remote.GithubService
+import com.example.memories.feature.feature_other.data.repository.GithubServiceImpl
+import com.example.memories.feature.feature_other.domain.repository.RemoteUserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -108,7 +111,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.Retrofit
 import javax.inject.Singleton
+import kotlin.jvm.java
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 @Module
@@ -498,5 +507,31 @@ object AppModule {
             fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository)
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit() : Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://api.github.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGitHubApi(retrofit: Retrofit): GithubService =
+        retrofit.create(GithubService::class.java)
+
+
+    @Provides
+    @Singleton
+    fun provideRemoteUseService(
+        service : GithubService
+    ) : RemoteUserService {
+        return GithubServiceImpl(service)
+    }
+
+
+
 
 }

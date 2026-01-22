@@ -101,6 +101,7 @@ dependencies {
 
     // coil
     implementation(libs.coil.compose)
+    implementation(libs.coil.network)
 
     // hilt
     ksp(libs.hilt.compiler)
@@ -140,4 +141,9 @@ dependencies {
     implementation(libs.androidx.hilt.work)
 
     ksp(libs.androidx.hilt.work.compiler)
+
+
+    // retrofit
+    implementation(libs.squareup.retrofit)
+    implementation(libs.retrofit.gson.convertor)
 }

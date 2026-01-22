@@ -24,6 +24,7 @@ material-expressive = "1.5.0-alpha10"
 lottie = "6.7.1"
 work = "2.11.0"
 hilt-ext = "1.2.0"
+retrofit = "3.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +56,7 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-camera-extensions = {module = "androidx.camera:camera-extensions",version.ref = "camerax"}
 androidx-camera-video= {module = "androidx.camera:camera-video",version.ref = "camerax"}
 coil-compose = {module = "io.coil-kt.coil3:coil-compose",version.ref = "coil"}
+coil-network = {module = "io.coil-kt.coil3:coil-network-okhttp",version.ref = "coil"}
 hilt-compiler = {module = "com.google.dagger:hilt-compiler",version.ref = "hilt"}
 hilt-android = {module = "com.google.dagger:hilt-android",version.ref = "hilt"}
 hilt-navigation-compose = {module = "androidx.hilt:hilt-navigation-compose",version.ref = "hilt-ext"}
@@ -76,6 +78,13 @@ dotlottie-android = {module = "com.airbnb.android:lottie-compose",version.ref = 
 androidx-work-runtime = {module = "androidx.work:work-runtime-ktx",version.ref = "work"}
 androidx-hilt-work = {module = "androidx.hilt:hilt-work",version.ref = "hilt-ext"}
 androidx-hilt-work-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-ext" }
+
+squareup-retrofit = {module = "com.squareup.retrofit2:retrofit",version.ref = "retrofit"}
+retrofit-gson-convertor = {module = "com.squareup.retrofit2:converter-gson",version.ref = "retrofit"}
+
+
+
+
 
 
 [plugins]

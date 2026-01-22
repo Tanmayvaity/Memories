@@ -65,5 +65,8 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     object About : AppScreen("About")
+
+    @Serializable
+    object DeveloperInfo : AppScreen("Developer Info")
 }
 

@@ -61,7 +61,8 @@ const val TAG = "OtherScreen"
 fun OtherScreen(
     onNavigateToTags: (AppScreen.Tags) -> Unit = {},
     onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
-    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {}
+    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
+    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -135,9 +136,10 @@ fun OtherScreen(
             title = "Developer Info",
             content = "View developer info",
             onClick = {
-                val developerUri = "https://github.com/Tanmayvaity"
-                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-                context.startActivity(intent)
+                onNavigateToDeveloperInfoScreen(AppScreen.DeveloperInfo)
+//                val developerUri = "https://github.com/Tanmayvaity"
+//                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
+//                context.startActivity(intent)
             }
         )
 
