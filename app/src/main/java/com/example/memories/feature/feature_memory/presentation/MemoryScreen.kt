@@ -86,25 +86,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
-import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.mapContentUriToType
-import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
-import com.example.memories.feature.feature_feed.presentation.share.DeleteConfirmationBottomSheet
 import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaUri
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
-import com.example.memories.feature.feature_memory.presentation.components.ReminderPickerButton
 import com.example.memories.feature.feature_memory.presentation.components.TagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
@@ -112,7 +106,6 @@ import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.LocalDate
 
 

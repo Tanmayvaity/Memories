@@ -43,18 +43,10 @@ import com.example.memories.feature.feature_camera.domain.usecase.TakeMediaUseCa
 import com.example.memories.feature.feature_camera.domain.usecase.TapToFocusUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.TorchToggleUseCase
 import com.example.memories.feature.feature_camera.domain.usecase.ZoomUseCase
-import com.example.memories.feature.feature_feed.data.repository.MediaFeedRepositoryImpl
 import com.example.memories.feature.feature_feed.data.repository.RecentSearchRepositoryImpl
-import com.example.memories.feature.feature_feed.domain.repository.MediaFeedRepository
 import com.example.memories.feature.feature_feed.domain.repository.RecentSearchRepository
-import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediaUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.DeleteMediasUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
-import com.example.memories.feature.feature_feed.domain.usecase.MediaFeedUseCases
-import com.example.memories.feature.feature_feed.domain.usecase.FetchMediaFromSharedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.GetMediaThumbnailUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.SharedUriToInternalUriUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.DeleteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetMemoryByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SearchByTitleUseCase
@@ -197,23 +189,23 @@ object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideMediaFeedRepository(mediaManager: MediaManager): MediaFeedRepository {
-        return MediaFeedRepositoryImpl(mediaManager)
-    }
+//    @Provides
+//    @Singleton
+//    fun provideMediaFeedRepository(mediaManager: MediaManager): MediaFeedRepository {
+//        return MediaFeedRepositoryImpl(mediaManager)
+//    }
 
-    @Provides
-    @Singleton
-    fun provideFeedMediaUseCase(repository: MediaFeedRepository): MediaFeedUseCases {
-        return MediaFeedUseCases(
-            fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository),
-            deleteMediaUseCase = DeleteMediaUseCase(repository),
-            deleteMediasUseCase = DeleteMediasUseCase(repository),
-            sharedUriToInternalUriUseCase = SharedUriToInternalUriUseCase(repository),
-            getMediaThumbnailUseCase = GetMediaThumbnailUseCase(repository)
-        )
-    }
+//    @Provides
+//    @Singleton
+//    fun provideFeedMediaUseCase(repository: MediaFeedRepository): MediaFeedUseCases {
+//        return MediaFeedUseCases(
+//            fetchMediaFromSharedUseCase = FetchMediaFromSharedUseCase(repository),
+//            deleteMediaUseCase = DeleteMediaUseCase(repository),
+//            deleteMediasUseCase = DeleteMediasUseCase(repository),
+//            sharedUriToInternalUriUseCase = SharedUriToInternalUriUseCase(repository),
+//            getMediaThumbnailUseCase = GetMediaThumbnailUseCase(repository)
+//        )
+//    }
 
     @Provides
     @Singleton

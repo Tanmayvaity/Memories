@@ -20,7 +20,6 @@ import kotlin.reflect.typeOf
 fun NavGraphBuilder.createMemoryGraph(
     navController: NavHostController,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange: (Boolean) -> Unit
 ) {
     composable<AppScreen.Memory>(
         typeMap = mapOf(
@@ -40,7 +39,6 @@ fun NavGraphBuilder.createMemoryGraph(
     ) {
         val args = it.toRoute<AppScreen.Memory>()
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         MemoryRoot(
             onBackPress = {
                 navController.popBackStack()

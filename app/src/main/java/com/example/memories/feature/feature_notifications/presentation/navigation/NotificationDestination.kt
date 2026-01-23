@@ -16,7 +16,6 @@ import kotlin.reflect.typeOf
 fun NavGraphBuilder.createNotificationGraph(
     navController : NavHostController,
     onBottomBarVisibilityChange : (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
     composable<AppScreen.Memory>(
         typeMap = mapOf(
@@ -27,7 +26,6 @@ fun NavGraphBuilder.createNotificationGraph(
     ) {
         val args = it.toRoute<AppScreen.Memory>()
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         MemoryRoot(
             onBackPress = {
                 navController.popBackStack()

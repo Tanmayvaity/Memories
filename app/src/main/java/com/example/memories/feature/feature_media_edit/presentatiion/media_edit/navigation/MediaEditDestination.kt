@@ -21,7 +21,6 @@ import kotlin.reflect.typeOf
 fun NavGraphBuilder.createMediaEditGraph(
     navController: NavHostController,
     onBottomBarVisibilityChange : (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
     composable<AppScreen.MediaEdit>(
         typeMap = mapOf(
@@ -35,7 +34,6 @@ fun NavGraphBuilder.createMediaEditGraph(
     ) {
         val args = it.toRoute<AppScreen.MediaEdit>()
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         MediaEditRoot(
             onBackPress = {
                 navController.popBackStack()

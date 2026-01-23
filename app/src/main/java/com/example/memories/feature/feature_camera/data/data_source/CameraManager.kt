@@ -230,6 +230,9 @@ class CameraManager(
 
     suspend fun takePicture(): Result<Uri> {
         val file = createTempFile(context)
+
+        if(file == null) return Result.Error(NullPointerException("File is null"))
+
         if (imageCaptureUseCase == null) {
             val error = IllegalStateException("ImageCapture use case not initialized")
             Log.e(TAG, "${error.message}")

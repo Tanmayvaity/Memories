@@ -19,7 +19,6 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     startDestination : TopLevelScreen = TopLevelScreen.Feed,
     onBottomBarVisibilityChange : (Boolean)-> Unit,
-    onFloatingActionBtnVisibilityChange: (Boolean) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -29,37 +28,31 @@ fun AppNavHost(
         createFeedGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
         )
 
         createOtherGraph(
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange,
             navController = navController
         )
 
         createCameraGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
         )
 
         createMediaEditGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
         )
 
         createMemoryGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
         )
 
         createNotificationGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
-            onFloatingActionBtnVisibilityChange = onFloatingActionBtnVisibilityChange
         )
 
 

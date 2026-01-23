@@ -13,11 +13,9 @@ import com.example.memories.navigation.TopLevelScreen
 fun NavGraphBuilder.createOtherGraph(
     navController: NavHostController,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange: (Boolean) -> Unit
 ) {
     composable<TopLevelScreen.Other> {
         onBottomBarVisibilityChange(true)
-        onFloatingActionBtnVisibilityChange(false)
         OtherScreen(
             onNavigateToTags = { route ->
                 navController.navigate(route)
@@ -36,7 +34,6 @@ fun NavGraphBuilder.createOtherGraph(
 
     composable<AppScreen.CameraSettings> {
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         CameraSettingsScreen(
             onBack = {
                 navController.popBackStack()
@@ -46,7 +43,6 @@ fun NavGraphBuilder.createOtherGraph(
 
     composable<AppScreen.About> {
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         AboutScreen(
             onBack = {
                 navController.popBackStack()
@@ -56,7 +52,6 @@ fun NavGraphBuilder.createOtherGraph(
 
     composable<AppScreen.DeveloperInfo> {
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         DeveloperInfoRoot(
             onBack = {
                 navController.popBackStack()

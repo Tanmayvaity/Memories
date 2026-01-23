@@ -42,11 +42,6 @@ import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TOP_LEVEL_DESTINATIONS
 import com.example.memories.navigation.TopLevelDestination
 import com.example.memories.navigation.TopLevelNavigation
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
-import dev.chrisbanes.haze.rememberHazeState
 
 
 @Preview()
@@ -54,7 +49,6 @@ import dev.chrisbanes.haze.rememberHazeState
 fun AppNav(navController: NavHostController = rememberNavController()) {
 
     var isBottomBarVisible by remember { mutableStateOf(true) }
-    var isFloatingActionButtonVisible by remember { mutableStateOf(true) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -65,7 +59,6 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
-//            contentWindowInsets = WindowInsets(top = 0.dp),
             bottomBar = {
                 AnimatedVisibility(
                     visible = isBottomBarVisible,
@@ -82,65 +75,6 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                     )
                 }
             },
-            floatingActionButton = {
-//                FloatingActionButton(
-//                    onClick = {
-//
-//                    }
-//                ) {
-//                    Icon(
-//                        painter = painterResource(R.drawable.ic_camera),
-//                        contentDescription = "Camera"
-//                    )
-//                }
-//                AnimatedVisibility(
-//                    visible = isFloatingActionButtonVisible
-//                ) {
-//                    ExtendedFloatingActionButton(
-//                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
-//                        text = {
-//                            Text(
-//                                text = "Create Memory"
-//                            )
-//                        },
-//                        icon = {
-//                            Icon(
-//                                painter = painterResource(R.drawable.ic_camera),
-//                                contentDescription = "Camera"
-//                            )
-//                        },
-//                        onClick = {
-////                            navController.navigate(AppScreen.Camera)
-//                        },
-//                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//                        containerColor = MaterialTheme.colorScheme.primaryContainer
-//                    )
-//
-//                }
-//                if(isFloatingActionButtonVisible){
-//                    ExtendedFloatingActionButton(
-//                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
-//                        text = {
-//                            Text(
-//                                text = "Create Memory"
-//                            )
-//                        },
-//                        icon = {
-//                            Icon(
-//                                painter = painterResource(R.drawable.ic_camera),
-//                                contentDescription = "Camera"
-//                            )
-//                        },
-//                        onClick = {
-//                            navController.navigate(AppScreen.Camera)
-//                        }
-//                    )
-//                }
-
-
-            }
-
-
         ) { innerPadding ->
             AppNavHost(
                 modifier = Modifier
@@ -150,10 +84,6 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                 onBottomBarVisibilityChange = { visibility ->
                     isBottomBarVisible = visibility
                 },
-                onFloatingActionBtnVisibilityChange = { visibility ->
-                    isFloatingActionButtonVisible = visibility
-                }
-
             )
         }
     }
@@ -186,18 +116,10 @@ fun BottomNavBar(
                 },
                 label = {
                     Text(
-                        text = item.name.toString(),
+                        text = item.name,
                         style = MaterialTheme.typography.titleSmall,
                     )
                 },
-//                colors = NavigationBarItemDefaults.colors(
-//                    indicatorColor = Color.Black,
-//                    selectedIconColor = Color.White,
-//                    selectedTextColor = Color.Black,
-//                    unselectedIconColor = Color.Black,
-//                    unselectedTextColor = Color.Black
-//                )
-
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = MaterialTheme.colorScheme.primary,
                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,

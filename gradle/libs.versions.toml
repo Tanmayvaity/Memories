@@ -1,29 +1,28 @@
 [versions]
-agp = "8.11.1"
-kotlin = "2.0.21"
-coreKtx = "1.16.0"
+agp = "9.0.0"
+kotlin = "2.3.0"
+coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.10.1"
-composeBom = "2025.12.01"
-navigation = "2.8.9"
-serialization = "1.6.3"
-camerax = "1.5.0-beta01"
-coil = "3.2.0"
-ksp = '2.0.21-1.0.27'
-hilt = "2.56.1"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.12.2"
+composeBom = "2026.01.00"
+navigation = "2.9.6"
+serialization = "1.10.0"
+camerax = "1.5.2"
+coil = "3.3.0"
+ksp = "2.3.4"
+hilt = "2.59"
 media3 = "1.7.1"
-haze = "1.6.8"
 paging = "3.3.6"
-paging-compose = "3.4.0-alpha01"
-datastore = "1.1.7"
-room = "2.7.2"
+paging-compose = "3.4.0-rc01"
+datastore = "1.2.0"
+room = "2.8.4"
 material-expressive = "1.5.0-alpha10"
 lottie = "6.7.1"
 work = "2.11.0"
-hilt-ext = "1.2.0"
+hilt-ext = "1.3.0"
 retrofit = "3.0.0"
 
 [libraries]
@@ -64,8 +63,6 @@ androidx-media3-exoplayer = {module = "androidx.media3:media3-exoplayer",version
 androidx-media3-exoplayer-dash  = {module = "androidx.media3:media3-exoplayer-dash",version.ref = "media3"}
 androidx-media3-ui = {module = "androidx.media3:media3-ui",version.ref = "media3"}
 androidx-media3-compose = {module = "androidx.media3:media3-ui-compose",version.ref = "media3"}
-dev-haze = {module = "dev.chrisbanes.haze:haze-android",version.ref = "haze"}
-dev-haze-materials = {module = "dev.chrisbanes.haze:haze-materials-android",version.ref = "haze"}
 androidx-paging-runtime = {module ="androidx.paging:paging-runtime",version.ref = "paging"}
 androidx-paging-compose = {module ="androidx.paging:paging-compose",version.ref = "paging-compose"}
 androidx-datastore-preferences = {module = "androidx.datastore:datastore-preferences",version.ref = "datastore"}
@@ -89,7 +86,6 @@ retrofit-gson-convertor = {module = "com.squareup.retrofit2:converter-gson",vers
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-ksp = {id = "com.google.devtools.ksp",version.ref = "ksp"}

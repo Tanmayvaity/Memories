@@ -14,11 +14,9 @@ import com.example.memories.navigation.AppScreen
 fun NavGraphBuilder.createCameraGraph(
     navController: NavHostController,
     onBottomBarVisibilityChange : (Boolean) -> Unit,
-    onFloatingActionBtnVisibilityChange : (Boolean) -> Unit
 ){
     composable<AppScreen.Camera>{
         onBottomBarVisibilityChange(false)
-        onFloatingActionBtnVisibilityChange(false)
         CameraRoute(
             onNavigateToImageEdit = { route->
                 navController.navigate(route)

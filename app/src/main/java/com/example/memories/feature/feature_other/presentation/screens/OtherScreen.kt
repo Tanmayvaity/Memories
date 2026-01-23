@@ -50,13 +50,13 @@ import com.example.memories.core.util.getVersionName
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
 import com.example.memories.navigation.AppScreen
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+
 
 
 const val TAG = "OtherScreen"
 
 @Preview
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(
     onNavigateToTags: (AppScreen.Tags) -> Unit = {},

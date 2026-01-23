@@ -6,7 +6,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
@@ -16,20 +15,17 @@ plugins {
 
 android {
     namespace = "com.example.memories"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.memories"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        ksp{
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     buildTypes {
@@ -50,6 +46,11 @@ android {
         compose = true
     }
 
+}
+androidComponents{
+    ksp{
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
     kotlin{
         target {
             compilerOptions{
@@ -60,10 +61,7 @@ android {
             freeCompilerArgs.add("-Xexplicit-backing-fields")
             freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
         }
-
-
     }
-
 }
 
 dependencies {
@@ -114,10 +112,6 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer.dash)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.compose)
-
-    // haze
-    implementation(libs.dev.haze)
-    implementation(libs.dev.haze.materials)
 
     // paging 3
     implementation(libs.androidx.paging.runtime)

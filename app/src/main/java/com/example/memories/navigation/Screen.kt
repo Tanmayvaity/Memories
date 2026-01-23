@@ -41,9 +41,6 @@ sealed class AppScreen(val route: String) {
     ) : AppScreen("Memory")
 
     @Serializable
-    object Shared : AppScreen("Shared")
-
-    @Serializable
     object CameraSettings : AppScreen("CameraSettings")
 
     @Serializable
