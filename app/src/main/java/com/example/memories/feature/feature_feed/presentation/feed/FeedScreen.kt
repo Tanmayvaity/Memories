@@ -51,7 +51,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.PagingData
@@ -81,8 +81,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedRoot(
     modifier: Modifier = Modifier,
-    viewModel: FeedViewModel = hiltViewModel<FeedViewModel>(),
-    themeViewModel: ThemeViewModel = hiltViewModel<ThemeViewModel>(),
+    viewModel: FeedViewModel = hiltViewModel(),
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
@@ -91,14 +90,8 @@ fun FeedRoot(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val memories = viewModel.memories.collectAsLazyPagingItems()
-    val dataLoadingState by viewModel.isDataLoading.collectAsStateWithLifecycle()
-    val isDarkModeEnabled by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
-
-
-
     FeedScreen(
         state = state,
-        loadState = dataLoadingState,
         onEvent = viewModel::onEvent,
         onNavigateToImageEdit = onNavigateToImageEdit,
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
@@ -115,7 +108,6 @@ fun FeedRoot(
 @Composable
 fun FeedScreen(
     state: FeedState,
-    loadState: Boolean,
     onEvent: (FeedEvents) -> Unit,
     onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
@@ -128,18 +120,12 @@ fun FeedScreen(
     val sheetState = rememberModalBottomSheetState()
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
     var expandFab by rememberSaveable() { mutableStateOf(false) }
-    var currentItemIndex by remember { mutableStateOf<Int?>(null) }
-    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var selectedChipIndex by remember { mutableStateOf<Int>(0) }
     val lazyListState = rememberLazyListState()
     var currentScrollValue by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentMemoryEntryMode: MemoryEntryMode? = null
     var isScrollingUp by remember { mutableStateOf(true) } // Start with FAB visible
-    var translateX = 600f
-    val leftTranslate = remember { Animatable(-translateX) }
-    val rightTranslate = remember { Animatable(translateX) }
     val scope = rememberCoroutineScope()
 
 // This effect will update isScrollingUp based on the scroll direction
@@ -162,67 +148,11 @@ fun FeedScreen(
 
     }
 
-
-
-    LaunchedEffect(currentScrollValue) {
-        onBottomBarVisibilityToggle(currentScrollValue)
-    }
-
-
-//    val mediaLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-//    ) { uriList ->
-//
-//
-//        if (uriList != null && uriList.size <= 5) {
-//
-//            val uriWrapperList = uriList.map { uri ->
-//                UriType(
-//                    uri = uri.toString(),
-//                    type = uri.mapContentUriToType(context)
-//                )
-//            }
-//
-//            if (currentMemoryEntryMode != null && uriWrapperList.isNotEmpty()) {
-//                when (currentMemoryEntryMode) {
-//                    MemoryEntryMode.EditImage -> {
-//                        onNavigateToImageEdit(AppScreen.MediaEdit)
-//                    }
-//
-//                    MemoryEntryMode.ChooseImageAndCreate -> {
-//                        onNavigateToMemoryCreate(AppScreen.Memory(null, uriWrapperList))
-//                    }
-//
-//                    else -> {}
-//                }
-//            }
-//
-//        }
-//        if (uriList == null) {
-//            Log.e(TAG, "FeedScreen: Uri List is NULL")
-//            return@rememberLauncherForActivityResult
-//        }
-//
-//        if (uriList.size > 5) {
-//            Log.e(TAG, "FeedScreen: uri list size  is greater than 5")
-//            return@rememberLauncherForActivityResult
-//        }
-//
-//
-//    }
-
-    val currentFontSize = lerp(
-        start = 24.sp,
-        stop = 20.sp,
-        fraction = scrollBehavior.state.collapsedFraction
-    )
-
     Scaffold(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             AppTopBar(
-
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(
@@ -264,47 +194,6 @@ fun FeedScreen(
             )
         },
         floatingActionButton = {
-//            FloatingActionButton(
-//                elevation = FloatingActionButtonDefaults.elevation(0.dp),
-//                onClick = {
-////                            navController.navigate(AppScreen.Camera)
-//                    mediaLauncher.launch(
-//                        PickVisualMediaRequest(
-//                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
-//                        )
-//                    )
-//                },
-//                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//                containerColor = MaterialTheme.colorScheme.primaryContainer
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.Add,
-//                    contentDescription = "Create Memory"
-//                )
-//            }
-
-
-//            CustomFloatingActionButton(
-//                expandable = true,
-//                actionList = listOf(
-//                    Triple(MemoryEntryMode.ChooseImageAndCreate, Icons.Default.AddCircle,"Choosing Media"),
-//                    Triple(MemoryEntryMode.EditImage, Icons.Outlined.Edit,"Edit Media"),
-//                    Triple(MemoryEntryMode.DirectCreate, Icons.Outlined.Add,"Without Media"),
-//
-//                ),
-//                onFabClick = {mode ->
-//                    currentMemoryEntryMode = mode
-//                    if(mode != MemoryEntryMode.DirectCreate){
-//                        mediaLauncher.launch(
-//                            PickVisualMediaRequest(
-//                                ActivityResultContracts.PickVisualMedia.ImageOnly
-//                            )
-//                        )
-//                    }
-//
-//                }
-//
-//            )
 
             val items = listOf(
                 Triple(
@@ -388,54 +277,6 @@ fun FeedScreen(
             contentPadding = innerPadding,
             state = lazyListState
         ) {
-
-//            stickyHeader() {
-//                ChipRow(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .background(MaterialTheme.colorScheme.surface),
-//                    selectedItemIndex = state.type.toIndex(),
-//                    items = listOf<MenuItem>(
-//                        MenuItem(
-//                            title = "All",
-//                            onClick = {
-////
-//                                onEvent(FeedEvents.ChangeFetchType(FetchType.ALL))
-//                                onEvent(FeedEvents.FetchFeed)
-//                                selectedChipIndex = 0
-//                            },
-//                            iconContentDescription = "",
-//                            icon = -1
-//                        ),
-//                        MenuItem(
-//                            title = "Favorite",
-//                            onClick = {
-//                                selectedChipIndex = 1
-////                                onEvent(FeedEvents.FetchFeed(FetchType.FAVORITE))
-//                                onEvent(FeedEvents.ChangeFetchType(FetchType.FAVORITE))
-//                                onEvent(FeedEvents.FetchFeed)
-//                            },
-//                            iconContentDescription = "",
-//                            icon = R.drawable.ic_favourite_filled
-//                        ),
-//                        MenuItem(
-//                            title = "Hidden",
-//                            onClick = {
-//                                selectedChipIndex = 2
-////                                onEvent(FeedEvents.FetchFeed(FetchType.HIDDEN))
-//                                onEvent(FeedEvents.ChangeFetchType(FetchType.HIDDEN))
-//                                onEvent(FeedEvents.FetchFeed)
-//                            },
-//                            iconContentDescription = "",
-//                            icon = R.drawable.ic_hidden
-//                        ),
-//
-//
-//                        )
-//                )
-//            }
-
-
             items(
                 key = { index: Int -> memories[index]?.memory?.memoryId ?: index },
                 count = memories.itemCount,
@@ -505,8 +346,6 @@ fun FeedScreen(
             }
         }
 
-
-
         if (showDeleteDialog && currentItem != null || state.isDeleting) {
 
             GeneralAlertSheet(
@@ -526,48 +365,6 @@ fun FeedScreen(
                 },
                 isLoading = state.isDeleting
             )
-
-
-//            GeneralAlertDialog(
-//                title = "Delete Memory Alert",
-//                text = "Are you sure you want to delete this memory",
-//                onDismiss = {
-//                    showDeleteDialog = false
-//                },
-//                confirmButton = {
-//                    Button(
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color.Red
-//                        ),
-//                        onClick = {
-//                            showDeleteDialog = false
-//                            onEvent(
-//                                FeedEvents.Delete(
-//                                    currentItem!!.memory,
-//                                    currentItem!!.mediaList.map { it -> it.uri })
-//                            )
-//                        }
-//                    ) {
-//                        Text(
-//                            text = "Delete",
-//                            color = Color.White
-//                        )
-//                    }
-//                },
-//                dismissButton = {
-//                    OutlinedButton(
-//                        onClick = {
-//                            showDeleteDialog = false
-//                        }
-//
-//                    ) {
-//                        Text(
-//                            text = stringResource(R.string.dismiss),
-//                            color = MaterialTheme.colorScheme.onSurface
-//                        )
-//                    }
-//                }
-//            )
         }
 
         if (memories.itemCount == 0 && memories.loadState.append != LoadState.Loading) {
@@ -682,7 +479,6 @@ fun FeedScreenPreview(modifier: Modifier = Modifier) {
         val previewMemories = List(30) { MemoryWithMediaModel() }
         FeedScreen(
             state = FeedState(),
-            loadState = false,
             onEvent = {},
             memories = flowOf(PagingData.from(previewMemories)).collectAsLazyPagingItems()
         )

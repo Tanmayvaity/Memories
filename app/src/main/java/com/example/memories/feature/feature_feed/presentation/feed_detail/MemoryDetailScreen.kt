@@ -97,10 +97,6 @@ fun MemoryDetailRoot(
     val isLoading by viewmodel.isLoading.collectAsStateWithLifecycle()
     val isDeleting by viewmodel.isDeleting.collectAsStateWithLifecycle()
     val context = LocalContext.current
-//    LaunchedEffect(Unit) {
-//        Log.d("MemoryDetailScreen", "MediaDetailRoot: ${memoryId}")
-//        viewmodel.onEvent(MemoryDetailEvents.Fetch(id = memoryId))
-//    }
 
     LaunchedEffect(Unit) {
         viewmodel.eventFlow.collect { event ->
@@ -152,7 +148,7 @@ fun MemoryDetailScreen(
     var showContentSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val toolbarScrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
-        exitDirection = FloatingToolbarExitDirection.Bottom,
+        exitDirection = FloatingToolbarExitDirection.Top,
     )
     val sheetState =  rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -344,44 +340,6 @@ fun MemoryDetailScreen(
         }
     }
     if (showDeleteDialog || isDeleting) {
-//        GeneralAlertDialog(
-//            title = "Delete Memory Alert",
-//            text = "Are you sure you want to delete this memory",
-//            onDismiss = {
-//                showDeleteDialog = false
-//            },
-//            confirmButton = {
-//                Button(
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color.Red
-//                    ),
-//                    onClick = {
-//                        showDeleteDialog = false
-//                        showContentSheet = false
-//                        onEvent(MemoryDetailEvents.Delete)
-//                    }
-//                ) {
-//                    Text(
-//                        text = "Delete",
-//                        color = Color.White
-//                    )
-//                }
-//            },
-//            dismissButton = {
-//                OutlinedButton(
-//                    onClick = {
-//                        showDeleteDialog = false
-//                    }
-//
-//                ) {
-//                    Text(
-//                        text = stringResource(R.string.dismiss),
-//                        color = MaterialTheme.colorScheme.onSurface
-//                    )
-//                }
-//            }
-//        )
-
         GeneralAlertSheet(
             title = "Delete Memory Alert",
             content = "Are you sure you want to delete this memory",

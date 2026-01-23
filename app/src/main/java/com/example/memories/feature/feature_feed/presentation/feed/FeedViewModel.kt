@@ -51,18 +51,6 @@ class FeedViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<FeedState>(FeedState())
     val state = _state.asStateFlow()
-//        .onStart { onEvent(FeedEvents.FetchFeed) }
-//        .onEach {it ->
-//            Log.d(TAG, "${it.memories}")
-//        }
-//        .onCompletion {
-//            _state.update { it.copy(isLoading = false) }
-//        }
-//        .stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.WhileSubscribed(5000),
-//            initialValue = FeedState()
-//        )
 
     private val _appliedFilters = MutableStateFlow(
         FilterState(
@@ -80,35 +68,10 @@ class FeedViewModel @Inject constructor(
         }
         .cachedIn(viewModelScope)
 
-
-
-
-
-
-    private val _isDataLoading = MutableStateFlow<Boolean>(false)
-    val isDataLoading : StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
     fun onEvent(event: FeedEvents) {
         when (event) {
             is FeedEvents.FetchFeed -> {
-//                viewModelScope.launch {
-//                    _state.update { it.copy(isLoading = true) }
-//                    feedUseCases.getFeedUseCase(
-//                        type = state.value.type,
-//                        sortType = state.value.sortType,
-//                        orderByType = state.value.orderByType
-//                    )
-//                        .collectLatest { itemList ->
-//                        _state.update { it ->
-//                            it.copy(
-//                                memories = itemList,
-//                                isLoading = false,
-//                                error = null
-//                            )
-//                        }
-//                    }
-//                }
+
             }
 
             is FeedEvents.ApplyFilter -> {
