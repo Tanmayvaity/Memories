@@ -1,9 +1,5 @@
 package com.example.memories.feature.feature_other.presentation.screens
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,10 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeEvents
@@ -55,20 +48,42 @@ import com.example.memories.navigation.AppScreen
 
 const val TAG = "OtherScreen"
 
+@Composable
+fun OtherRoot(
+    onNavigateToTags: (AppScreen.Tags) -> Unit = {},
+    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
+    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
+    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
+    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {},
+    viewmodel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+) {
+    val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
+
+    OtherScreen(
+        state = state,
+        onThemeEvent = viewmodel::onEvent,
+        onNavigateToTags = onNavigateToTags,
+        onNavigateToSettingsScreen = onNavigateToSettingsScreen,
+        onNavigateToAboutScreen = onNavigateToAboutScreen,
+        onNavigateToDeveloperInfoScreen = onNavigateToDeveloperInfoScreen,
+        onNavigateToDeleteAllDataScreen = onNavigateToDeleteAllDataScreen
+    )
+}
+
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(
+    state: ThemeTypes = ThemeTypes.LIGHT,
+    onThemeEvent: (ThemeEvents) -> Unit = {},
     onNavigateToTags: (AppScreen.Tags) -> Unit = {},
     onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
     onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
-    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {}
+    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
+    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {}
 ) {
 
     val context = LocalContext.current
-    val viewmodel = hiltViewModel<ThemeViewModel>()
-    val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
-    val theme = LocalTheme.current
     val scrollState = rememberScrollState()
     var showThemeSheet by remember { mutableStateOf(false) }
 
@@ -116,7 +131,17 @@ fun OtherScreen(
             onClick = {
                 onNavigateToTags(AppScreen.Tags)
             }
-        )
+        ),
+        MenuItem(
+            icon = R.drawable.ic_delete,
+            iconContentDescription = "Delete Icon",
+            title = "Delete All Data",
+            content = "Delete the entire data you have created",
+            onClick = {
+                onNavigateToDeleteAllDataScreen(AppScreen.DeleteAllData)
+            }
+        ),
+
 
     )
     val appInfoSettingItems = listOf<MenuItem>(
@@ -217,7 +242,7 @@ fun OtherScreen(
                 isDarkMode = state,
                 onApplyTheme = {
                     showThemeSheet = false
-                    viewmodel.onEvent(
+                    onThemeEvent(
                         ThemeEvents.SetTheme
                     )
                 },
@@ -227,7 +252,7 @@ fun OtherScreen(
                         icon = R.drawable.ic_light_mode,
                         iconContentDescription = "Light Mode Icon",
                         onClick = {
-                            viewmodel.onEvent(
+                            onThemeEvent(
                                 ThemeEvents.ChangeThemeType(
                                     ThemeTypes.LIGHT
 
@@ -240,7 +265,7 @@ fun OtherScreen(
                         icon = R.drawable.ic_night_mode,
                         iconContentDescription = "Dark Mode Icon",
                         onClick = {
-                            viewmodel.onEvent(
+                            onThemeEvent(
                                 ThemeEvents.ChangeThemeType(
                                     ThemeTypes.DARK
 
@@ -253,7 +278,7 @@ fun OtherScreen(
 //                        icon = R.drawable.ic_theme,
 //                        iconContentDescription = "System Default Icon",
 //                        onClick = {
-//                            viewmodel.onEvent(ThemeEvents.ChangeThemeType(
+//                            onThemeEvent(ThemeEvents.ChangeThemeType(
 //                                ThemeTypes.SYSTEM
 //                            ))
 //                        }
@@ -343,9 +368,3 @@ fun CustomSettingRow(
 
     }
 }
-
-
-
-
-
-

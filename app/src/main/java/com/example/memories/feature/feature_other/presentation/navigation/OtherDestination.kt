@@ -5,8 +5,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.memories.feature.feature_other.presentation.screens.AboutScreen
 import com.example.memories.feature.feature_other.presentation.screens.CameraSettingsScreen
+import com.example.memories.feature.feature_other.presentation.screens.DeleteAllDataRoot
 import com.example.memories.feature.feature_other.presentation.screens.DeveloperInfoRoot
-import com.example.memories.feature.feature_other.presentation.screens.OtherScreen
+import com.example.memories.feature.feature_other.presentation.screens.OtherRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 
@@ -16,7 +17,7 @@ fun NavGraphBuilder.createOtherGraph(
 ) {
     composable<TopLevelScreen.Other> {
         onBottomBarVisibilityChange(true)
-        OtherScreen(
+        OtherRoot(
             onNavigateToTags = { route ->
                 navController.navigate(route)
             },
@@ -28,7 +29,10 @@ fun NavGraphBuilder.createOtherGraph(
             },
             onNavigateToDeveloperInfoScreen = {route ->
                 navController.navigate(route)
-            }
+            },
+            onNavigateToDeleteAllDataScreen = {route ->
+                navController.navigate(route)
+            },
         )
     }
 
@@ -53,6 +57,15 @@ fun NavGraphBuilder.createOtherGraph(
     composable<AppScreen.DeveloperInfo> {
         onBottomBarVisibilityChange(false)
         DeveloperInfoRoot(
+            onBack = {
+                navController.popBackStack()
+            }
+        )
+    }
+
+    composable<AppScreen.DeleteAllData> {
+        onBottomBarVisibilityChange(false)
+        DeleteAllDataRoot(
             onBack = {
                 navController.popBackStack()
             }

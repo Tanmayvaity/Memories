@@ -7,4 +7,9 @@
     <string name="download">Download</string>
     <string name ="previous">Go back to the previous screen</string>
     <string name ="cancel">Cancel</string>
+    <string name="security_check">Security Check</string>
+    <string name="delete_all_memories_title">Delete All Memories?</string>
+    <string name="delete_all_memories_description">This action is permanent and cannot be undone. All your photos, videos, and journal entries will be wiped from your device and backup.</string>
+    <string name="type_delete_to_confirm">Type DELETE to confirm</string>
+    <string name="permanently_delete_everything">Permanently Delete Everything</string>
 </resources>
