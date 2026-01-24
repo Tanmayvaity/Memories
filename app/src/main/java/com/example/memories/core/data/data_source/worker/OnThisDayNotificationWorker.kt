@@ -103,27 +103,28 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
                 .toInstant().toEpochMilli()
 
             val memories = memoryRepository.getMemoriesWithinRange(startOfDay, endOfDay).first()
-            if (memories.isNotEmpty() && memories[0].mediaList.isNotEmpty()) {
+            if (memories.isNotEmpty()) {
                 val first = memories[0]
-                val uri = first.mediaList[0].uri
-                val isTypeImage = uri.toUri().mapToType().isImageFile()
-                if (isTypeImage) {
-                    val bitmap = mediaManager.uriToBitmap(uri.toUri())
-                    notificationService.showOnThisDayNotification(
-                        bitmap.getOrNull(),
-                        "A memory from this day",
-                        "You have memories to look back on ${
-                            today.format(
-                                DateTimeFormatter.ofPattern(
-                                    "dd MMM yyyy"
-                                )
+
+                val bitmap = if (first.mediaList.isNotEmpty()) {
+                    val uri = first.mediaList[0].uri
+                    val isTypeImage = uri.toUri().mapToType().isImageFile()
+
+                    if (isTypeImage) mediaManager.uriToBitmap(uri.toUri()).getOrNull() else null
+                } else null
+
+                notificationService.showOnThisDayNotification(
+                    bitmap,
+                    "A memory from this day",
+                    "You have memories to look back on ${
+                        today.format(
+                            DateTimeFormatter.ofPattern(
+                                "dd MMM yyyy"
                             )
-                        }"
-                    )
-                    return@withContext Result.success()
-                }
-            } else {
-                Log.e(TAG, "doWork: do memory or media empty",)
+                        )
+                    }"
+                )
+                return@withContext Result.success()
             }
         }
 
@@ -131,8 +132,6 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
 
         return@withContext Result.success()
     }
-
-
 
 
 }

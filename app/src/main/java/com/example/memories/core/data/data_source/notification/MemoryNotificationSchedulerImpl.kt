@@ -36,8 +36,8 @@ class MemoryNotificationSchedulerImpl @Inject constructor(
 
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 7)
-            set(Calendar.MINUTE, 0)
+            set(Calendar.HOUR_OF_DAY,7)
+            set(Calendar.MINUTE,0)
         }
 
         if (target.before(now)) {
