@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -46,7 +49,7 @@ class FetchOnThisDayUseCase(
             val endOfDay = targetDate.plusDays(1).atStartOfDay(ZoneId.systemDefault())
                 .toInstant().toEpochMilli()
 
-            val memories = repository.getMemoriesWithinRange(startOfDay, endOfDay)
+            val memories = repository.getMemoriesWithinRange(startOfDay, endOfDay).first()
 //            Log.d("FetchOnThisDataUseCase", "invoke: inside ${memories}")
             Log.d("FetchOnThisDataUseCase", "Querying $label: $startOfDay to $endOfDay")
 

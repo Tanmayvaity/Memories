@@ -74,7 +74,7 @@ fun FilterActionSheet(
             onDismiss()
         },
         sheetState = sheetState,
-        containerColor = if (theme) VeryDarkGray else VeryLightGray
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier

@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.example.memories.core.util.isOnBackStack
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailRoot
+import com.example.memories.feature.feature_feed.presentation.history.HistoryRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
 import com.example.memories.feature.feature_feed.presentation.tags_with_memory.TagWithMemoryRoot
@@ -89,6 +90,19 @@ fun NavGraphBuilder.createFeedGraph(
                 navController.popBackStack()
             },
             onNavigateToMemory = {route ->
+                navController.navigate(route)
+            }
+
+        )
+    }
+
+    composable<AppScreen.History> {
+        onBottomBarVisibilityChange(false)
+        HistoryRoot(
+            onBack = {
+                navController.popBackStack()
+            },
+            onNavigate = {route ->
                 navController.navigate(route)
             }
 

@@ -35,7 +35,7 @@ class MemoryRepositoryImpl @Inject constructor(
     val memoryDao: MemoryDao,
     val tagDao: TagDao,
 ) : MemoryRepository {
-    companion object{
+    companion object {
         private const val TAG = "MemoryRepositoryImpl"
     }
 
@@ -220,8 +220,12 @@ class MemoryRepositoryImpl @Inject constructor(
         return memoryDao.getEarliestMemoryTimestamp()
     }
 
-    override suspend fun getMemoriesWithinRange(min: Long, max: Long): List<MemoryWithMediaModel> {
-        return memoryDao.getMemoriesBetweenTimestamps(min, max).map { it -> it.toDomain() }
+    override suspend fun getMemoriesWithinRange(
+        min: Long,
+        max: Long
+    ): Flow<List<MemoryWithMediaModel>> {
+        return memoryDao.getMemoriesBetweenTimestamps(min, max)
+            .map { list -> list.map { it -> it.toDomain() } }
     }
 
     override suspend fun getRecentMemories(limit: Int): Flow<List<MemoryWithMediaModel>> {

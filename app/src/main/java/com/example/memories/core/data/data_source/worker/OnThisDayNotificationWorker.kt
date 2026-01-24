@@ -102,7 +102,7 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
             val endOfDay = targetDate.plusDays(1).atStartOfDay(ZoneId.systemDefault())
                 .toInstant().toEpochMilli()
 
-            val memories = memoryRepository.getMemoriesWithinRange(startOfDay, endOfDay)
+            val memories = memoryRepository.getMemoriesWithinRange(startOfDay, endOfDay).first()
             if (memories.isNotEmpty() && memories[0].mediaList.isNotEmpty()) {
                 val first = memories[0]
                 val uri = first.mediaList[0].uri

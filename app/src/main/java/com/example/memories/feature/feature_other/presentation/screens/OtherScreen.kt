@@ -50,11 +50,12 @@ const val TAG = "OtherScreen"
 
 @Composable
 fun OtherRoot(
-    onNavigateToTags: (AppScreen.Tags) -> Unit = {},
-    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
-    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
-    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
-    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {},
+    onNavigateToTags: (AppScreen.Tags) -> Unit,
+    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit,
+    onNavigateToAboutScreen : (AppScreen.About) -> Unit,
+    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit,
+    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit,
+    onNavigateToHistoryScreen : (AppScreen.History) -> Unit,
     viewmodel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
 ) {
     val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
@@ -66,7 +67,8 @@ fun OtherRoot(
         onNavigateToSettingsScreen = onNavigateToSettingsScreen,
         onNavigateToAboutScreen = onNavigateToAboutScreen,
         onNavigateToDeveloperInfoScreen = onNavigateToDeveloperInfoScreen,
-        onNavigateToDeleteAllDataScreen = onNavigateToDeleteAllDataScreen
+        onNavigateToDeleteAllDataScreen = onNavigateToDeleteAllDataScreen,
+        onNavigateToHistoryScreen = onNavigateToHistoryScreen
     )
 }
 
@@ -80,7 +82,8 @@ fun OtherScreen(
     onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
     onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
     onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
-    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {}
+    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {},
+    onNavigateToHistoryScreen : (AppScreen.History) -> Unit = {},
 ) {
 
     val context = LocalContext.current
@@ -130,6 +133,15 @@ fun OtherScreen(
             content = "Check and edit your created tags",
             onClick = {
                 onNavigateToTags(AppScreen.Tags)
+            }
+        ),
+        MenuItem(
+            icon = R.drawable.ic_history,
+            iconContentDescription = "History Icon",
+            title = "View Past Memories",
+            content = "Relive your cherished moments",
+            onClick = {
+                onNavigateToHistoryScreen(AppScreen.History)
             }
         ),
         MenuItem(

@@ -24,15 +24,18 @@ fun NavGraphBuilder.createOtherGraph(
             onNavigateToSettingsScreen = { route ->
                 navController.navigate(route)
             },
-            onNavigateToAboutScreen = {route ->
+            onNavigateToAboutScreen = { route ->
                 navController.navigate(route)
             },
-            onNavigateToDeveloperInfoScreen = {route ->
+            onNavigateToDeveloperInfoScreen = { route ->
                 navController.navigate(route)
             },
-            onNavigateToDeleteAllDataScreen = {route ->
+            onNavigateToDeleteAllDataScreen = { route ->
                 navController.navigate(route)
             },
+            onNavigateToHistoryScreen = { route ->
+                navController.navigate(route)
+            }
         )
     }
 

@@ -59,7 +59,7 @@ interface MemoryRepository {
     suspend fun getMemoriesWithinRange(
         min: Long,
         max: Long,
-    ): List<MemoryWithMediaModel>
+    ): Flow<List<MemoryWithMediaModel>>
 
     suspend fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMediaModel>>
 }

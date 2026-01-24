@@ -204,5 +204,5 @@ interface MemoryDao {
         AND memory_for_time_stamp < :endTimestamp
         ORDER BY memory_for_time_stamp DESC
     """)
-    suspend fun getMemoriesBetweenTimestamps(startTimestamp: Long, endTimestamp: Long): List<MemoryWithMedia>
+    fun getMemoriesBetweenTimestamps(startTimestamp: Long, endTimestamp: Long): Flow<List<MemoryWithMedia>>
 }

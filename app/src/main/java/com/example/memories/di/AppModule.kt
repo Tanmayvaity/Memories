@@ -85,6 +85,7 @@ import com.example.memories.core.data.data_source.notification.MemoryNotificatio
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
@@ -342,14 +343,13 @@ object AppModule {
         )
     }
 
-//    @Provides
-//    @Singleton
-//    fun providesFeedRepository(
-//        memoryDao: MemoryDao,
-//        tagDao: TagDao
-//    ): FeedRepository{
-//        return FeedRepositoryImpl(memoryDao,tagDao)
-//    }
+    @Provides
+    @Singleton
+    fun providesFeedRepository(
+        repository : MemoryRepository
+    ): FetchTodayMemoriesUseCase{
+        return FetchTodayMemoriesUseCase(repository)
+    }
 
     @Provides
     @Singleton
