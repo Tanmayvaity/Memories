@@ -9,4 +9,8 @@ interface RecentSearchRepository {
 
     fun fetchRecentSearch() : Flow<List<SearchModel>>
 
+    suspend fun deleteSearchById(id : String)
+
+    suspend fun deleteAllSearch()
+
 }

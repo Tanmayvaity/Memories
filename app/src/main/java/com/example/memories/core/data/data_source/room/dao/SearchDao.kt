@@ -30,6 +30,14 @@ interface SearchDao {
     )
     suspend fun trimRecentSearch()
 
+    @Query(
+        "DELETE FROM SearchEntity WHERE memory_id = :id"
+    )
+    suspend fun deleteSearch(id : String)
+
+    @Query("DELETE FROM SearchEntity")
+    suspend fun deleteAllSearch()
+
     @Transaction
     suspend fun insertAndTrim(search: SearchEntity) {
         insertSearch(search)

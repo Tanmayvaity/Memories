@@ -69,6 +69,7 @@ fun MemoryItem(
     memoryItem: MemoryWithMediaModel = MemoryWithMediaModel(),
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     onClick: () -> Unit = {},
+    onIconClick: () -> Unit = {}
 ) {
     val imageUri = memoryItem.mediaList.firstOrNull()?.uri
     var showMenu by remember { mutableStateOf(false) }
@@ -148,7 +149,8 @@ fun MemoryItem(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
                         alpha = 0f,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        onClick = onIconClick
                     )
                 }
 

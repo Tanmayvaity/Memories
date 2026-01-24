@@ -136,10 +136,11 @@ fun MemorySearchBar(
                         memoryItem = item,
                         modifier = Modifier
                             .animateItem()
-                            .padding(bottom = 5.dp)
-                    ) {
-                        onItemClick(item.memory.memoryId)
-                    }
+                            .padding(bottom = 5.dp),
+                        onClick = {
+                            onItemClick(item.memory.memoryId)
+                        }
+                    )
                 }
             }
         }

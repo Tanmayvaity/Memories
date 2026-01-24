@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.search
 
 import android.content.res.Configuration
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -169,6 +170,7 @@ fun SearchScreen(
                 onNavigateToMemoryDetail = {},
                 state = state,
                 onItemClick = { memoryId ->
+                    Log.d("SearchScreen", "SearchScreen: clicked")
                     onEvent(SearchEvents.AddSearch(memoryId))
                     onNavigateToMemoryDetail(AppScreen.MemoryDetail(memoryId))
                 }
@@ -219,13 +221,20 @@ fun SearchScreen(
                     ) {
                         RecentSearchSection(
                             state = state,
-                            theme = theme
-                        ) { id ->
-                            onEvent(SearchEvents.AddSearch(id))
-                            onNavigateToMemoryDetail(
-                                AppScreen.MemoryDetail(id)
-                            )
-                        }
+                            theme = theme,
+                            onRecentSearchItemClick = { id ->
+                                onEvent(SearchEvents.AddSearch(id))
+                                onNavigateToMemoryDetail(
+                                    AppScreen.MemoryDetail(id)
+                                )
+                            },
+                            onClearAllClick = {
+                                onEvent(SearchEvents.DeleteAllSearch)
+                            },
+                            onDeleteSearchClick = {id ->
+                                onEvent(SearchEvents.DeleteSearch(id))
+                            }
+                        )
                     }
                 }
 

@@ -86,6 +86,8 @@ import com.example.memories.feature.feature_notifications.data.NotificationRepos
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteAllSearchUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
@@ -496,7 +498,9 @@ object AppModule {
             searchByTitleUseCase = SearchByTitleUseCase(memoryRepository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             getMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
-            fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository)
+            fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository),
+            deleteSearchByIdUseCase = DeleteSearchByIdUseCase(recentSearchRepository),
+            deleteAllSearchUseCase = DeleteAllSearchUseCase(recentSearchRepository)
         )
     }
 

@@ -17,6 +17,7 @@ import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
+import com.example.memories.feature.feature_feed.presentation.search.SearchEvents.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -197,7 +198,7 @@ class SearchViewModel @Inject constructor(
 
                             if (!initialSelectDone && tags.isNotEmpty()) {
                                 _state.update { it.copy(currentTag = tags.first()) }
-                                onEvent(SearchEvents.SelectTag(state.value.currentTag!!))
+                                onEvent(SelectTag(state.value.currentTag!!))
                                 initialSelectDone = true
                             }
                         }
@@ -262,6 +263,18 @@ class SearchViewModel @Inject constructor(
 
                 }
             }
+
+            is SearchEvents.DeleteAllSearch -> {
+                viewModelScope.launch {
+                    searchUseCase.deleteAllSearchUseCase()
+                }
+            }
+            is SearchEvents.DeleteSearch -> {
+                viewModelScope.launch {
+                    searchUseCase.deleteSearchByIdUseCase(event.memoryId)
+                }
+            }
+
         }
     }
 
