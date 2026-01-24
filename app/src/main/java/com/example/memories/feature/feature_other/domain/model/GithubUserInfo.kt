@@ -6,6 +6,8 @@ data class GithubUserInfo(
     val id : Int,
     @SerializedName("avatar_url") val avatarUrl : String?,
     @SerializedName("html_url") val profileUrl : String?,
+    val location : String?,
     val name : String,
     val bio : String?,
+    @SerializedName("create_at") val createAt : String?
 )

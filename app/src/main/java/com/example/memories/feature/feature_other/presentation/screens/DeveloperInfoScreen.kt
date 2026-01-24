@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -40,6 +41,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
@@ -114,6 +117,7 @@ fun DeveloperInfoScreen(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val isPreviewMode = LocalInspectionMode.current
     Scaffold(
         topBar = {
             AppTopBar(
@@ -169,7 +173,10 @@ fun DeveloperInfoScreen(
 
                 SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(user.avatarUrl)
+                        .data(
+                            if(isPreviewMode) R.drawable.ic_launcher_background
+                            else user.avatarUrl
+                        )
                         .crossfade(true)
                         .listener(
                             onError = { _, result ->
@@ -183,7 +190,8 @@ fun DeveloperInfoScreen(
                     loading = {
                         CircularProgressIndicator(
                             strokeWidth = 3.dp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(32.dp)
                         )
                     },
                     contentDescription = "Avatar",
@@ -191,6 +199,24 @@ fun DeveloperInfoScreen(
                         .size(200.dp)
                         .clip(CircleShape)
                 )
+                user.location?.let { location ->
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_location),
+                            contentDescription = "Location Icon",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = location,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                    }
+                }
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
                     text = "${user?.name}",
@@ -203,6 +229,7 @@ fun DeveloperInfoScreen(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
                 Spacer(modifier = Modifier.height(32.dp))
                 Surface(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.1f),
@@ -259,7 +286,9 @@ private fun DeveloperInfoScreenPreview() {
                     bio = "Android Developer",
                     profileUrl = "",
                     avatarUrl = "",
-                    id = 1
+                    id = 1,
+                    location = "India",
+                    createAt = "Oct 2023"
                 )
 
             )

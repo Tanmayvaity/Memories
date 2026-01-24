@@ -87,7 +87,7 @@ fun MemoryItemCard(
     onFavouriteButtonClick: () -> Unit = {},
     onHideButtonClick: () -> Unit = {},
     onDeleteButtonClick: () -> Unit = {},
-    elevation: Int = 25,
+    elevation: Int = 8,
     shape: Shape = RoundedCornerShape(8.dp),
 ) {
 
