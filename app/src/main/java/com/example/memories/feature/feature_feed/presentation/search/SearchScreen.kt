@@ -21,17 +21,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -67,6 +74,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -93,9 +101,12 @@ import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import org.jetbrains.annotations.Async
 import com.example.memories.R
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
+import com.example.memories.core.util.isImageFile
+import com.example.memories.feature.feature_feed.presentation.feed.components.OnThisDayCard
 import com.google.common.collect.Multimaps.index
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -120,6 +131,7 @@ fun SearchRoot(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -231,7 +243,7 @@ fun SearchScreen(
                             onClearAllClick = {
                                 onEvent(SearchEvents.DeleteAllSearch)
                             },
-                            onDeleteSearchClick = {id ->
+                            onDeleteSearchClick = { id ->
                                 onEvent(SearchEvents.DeleteSearch(id))
                             }
                         )
@@ -264,45 +276,58 @@ fun SearchScreen(
                                 modifier = Modifier.height(250.dp)
                             ) { index ->
                                 val memory = allMemories[index]
-                                Box(
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    AsyncImage(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .clickable {
-                                                onNavigateToMemoryDetail(
-                                                    AppScreen.MemoryDetail(
-                                                        memory.memory.memoryId
+                                val uri = memory.mediaList.firstOrNull()?.uri
+                                if (uri != null && isImageFile(uri)) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        AsyncImage(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .clickable {
+                                                    onNavigateToMemoryDetail(
+                                                        AppScreen.MemoryDetail(
+                                                            memory.memory.memoryId
+                                                        )
                                                     )
-                                                )
-                                            },
-                                        contentScale = ContentScale.Crop,
-                                        placeholder = painterResource(R.drawable.ic_launcher_background),
-                                        error = painterResource(R.drawable.ic_launcher_background),
-                                        contentDescription = "",
-                                        model = memory.mediaList.firstOrNull()?.uri
-
-                                    )
-                                    Text(
-                                        text = memory.memory.memoryForTimeStamp!!.formatTime("dd MMM yyyy"),
-                                        color = Color.White,
-                                        style = TextStyle(
-                                            shadow = Shadow(
-                                                color = Color.Black,
-                                                offset = Offset(2f, 2f),
-                                                blurRadius = 4f,
+                                                },
+                                            contentScale = ContentScale.Crop,
+                                            placeholder = painterResource(R.drawable.ic_launcher_background),
+                                            error = painterResource(R.drawable.ic_launcher_background),
+                                            contentDescription = "",
+                                            model = memory.mediaList.firstOrNull()?.uri
+                                        )
+                                        Text(
+                                            text = memory.memory.memoryForTimeStamp!!.formatTime("dd MMM yyyy"),
+                                            color = Color.White,
+                                            style = TextStyle(
+                                                shadow = Shadow(
+                                                    color = Color.Black,
+                                                    offset = Offset(2f, 2f),
+                                                    blurRadius = 4f,
+                                                ),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 32.sp
                                             ),
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 32.sp
-                                        ),
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .padding(16.dp)
+                                            modifier = Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .padding(16.dp)
+                                        )
+                                    }
+                                } else {
+                                    OnThisDayCard(
+                                        time = memory.memory.memoryForTimeStamp!!,
+                                        title = memory.memory.title,
+                                        onClick = {
+                                            onNavigateToMemoryDetail(
+                                                AppScreen.MemoryDetail(
+                                                    memory.memory.memoryId
+                                                )
+                                            )
+                                        }
                                     )
                                 }
-
                             }
                         }
                     }
@@ -326,15 +351,13 @@ fun SearchScreen(
                                     .padding(top = 5.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            FlowRow(
+                            LazyRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                state.recentMemories.forEachIndexed { index, item ->
-
+                                itemsIndexed(state.recentMemories) { index, item ->
                                     val isMediaValid = item.mediaList.isNotEmpty()
-
                                     Box(
                                         modifier = Modifier
                                             .size(64.dp)
