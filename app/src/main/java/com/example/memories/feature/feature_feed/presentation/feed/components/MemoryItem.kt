@@ -88,6 +88,9 @@ fun MemoryItem(
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        ),
         shape = RoundedCornerShape(16.dp)
     ) {
         Box {

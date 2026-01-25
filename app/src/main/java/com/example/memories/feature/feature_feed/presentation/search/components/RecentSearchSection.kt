@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.search.components
 
+import android.R.attr.onClick
 import android.R.attr.theme
 import android.util.Log
 import androidx.compose.animation.animateContentSize
@@ -85,7 +86,7 @@ fun RecentSearchSection(
                 MemoryItem(
                     modifier = Modifier.padding(vertical = 5.dp),
                     memoryItem = item,
-                    backgroundColor = if (theme) VeryDarkGray else VeryLightGray,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     onClick = {
                         onRecentSearchItemClick(item.memory.memoryId)
                     },
