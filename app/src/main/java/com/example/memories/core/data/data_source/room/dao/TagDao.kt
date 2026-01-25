@@ -35,7 +35,7 @@ interface TagDao {
 
     @Transaction
     @Query("SELECT * FROM TagEntity where tag_id = :id")
-    fun getMemoryByTag(id : String): Flow<TagsWithMemory>
+    fun getMemoryByTag(id : String): Flow<TagsWithMemory?>
 
 
     @Transaction

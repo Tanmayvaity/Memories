@@ -26,18 +26,16 @@ class DeleteAllDataWorker @AssistedInject constructor(
         const val DELETE_ALL_DATA_WORKER = "DELETE_ALL_DATA_WORKER"
     }
 
-    override suspend fun doWork(): Result {
-        return withContext(Dispatchers.IO) {
-            runCatching {
-                val uriList = mediaDao.getAllMedia().map { it -> it.uri.toUri() }
-                db.clearAllTables()
-                mediaManager.deleteInternalMedia(uriList)
-            }.fold(
-                onSuccess = { Result.success() },
-                onFailure = { Result.failure() }
-            )
+        override suspend fun doWork(): Result {
+            return withContext(Dispatchers.IO) {
+                runCatching {
+                    val uriList = mediaDao.getAllMedia().map { it -> it.uri.toUri() }
+                    db.clearAllTables()
+                    mediaManager.deleteInternalMedia(uriList)
+                }.fold(
+                    onSuccess = { Result.success() },
+                    onFailure = { Result.failure() }
+                )
+            }
         }
-
-    }
-
 }

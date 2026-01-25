@@ -26,6 +26,7 @@ import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -195,25 +196,27 @@ class MemoryRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>> {
-        return tagDao.getMemoryByTag(id).flatMapLatest { tagWithMemories ->
-            val ids = tagWithMemories.memories.map { it.memoryId }
-            Pager(
-                config = PagingConfig(
-                    pageSize = 20,
-                    prefetchDistance = 5,
-                    enablePlaceholders = false
-                ),
-                pagingSourceFactory = {
-                    Log.d(TAG, "Creating new PagingSource for tag memory")
-                    memoryDao.getAllMemoriesWithMediaByTag(ids)
-                }
-            ).flow.map { pagingData ->
-                pagingData.map {
-                    Log.d(TAG, "Paging : loading items tag memory ${it.memory.memoryId}")
-                    it.toDomain()
+        return tagDao.getMemoryByTag(id)
+            .filterNotNull()
+            .flatMapLatest { tagWithMemories ->
+                val ids = tagWithMemories.memories.map { it.memoryId }
+                Pager(
+                    config = PagingConfig(
+                        pageSize = 20,
+                        prefetchDistance = 5,
+                        enablePlaceholders = false
+                    ),
+                    pagingSourceFactory = {
+                        Log.d(TAG, "Creating new PagingSource for tag memory")
+                        memoryDao.getAllMemoriesWithMediaByTag(ids)
+                    }
+                ).flow.map { pagingData ->
+                    pagingData.map {
+                        Log.d(TAG, "Paging : loading items tag memory ${it.memory.memoryId}")
+                        it.toDomain()
+                    }
                 }
             }
-        }
     }
 
     override suspend fun getEarliestMemoryTimeStamp(): Long? {
