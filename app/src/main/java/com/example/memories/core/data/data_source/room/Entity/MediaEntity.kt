@@ -32,5 +32,6 @@ data class MediaEntity(
     @ColumnInfo("time_stamp")
     val timeStamp : Long,
     val longitude : Long?,
-    val latitude : Long?
+    val latitude : Long?,
+    val position : Int = 0
 )

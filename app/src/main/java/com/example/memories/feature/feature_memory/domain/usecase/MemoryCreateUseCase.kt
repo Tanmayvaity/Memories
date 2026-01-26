@@ -25,8 +25,8 @@ class MemoryCreateUseCase @Inject constructor(
         uriList: List<UriType>,
         title: String,
         content: String,
-        tagList : List<TagModel>,
-        memoryForTimeStamp : Long,
+        tagList: List<TagModel>,
+        memoryForTimeStamp: Long,
     ): Result<String> {
         Log.d(TAG, "invoke: MemoryCreateUseCase called")
 
@@ -48,8 +48,18 @@ class MemoryCreateUseCase @Inject constructor(
 
 
                 memoryRepository.insertMemoryWithMediaAndTag(
-                    memory = MemoryModel(title = title, content = content, memoryForTimeStamp = memoryForTimeStamp),
-                    mediaList = permanentUriList.data.map { it -> MediaModel(memoryId = "", uri = it.toString()) },
+                    memory = MemoryModel(
+                        title = title,
+                        content = content,
+                        memoryForTimeStamp = memoryForTimeStamp
+                    ),
+                    mediaList = permanentUriList.data.mapIndexed { index, it ->
+                        MediaModel(
+                            memoryId = "",
+                            uri = it.toString(),
+                            position = index
+                        )
+                    },
                     tagList = tagList
                 )
 
@@ -80,7 +90,10 @@ class MemoryCreateUseCase @Inject constructor(
             }
 
             is Result.Error -> {
-                Log.e("MemoryCreateUseCase", "Failed to save to media to internal storage ${permanentUriList.error}")
+                Log.e(
+                    "MemoryCreateUseCase",
+                    "Failed to save to media to internal storage ${permanentUriList.error}"
+                )
                 return Result.Error(permanentUriList.error)
             }
         }

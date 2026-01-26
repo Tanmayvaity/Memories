@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import android.os.health.TimerStat
+import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
@@ -20,6 +21,8 @@ data class MemoryState(
     val memoryForTimeStamp : Long? = null,
     val timeStamp: Long? = null,
     val memory : MemoryWithMediaModel? = null,
+    val originalMediaList : List<MediaModel> = emptyList(),
+    val isLoading : Boolean = false
 )
 
 

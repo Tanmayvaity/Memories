@@ -82,6 +82,7 @@ import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUs
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
@@ -274,7 +275,8 @@ object AppModule {
                 MEMORY_MIGRATION_1_2,
                 MEMORY_MIGRATION_2_3,
                 MEMORY_MIGRATION_3_4,
-                MEMORY_MIGRATION_4_5
+                MEMORY_MIGRATION_4_5,
+                MEMORY_MIGRATION_5_6
             )
             .build()
     }

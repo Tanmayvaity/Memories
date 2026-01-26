@@ -14,7 +14,8 @@ fun MediaEntity.toDomain() : MediaModel {
         uri = uri,
         hidden = hidden,
         favourite = favourite,
-        timeStamp = timeStamp
+        timeStamp = timeStamp,
+        position = position
     )
 }
 fun MediaModel.toEntity() : MediaEntity {
@@ -26,7 +27,8 @@ fun MediaModel.toEntity() : MediaEntity {
         favourite = favourite,
         timeStamp = timeStamp,
         longitude = null,
-        latitude = null
+        latitude = null,
+        position = position
     )
 }
 

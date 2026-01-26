@@ -159,6 +159,17 @@ class MemoryRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteInternalMedia(uriList: List<Uri>): Result<String> {
+        return mediaManager.deleteInternalMedia(uriList)
+    }
+
+    override suspend fun getMediaUrisToDelete(
+        memoryId: String,
+        incomingMediaIds: List<String>
+    ): List<String> {
+        return memoryDao.getMediaUrisToDelete(memoryId,incomingMediaIds)
+    }
+
 
     override suspend fun updateFavouriteState(id: String, isFavourite: Boolean) {
         return memoryDao.updateFavourite(id, isFavourite)

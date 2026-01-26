@@ -30,14 +30,14 @@ fun MemoryModel.toEntity() : MemoryEntity {
         timeStamp = timeStamp,
         longitude = null,
         latitude = null,
-        memoryForTimeStamp = memoryForTimeStamp!!
+        memoryForTimeStamp = memoryForTimeStamp!!,
     )
 }
 
 fun MemoryWithMedia.toDomain(): MemoryWithMediaModel {
     return MemoryWithMediaModel(
         memory = memory.toDomain(),
-        mediaList = list.map { it -> it.toDomain() },
+        mediaList = list.sortedBy { it.position }.map { it.toDomain() },
         tagsList = tags.map { tag -> tag.toDomain() }
     )
 }

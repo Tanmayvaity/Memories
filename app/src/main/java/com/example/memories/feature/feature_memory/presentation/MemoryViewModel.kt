@@ -20,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -152,8 +153,7 @@ class MemoryViewModel @Inject constructor(
                         _errorFlow.send("Memory timestamp cannot be empty")
                         return@launch
                     }
-
-
+                    _memoryState.update { it.copy(isLoading = true) }
                     val result = memoryUseCase.createMemoryUseCase(
                         uriList = event.uriList,
                         title = event.title,
@@ -165,10 +165,12 @@ class MemoryViewModel @Inject constructor(
                         is Result.Error -> {
                             Log.e(TAG, "onEvent: Create Memory  ${result.error.message}")
                             _errorFlow.send(result.error.message.toString())
+                            _memoryState.update { it.copy(isLoading = false) }
                         }
 
                         is Result.Success<String> -> {
                             _successFlow.send(result.data.toString())
+                            _memoryState.update { it.copy(isLoading = false) }
                         }
                     }
 
@@ -185,6 +187,7 @@ class MemoryViewModel @Inject constructor(
                     }
 
                     memoryState.value.memory?.let{ memory ->
+                        _memoryState.update { it.copy(isLoading = true) }
                         val result = memoryUseCase.updateMemoryUseCase(
                             memory = memory.copy(
                                 memory = memory.memory.copy(
@@ -193,16 +196,19 @@ class MemoryViewModel @Inject constructor(
                                     memoryForTimeStamp = _memoryState.value.memoryForTimeStamp!!
                                 ),
                                 tagsList = _memoryState.value.tagsSelectedForThisMemory
-                            )
+                            ),
+                            orderedMediaSlots = event.orderedMediaSlots
                         )
 
                         when(result){
                             is Result.Error -> {
                                 Log.e(TAG, "onEvent: Update Memory : ${result.error.message}", )
                                 _errorFlow.send(result.error.message.toString())
+                                _memoryState.update { it.copy(isLoading = false) }
                             }
                             is Result.Success<String> -> {
                                 _successFlow.send(result.data.toString())
+                                _memoryState.update { it.copy(isLoading = false) }
                             }
                         }
                     }
@@ -287,7 +293,8 @@ class MemoryViewModel @Inject constructor(
                                 tagsSelectedForThisMemory = item.tagsList,
                                 timeStamp = item.memory.timeStamp,
                                 memory = item,
-                                memoryForTimeStamp = item.memory.memoryForTimeStamp
+                                memoryForTimeStamp = item.memory.memoryForTimeStamp,
+                                originalMediaList = item.mediaList
                             )
                         }
 

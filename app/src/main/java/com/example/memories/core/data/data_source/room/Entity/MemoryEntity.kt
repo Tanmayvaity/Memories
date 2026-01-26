@@ -19,5 +19,5 @@ data class MemoryEntity(
     val longitude : Long?,
     val latitude : Long?,
     @ColumnInfo("memory_for_time_stamp")
-    val memoryForTimeStamp : Long
+    val memoryForTimeStamp : Long,
 )

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -91,11 +93,13 @@ import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaUri
+import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
@@ -106,7 +110,9 @@ import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 
 @Composable
@@ -116,11 +122,14 @@ fun MemoryRoot(
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
     onTagClick: (AppScreen.TagWithMemories) -> Unit,
-    uriList : List<UriType>
+    uriList: List<UriType>
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
-        viewModel.onEvent(MemoryEvents.UpdateList(uriList))
+        if(state.creationState == CreationState.CREATE && uriList.isNotEmpty()){
+            viewModel.onEvent(MemoryEvents.UpdateList(uriList))
+        }
+
     }
     MemoryScreen(
         onBackPress = onBackPress,
@@ -212,7 +221,7 @@ fun MemoryScreen(
         if (state.uriList.isNotEmpty()) {
             mediaUriList.clear()
             mediaUriList.addAll(state.uriList.map { it.uri })
-            repeat(5 - mediaUriList.size){
+            repeat(5 - mediaUriList.size) {
                 mediaUriList.add(null)
             }
         }
@@ -252,23 +261,58 @@ fun MemoryScreen(
                                 CREATE -> {
                                     onEvent(
                                         MemoryEvents.CreateMemory(
-                                            uriList = mediaUriList.filter { it!=null }.map {  it -> UriType(it,it!!.toUri().mapContentUriToType(context)) },
+                                            uriList = mediaUriList.filter { it != null }.map { it ->
+                                                UriType(
+                                                    it,
+                                                    it!!.toUri().mapContentUriToType(context)
+                                                )
+                                            },
                                             title = state.title,
                                             content = state.content
                                         )
                                     )
                                 }
+
                                 UPDATE -> {
-                                    onEvent(MemoryEvents.UpdateMemory)
+                                    val slots = mediaUriList
+                                        .filterNotNull()
+                                        .map { uri ->
+                                            val existingMedia =
+                                                state.originalMediaList.find { it.uri == uri }
+                                            if (existingMedia == null) {
+                                                MediaSlot.New(
+                                                    UriType(
+                                                        uri,
+                                                        uri.toUri().mapContentUriToType(context)
+                                                    )
+                                                )
+                                            } else {
+                                                MediaSlot.Existing(existingMedia)
+                                            }
+                                        }
+                                    onEvent(
+                                        MemoryEvents.UpdateMemory(
+                                            orderedMediaSlots = slots
+                                        )
+                                    )
                                 }
                             }
 
                         }
                     ) {
-                        Text(
-                            text = if (state.creationState == CreationState.CREATE) "Create" else "Update",
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 3.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Text(
+                                text = if (state.creationState == CreationState.CREATE) "Create" else "Update",
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+
                     }
                 }
             )
@@ -348,58 +392,6 @@ fun MemoryScreen(
                 )
 
 
-//                ReminderPickerButton(
-//                    onClick = {
-//                        showDatePicker = true
-//                    },
-//                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-//                    vectorContentDescription = "Arrow Right",
-//                )
-
-
-//                Button(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(90.dp)
-//                        .padding(10.dp)
-//                    ,
-//                    onClick = {
-//                        showDatePicker = true
-//                    },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = MaterialTheme.colorScheme.primaryContainer
-//                    )
-//                ) {
-//                    Row(
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.DateRange,
-//                            contentDescription = null,
-//                            tint = MaterialTheme.colorScheme.onSurface
-//                        )
-//                        Text(
-//                            text = dateText,
-//                            modifier = Modifier.padding(start = 5.dp),
-//                            style = MaterialTheme.typography.labelLarge,
-//                            color = MaterialTheme.colorScheme.onSurface
-//                        )
-//                    }
-//                }
-
-
-                var tagsText by remember { mutableStateOf("") }
-
-//               RoundedTagTextField(
-//                   value = tagsText,
-//                   onValueChange = {it ->
-//                       tagsText = it
-//                   },
-//                   onFocus = {
-//                       tagExpanded = true
-//                   }
-//               )
-
                 TagRow(
                     totalTags = state.tagsSelectedForThisMemory,
                     modifier = Modifier.padding(start = 10.dp, end = 10.dp),
@@ -417,65 +409,6 @@ fun MemoryScreen(
                     }
 
                 )
-
-
-//                FlowRow(
-//                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-//                    verticalArrangement = Arrangement.SpaceBetween,
-//                    modifier = Modifier.fillMaxWidth()
-//                        .padding(start = 10.dp,end = 10.dp,top = 15.dp)
-//                ) {
-//                    repeat(totalTags.size){ index ->
-//                        FilterChip(
-//                            modifier = Modifier.height(48.dp),
-//                            shape = RoundedCornerShape(20.dp),
-//                            selected = false,
-//                            border = null,
-//                            label = {
-//                                Text(
-//                                    text = totalTags[index].toString(),
-//                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-//                                )
-//                            },
-//                            onClick = {},
-//                            colors = FilterChipDefaults.filterChipColors(
-//                                containerColor = MaterialTheme.colorScheme.primaryContainer
-//                            )
-//                        )
-//                    }
-//                    repeat(times = 1){
-//                        Button(
-//                            onClick = {
-//                                showTagBottomSheet = true
-//                            },
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = MaterialTheme.colorScheme.surface,
-//                                contentColor = MaterialTheme.colorScheme.onSurface
-//                            ),
-//                            modifier = Modifier
-//                                .border(
-//                                1.dp,
-//                                MaterialTheme.colorScheme.primary,
-//                                RoundedCornerShape(25.dp)
-//                            )
-//
-//                        ) {
-//                            Row (
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ){
-//                                Icon(
-//                                    imageVector = Icons.Default.Add,
-//                                    contentDescription = "Add Tags"
-//                                )
-//                                Text(
-//                                    text = "Add Tags",
-//                                    modifier = Modifier.padding(start = 5.dp),
-//                                )
-//
-//                            }
-//                        }
-//                    }
-//                }
                 CustomTextField(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -515,27 +448,6 @@ fun MemoryScreen(
         }
 
         if (showDatePicker) {
-//            Popup(
-//                onDismissRequest = {
-//                    showDatePicker = false
-//                },
-////                alignment = Alignment.TopStart
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .offset(y = 64.dp)
-//                        .shadow(elevation = 4.dp)
-//                        .background(MaterialTheme.colorScheme.surface)
-//                        .padding(16.dp)
-//                ) {
-//                    DatePicker(
-//                        state = datePickerState,
-//                        showModeToggle = false
-//                    )
-//                }
-
-
             ReminderDatePickerDialog(
                 onDismiss = {
                     showDatePicker = false
@@ -697,7 +609,7 @@ fun MemoryScreenPreview(modifier: Modifier = Modifier) {
         MemoryScreen(
             onBackPress = {},
             onEvent = {},
-            state = MemoryState(),
+            state = MemoryState(isLoading = true),
         )
     }
 }

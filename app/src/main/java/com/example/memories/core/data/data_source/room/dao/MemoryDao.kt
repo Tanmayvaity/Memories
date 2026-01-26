@@ -23,7 +23,7 @@ interface MemoryDao {
     @Upsert
     suspend fun insertMemory(memory: MemoryEntity)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllMedia(mediaList: List<MediaEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -49,6 +49,23 @@ interface MemoryDao {
     ) {
         insertMemory(memory)
 
+        // media logic
+
+        val incomingMediaIds = mediaList.map { it.mediaId }
+        if(incomingMediaIds.isEmpty()){
+            deleteAllMediaForMemory(memory.memoryId)
+
+        }else{
+            val mediaIdsToDelete = getMediaIdsToDelete(
+                memoryId = memory.memoryId,
+                incomingMediaIds = incomingMediaIds
+            )
+            if(mediaIdsToDelete.isNotEmpty()){
+                deleteMediaByIds(mediaIdsToDelete)
+            }
+        }
+        insertAllMedia(mediaList.map { it.copy(memoryId = memory.memoryId) })
+        // tag logic
         val incomingTagsIds = tags.map { it.tagId }
         if (incomingTagsIds.isEmpty()) {
             deleteAllTagsForMemory(memory.memoryId)
@@ -73,6 +90,13 @@ interface MemoryDao {
         WHERE memory_id = :memoryId AND media_id NOT IN (:incomingMediaIds)
     """)
     suspend fun getMediaIdsToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>
+
+    @Query("""
+        SELECT uri FROM MediaEntity
+        WHERE memory_id = :memoryId AND media_id NOT IN (:incomingMediaIds)
+    """)
+    suspend fun getMediaUrisToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>
+
 
     @Query("""
         SELECT tag_id FROM MemoryTagCrossRef

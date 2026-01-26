@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_memory.presentation
 import androidx.compose.ui.focus.FocusState
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 
 
 sealed class MemoryEvents {
@@ -21,7 +22,9 @@ sealed class MemoryEvents {
         val content : String ,
         ): MemoryEvents()
 
-    object UpdateMemory : MemoryEvents()
+    data class UpdateMemory(
+        val orderedMediaSlots : List<MediaSlot>
+    ) : MemoryEvents()
 
     object FetchTags : MemoryEvents()
 
