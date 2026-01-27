@@ -48,7 +48,7 @@ fun MemorySearchBar(
     modifier: Modifier = Modifier,
     onQueryChange: (String) -> Unit = {},
     onClearInput: () -> Unit = {},
-    onItemClick : (String) -> Unit = {}
+    onItemClick : (String) -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
     val horizontalPadding by animateDpAsState(

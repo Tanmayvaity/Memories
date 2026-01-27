@@ -1,9 +1,11 @@
 package com.example.memories.feature.feature_feed.presentation.search
 
+import android.R.attr.top
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -259,15 +262,36 @@ fun SearchScreen(
                                 .fillMaxWidth()
                                 .background(MaterialTheme.colorScheme.surface)
                         ) {
-                            Text(
-                                text = "On This Day",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 5.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 5.dp)
+                            ) {
+                                Text(
+                                    text = "On This Day",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                )
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(0.1f))
+                                        .padding(8.dp)
+                                ){
+                                    Text(
+                                        text = "${carouselState.currentItem + 1}/${allMemories.size}",
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+
+
+
+                            }
+
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalMultiBrowseCarousel(
                                 state = carouselState,
