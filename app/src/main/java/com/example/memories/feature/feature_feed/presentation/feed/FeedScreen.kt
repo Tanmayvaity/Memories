@@ -31,6 +31,7 @@ import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -124,28 +125,29 @@ fun FeedScreen(
     val lazyListState = rememberLazyListState()
     var currentScrollValue by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var currentMemoryEntryMode: MemoryEntryMode? = null
-    var isScrollingUp by remember { mutableStateOf(true) } // Start with FAB visible
+    var currentMemoryEntryMode by remember { mutableStateOf<MemoryEntryMode?>(null) }
     val scope = rememberCoroutineScope()
 
-// This effect will update isScrollingUp based on the scroll direction
-    LaunchedEffect(lazyListState) {
-        var previousScrollOffset = 0
-        snapshotFlow { lazyListState.firstVisibleItemScrollOffset }
-            .collect { currentScrollOffset ->
-                if (previousScrollOffset < currentScrollOffset) {
-                    // Scrolling down
-                    isScrollingUp = false
-                } else if (previousScrollOffset > currentScrollOffset) {
-                    // Scrolling up
-                    isScrollingUp = true
-                }
-                if (isScrollingUp != currentScrollValue) {
-                    currentScrollValue = isScrollingUp
-                }
-                previousScrollOffset = currentScrollOffset
+    val isScrollingUp by remember {
+        var previousIndex = 0
+        var previousOffset = 0
+        derivedStateOf {
+            val currentIndex = lazyListState.firstVisibleItemIndex
+            val currentOffset = lazyListState.firstVisibleItemScrollOffset
+            val scrollingUp = if (currentIndex == 0 && currentOffset == 0) {
+                true
+            } else if (currentIndex != previousIndex) {
+                currentIndex < previousIndex  // compare by item index, not offset
+            } else {
+                currentOffset < previousOffset
             }
-
+            previousIndex = currentIndex
+            previousOffset = currentOffset
+            scrollingUp
+        }.also {
+            previousIndex = lazyListState.firstVisibleItemIndex
+            previousOffset = lazyListState.firstVisibleItemScrollOffset
+        }
     }
 
     Scaffold(
