@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -21,16 +22,16 @@ import javax.inject.Inject
 class MemoryDetailViewModel @Inject constructor(
     val feedUseCases: FeedUseCaseWrapper,
     savedStateHandle: SavedStateHandle
-) : ViewModel(){
+) : ViewModel() {
 
-    private val _memory = MutableStateFlow(MemoryWithMediaModel())
-    val memory = _memory.asStateFlow()
+    private val _state = MutableStateFlow(MemoryDetailState())
+    val state = _state.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
     private val _isDeleting = MutableStateFlow(false)
     val isDeleting = _isDeleting.asStateFlow()
-    private val _eventChannel  = Channel<UiEvent>()
+    private val _eventChannel = Channel<UiEvent>()
     val eventFlow = _eventChannel.receiveAsFlow()
 
     init {
@@ -42,16 +43,15 @@ class MemoryDetailViewModel @Inject constructor(
     }
 
 
-
-    fun onEvent(event: MemoryDetailEvents){
-        when(event){
+    fun onEvent(event: MemoryDetailEvents) {
+        when (event) {
             is MemoryDetailEvents.Fetch -> {
                 _isLoading.update { true }
                 viewModelScope.launch {
                     val memory = feedUseCases.getMemoryByIdUseCase(event.id)
-                    if(memory!=null){
-                        _memory.update {
-                            memory
+                    if (memory != null) {
+                        _state.update {
+                            it.copy(memory = memory)
                         }
                     }
                     _isLoading.update { false }
@@ -62,9 +62,13 @@ class MemoryDetailViewModel @Inject constructor(
 
             is MemoryDetailEvents.FavoriteToggle -> {
                 viewModelScope.launch {
-                    _memory.update { it.copy(
-                        memory = it.memory.copy(favourite = !event.isFavourite)
-                    ) }
+                    _state.update {
+                        it.copy(
+                            memory = it.memory?.copy(
+                                memory = it.memory.memory.copy(favourite = !event.isFavourite)
+                            )
+                        )
+                    }
                     feedUseCases.toggleFavouriteUseCase(
                         event.id,
                         isFavourite = !event.isFavourite
@@ -72,45 +76,122 @@ class MemoryDetailViewModel @Inject constructor(
                 }
 
             }
+
             is MemoryDetailEvents.HiddenToggle -> {
                 viewModelScope.launch {
-                    _memory.update { it.copy(
-                        memory = it.memory.copy(hidden = event.isHidden)
-                    ) }
+
+
+                    _state.update {
+                        it.copy(
+                            memory = it.memory?.copy(
+                                memory = it.memory.memory.copy(hidden = event.isHidden)
+                            )
+                        )
+                    }
                     feedUseCases.toggleHiddenUseCase(
                         event.id,
                         isHidden = event.isHidden
                     )
-                    _eventChannel.send(UiEvent.ShowToast(
-                        message = if(_memory.value.memory.hidden) "Memory hidden" else "Memory Shown",
-                        type = UiEvent.ToastType.HIDDEN
-                    ))
+                    _eventChannel.send(
+                        UiEvent.ShowToast(
+                            message = if (_state.value.memory!!.memory.hidden) "Memory hidden" else "Memory Shown",
+                            type = UiEvent.ToastType.HIDDEN
+                        )
+                    )
 
                 }
             }
 
             is MemoryDetailEvents.Delete -> {
+                if(state.value.memory?.memory == null) return
+
                 _isDeleting.update { true }
                 viewModelScope.launch {
                     val result = feedUseCases.deleteMemoryUseCase(
-                        memory = _memory.value.memory,
-                        uriList = _memory.value.mediaList.map { it.uri }
-                        )
+                        memory = _state.value.memory!!.memory,
+                        uriList = _state.value.memory!!.mediaList.map { it.uri }
+                    )
                     _isDeleting.update { false }
-                    when(result){
+                    when (result) {
                         is Result.Error -> {
-                            Log.e(TAG, "onEvent: error while deleting", )
+                            Log.e(TAG, "onEvent: error while deleting")
+                            _eventChannel.send(
+                                UiEvent.Error(
+                                    message = "Cannot Delete Memory",
+                                )
+                            )
                         }
+
                         is Result.Success<String> -> {
                             Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
-                            _eventChannel.send(UiEvent.ShowToast(
-                                message = "Memory deleted",
-                                type = UiEvent.ToastType.DELETE
-                            ))
+                            _eventChannel.send(
+                                UiEvent.ShowToast(
+                                    message = "Memory deleted",
+                                    type = UiEvent.ToastType.DELETE
+                                )
+                            )
                         }
                     }
                 }
             }
+
+            is MemoryDetailEvents.DownloadImage -> {
+                viewModelScope.launch {
+                    _state.update { it.copy(isDownloading = true) }
+                    val result = feedUseCases.downloadWithBitmapUseCase(
+                        uri = event.uri,
+                        shaderCode = null
+                    )
+
+                    when(result){
+                        is Result.Error -> {
+                            _eventChannel.send(
+                                UiEvent.Error(
+                                    message = "Cannot Download Image",
+                                )
+                            )
+                            Log.e(TAG, "onEvent: ${result.error.message}", )
+                            _state.update { it.copy(isDownloading = false) }
+                        }
+                        is Result.Success -> {
+                            _eventChannel.send(
+                                UiEvent.ShowToast(
+                                    message = "Download Complete",
+                                    type = UiEvent.ToastType.DOWNLOAD
+                                )
+                            )
+                            _state.update { it.copy(isDownloading = false) }
+                        }
+                    }
+
+                }
+            }
+
+            is MemoryDetailEvents.ShareImage -> {
+                viewModelScope.launch {
+                    _state.update { it.copy(isSharing = true) }
+                    val result = feedUseCases.saveToCacheStorageWithUriUseCase(event.uri)
+                    when(result){
+                        is Result.Error -> {
+                            _eventChannel.send(
+                                UiEvent.Error(
+                                    message = "Cannot Share Image",
+                                )
+                            )
+                            _state.update { it.copy(isSharing = false) }
+                            Log.e(TAG, "onEvent: ${result.error.message}", )
+                        }
+
+                        is Result.Success<Uri> -> {
+                            _state.update { it.copy(isSharing = false) }
+                            _eventChannel.send(UiEvent.ShowShareChooser(result.data))
+                        }
+
+                    }
+
+                }
+            }
+
         }
 
 
@@ -121,3 +202,10 @@ class MemoryDetailViewModel @Inject constructor(
     }
 
 }
+
+
+data class MemoryDetailState(
+    val memory: MemoryWithMediaModel? = null,
+    val isDownloading: Boolean = false,
+    val isSharing : Boolean = false
+)

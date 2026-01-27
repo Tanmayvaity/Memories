@@ -47,6 +47,7 @@ import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
+import com.example.memories.core.util.startChooser
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.EditTool
@@ -85,12 +86,14 @@ fun MediaEditRoot(
                 }
 
                 is MediaEditOneTimeEvents.ShowShareChooser -> {
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/*"
-                        putExtra(Intent.EXTRA_STREAM, event.value)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
+//                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+//                        type = "image/*"
+//                        putExtra(Intent.EXTRA_STREAM, event.value)
+//                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//                    }
+//                    context.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
+
+                    context.startChooser(event.value)
                 }
 
                 is MediaEditOneTimeEvents.NavigateToMemory -> {

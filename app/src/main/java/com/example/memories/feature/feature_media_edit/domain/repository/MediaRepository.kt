@@ -49,4 +49,8 @@ interface MediaRepository {
         bitmap: Bitmap,
     ) : Result<Uri>
 
+    suspend fun saveToCacheStorageWithUri(
+        uri : Uri
+    ): Result<Uri>
+
 }

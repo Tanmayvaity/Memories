@@ -90,4 +90,8 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun saveToCacheStorage(uri: Uri, bitmap: Bitmap): Result<Uri> {
         return mediaManager.saveToCacheStorage(uri,bitmap)
     }
+
+    override suspend fun saveToCacheStorageWithUri(uri: Uri): Result<Uri> {
+        return mediaManager.saveToCacheStorageWithUri(uri)
+    }
 }

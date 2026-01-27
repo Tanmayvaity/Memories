@@ -57,7 +57,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.S
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
-import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmap
+import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
@@ -86,6 +86,7 @@ import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATI
 import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SaveToCacheStorageWithUriUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteAllSearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
@@ -107,12 +108,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import javax.inject.Singleton
 import kotlin.jvm.java
-import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.converter.gson.GsonConverterFactory
 
 
@@ -184,7 +182,7 @@ object AppModule {
     fun provideMediaUseCase(repository: MediaRepository): MediaUseCases {
         return MediaUseCases(
             uriToBitmapUseCase = UriToBitmapUseCase(repository),
-            downloadWithBitmap = DownloadWithBitmap(repository),
+            downloadWithBitmap = DownloadWithBitmapUseCase(repository),
             saveBitmapToInternalStorageUseCase = SaveBitmapToInternalStorageUseCase(repository),
             downloadVideoUseCase = DownloadVideoUseCase(repository),
             applyFilterUseCase = ApplyFilterUseCase(repository),
@@ -371,7 +369,9 @@ object AppModule {
             searchByTitleUseCase = SearchByTitleUseCase(repository),
             fetchTagUseCase = FetchTagUseCase(tagRepository),
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository),
-            fetchOnThisDataUseCase = FetchOnThisDayUseCase(repository)
+            fetchOnThisDataUseCase = FetchOnThisDayUseCase(repository),
+            downloadWithBitmapUseCase = DownloadWithBitmapUseCase(mediaRepository),
+            saveToCacheStorageWithUriUseCase = SaveToCacheStorageWithUriUseCase(mediaRepository)
         )
 
     }

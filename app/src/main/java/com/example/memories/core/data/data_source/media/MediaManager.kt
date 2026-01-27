@@ -1,6 +1,7 @@
 package com.example.memories.core.data.data_source.media
 
 import android.R
+import android.R.attr.bitmap
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -288,6 +289,61 @@ class MediaManager(
         )
     }
 
+    suspend fun saveToCacheStorageWithUri(
+        uri: Uri,
+    ): Result<Uri> = withContext(Dispatchers.IO) {
+
+        val resolver = context.contentResolver
+        val baseDir = context.cacheDir
+            ?: throw IllegalStateException("Cache files dir not available")
+        runCatching {
+            val mimeType = getMimeType(uri)
+
+            val extension = getExtension(mimeType)
+
+            val type = getType(mimeType)
+            if (type == Type.UNKNOWN_TYPE) throw IllegalArgumentException("Unknown type")
+
+            if (type == Type.VIDEO_MP4) throw UnsupportedOperationException("Video saving not implemented")
+
+
+            Log.i(
+                TAG,
+                "saveToCacheStorage: mimeType -> $mimeType extension -> $extension type -> $type"
+            )
+            val dirName = if (type.isImageFile()) "images" else "videos"
+            val prefix = if (type.isImageFile()) "IMG_" else "VID_"
+
+            val targetDir = File(baseDir, dirName).apply {
+                if (!exists()) {
+                    mkdirs()
+                }
+
+            }
+            val file = File(
+                targetDir,
+                "$prefix${System.currentTimeMillis()}.$extension"
+            )
+
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(file)?.use { output ->
+                    input.copyTo(output)
+                }
+
+            }
+            Log.d(TAG, "saveToCacheStorage  : file name : ${file.name} at ${file.path}")
+            val contentUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            contentUri
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { Result.Error(it) }
+        )
+    }
     private fun getMimeType(
         uri: Uri
     ): String {

@@ -177,3 +177,13 @@ fun Context.hasPostNotificationPermission(): Boolean {
     }
 }
 
+
+fun Context.startChooser(uri : Uri?){
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/*"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    this.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
+}
+
