@@ -35,6 +35,9 @@ fun NavGraphBuilder.createOtherGraph(
             },
             onNavigateToHistoryScreen = { route ->
                 navController.navigate(route)
+            },
+            onNavigateToBackupScreen = { route ->
+                navController.navigate(route)
             }
         )
     }

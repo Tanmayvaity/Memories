@@ -58,6 +58,7 @@ fun OtherRoot(
     onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit,
     onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit,
     onNavigateToHistoryScreen : (AppScreen.History) -> Unit,
+    onNavigateToBackupScreen : (AppScreen.Backup) -> Unit,
     viewmodel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
 ) {
     val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
@@ -70,7 +71,8 @@ fun OtherRoot(
         onNavigateToAboutScreen = onNavigateToAboutScreen,
         onNavigateToDeveloperInfoScreen = onNavigateToDeveloperInfoScreen,
         onNavigateToDeleteAllDataScreen = onNavigateToDeleteAllDataScreen,
-        onNavigateToHistoryScreen = onNavigateToHistoryScreen
+        onNavigateToHistoryScreen = onNavigateToHistoryScreen,
+        onNavigateToBackupScreen = onNavigateToBackupScreen
     )
 }
 
@@ -86,6 +88,7 @@ fun OtherScreen(
     onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
     onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {},
     onNavigateToHistoryScreen : (AppScreen.History) -> Unit = {},
+    onNavigateToBackupScreen : (AppScreen.Backup) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -117,7 +120,9 @@ fun OtherScreen(
             iconContentDescription = "Database backup icon",
             title = "Database backup",
             content = "Take database backup",
-            onClick = {}
+            onClick = {
+                onNavigateToBackupScreen(AppScreen.Backup)
+            }
         ),
         MenuItem(
             icon = R.drawable.ic_theme,

@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.feed_detail.compo
 
 import android.annotation.SuppressLint
 import androidx.camera.viewfinder.core.impl.ContentScale
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

@@ -1,7 +1,6 @@
 package com.example.memories.feature.feature_notifications.presentation
 
 import android.Manifest
-import android.R.attr.end
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
@@ -9,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,7 +59,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import androidx.compose.ui.unit.dp
@@ -72,7 +71,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
 import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.presentation.components.AppTopBar
-import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.presentation.components.PermissionAlert
+import com.example.memories.core.presentation.components.SettingCard
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_notifications.presentation.components.ReminderTimePickerDialog
@@ -103,7 +103,6 @@ fun NotificationSettingsScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cardColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var canScheduleExactAlarms by remember { mutableStateOf(false) }
     var isCheckingPermission by remember { mutableStateOf(true) }
@@ -179,7 +178,7 @@ fun NotificationSettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Enable All Notifications
-            NotificationCard(containerColor = cardColor) {
+            SettingCard(containerColor = cardColor) {
                 NotificationToggleRow(
                     title = "Enable All Notifications",
                     description = "Globally pause or resume all alerts",
@@ -192,7 +191,7 @@ fun NotificationSettingsScreen(
 
             // My Memories Section
             SectionHeader(title = "MY MEMORIES")
-            NotificationCard(containerColor = cardColor) {
+            SettingCard(containerColor = cardColor) {
                 NotificationToggleRow(
                     title = "Reminders",
                     description = "Get nudged to record a memory if you haven't in a while.",
@@ -202,7 +201,10 @@ fun NotificationSettingsScreen(
                     timeChipValue = formatTime(state.reminderHour, state.reminderMinute),
                     onTimeChipClick = { showTimePicker = true },
                     showPermissionAlert = !isCheckingPermission && !canScheduleExactAlarms,
-                    onCheckedChange = { onEvent(NotificationsEvents.SetReminderNotification(it)) }
+                    onCheckedChange = { onEvent(NotificationsEvents.SetReminderNotification(it)) },
+                    onTapToFixClick = {
+                        openExactAlarmSettings(context)
+                    }
                 )
                 NotificationToggleRow(
                     title = "On This Day",
@@ -216,7 +218,7 @@ fun NotificationSettingsScreen(
 
             // Updates & Offers Section
             SectionHeader(title = "UPDATES & OFFERS")
-            NotificationCard(containerColor = cardColor) {
+            SettingCard(containerColor = cardColor) {
                 NotificationToggleRow(
                     title = "App Updates",
                     description = "Stay informed about new features and improvements.",
@@ -283,19 +285,7 @@ fun NotificationSettingsScreen(
 
 // region Components
 
-@Composable
-private fun NotificationCard(
-    containerColor: Color,
-    content: @Composable () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column { content() }
-    }
-}
+
 
 @Composable
 fun SectionHeader(title: String) {
@@ -321,7 +311,8 @@ fun NotificationToggleRow(
     showTimeChip: Boolean = false,
     timeChipValue: String = "",
     onTimeChipClick: () -> Unit = {},
-    showPermissionAlert: Boolean = false
+    showPermissionAlert: Boolean = false,
+    onTapToFixClick : () -> Unit = {}
 ) {
     Column(modifier = modifier) {
         Row(
@@ -333,7 +324,8 @@ fun NotificationToggleRow(
                     end = 16.dp,
                     bottom = if (showTimeChip) 0.dp else 16.dp
                 ),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement
+                .SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 TitleRow(icon = icon, title = title)
@@ -342,7 +334,12 @@ fun NotificationToggleRow(
 
                 AnimatedVisibility(showPermissionAlert) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    PermissionAlert()
+                    PermissionAlert(
+                        initialText = "Exact alarm permission is required.",
+                        onTapToFixClick = {
+                            onTapToFixClick()
+                        }
+                    )
                 }
             }
 
@@ -385,11 +382,16 @@ private fun TitleRow(icon: ImageVector?, title: String) {
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
+//        Text(
+//            text = title,
+//            style = MaterialTheme.typography.bodyLarge,
+//            fontWeight = FontWeight.SemiBold,
+//            color = MaterialTheme.colorScheme.onSurface
+//        )
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -399,7 +401,7 @@ private fun DescriptionText(description: String) {
     Text(
         text = description,
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 16.sp
     )
 }
@@ -424,53 +426,7 @@ private fun TimeChip(
     )
 }
 
-@Composable
-private fun PermissionAlert() {
-    val context = LocalContext.current
 
-    val alertText = buildAnnotatedString {
-        append("Exact alarm permission is required. ")
-        withLink(
-            LinkAnnotation.Clickable(
-                tag = "fix",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        textDecoration = TextDecoration.Underline,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-            ) {
-                openExactAlarmSettings(context)
-            }
-        ) {
-            append("Tap to fix")
-        }
-    }
-
-    Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        shape = RoundedCornerShape(8.dp),
-        tonalElevation = 2.dp
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_warning),
-                contentDescription = "Warning",
-                tint = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = alertText,
-                modifier = Modifier.padding(start = 8.dp),
-                style = MaterialTheme.typography.labelMedium,
-                textAlign = TextAlign.Start
-            )
-        }
-    }
-}
 
 @Composable
 private fun ManageInSystemSettingsButton(
