@@ -25,6 +25,7 @@ class OtherSettingsDatastore(
         val ON_THIS_DAY_NOTIFICATION_ALLOWED = booleanPreferencesKey("on_this_day_notification_allowed")
 
         val REMINDER_TIME = intPreferencesKey("reminder_time")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
 
      val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -45,6 +46,10 @@ class OtherSettingsDatastore(
 
     val reminderTime = context.datastore.data.map{ preferences ->
         preferences[REMINDER_TIME] ?: (22 * 60 + 0)
+    }
+
+    val isOnboardingCompleted = context.datastore.data.map { preferences ->
+        preferences[ONBOARDING_COMPLETED] ?: false
     }
 
     suspend fun setDarkMode(toDarkMode : Boolean){
@@ -77,6 +82,12 @@ class OtherSettingsDatastore(
         Log.d(TAG, "enableAllNotifications: ${enabled}")
         context.datastore.edit{ preferences ->
             preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED] = enabled
+        }
+    }
+
+    suspend fun setOnboardingCompleted(){
+        context.datastore.edit { preferences ->
+            preferences[ONBOARDING_COMPLETED] = true
         }
     }
 

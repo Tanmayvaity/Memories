@@ -74,5 +74,8 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     object Backup : AppScreen("Backup")
+
+    @Serializable
+    data object Onboarding : AppScreen("Onboarding")
 }
 

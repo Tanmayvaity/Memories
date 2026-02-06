@@ -54,12 +54,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.util.createSettingsIntent
+import com.example.memories.core.util.hasPostNotificationPermission
 import com.example.memories.core.util.isPermissionGranted
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.ui.theme.MemoriesTheme
@@ -108,16 +110,20 @@ class MainActivity : ComponentActivity() {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
                         Lifecycle.Event.ON_START -> {
-                            requestPermissionLogic(
-                                context,
-                                Manifest.permission.POST_NOTIFICATIONS,
-                                onGranted = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        invokeNotificationUseCase()
-                                    }
-                                },
-                                notificationLauncher
-                            )
+//                            requestPermissionLogic(
+//                                context,
+//                                Manifest.permission.POST_NOTIFICATIONS,
+//                                onGranted = {
+//
+//                                },
+//                                notificationLauncher
+//                            )
+
+                            if(hasPostNotificationPermission()){
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    invokeNotificationUseCase()
+                                }
+                            }
                         }
 
                         Lifecycle.Event.ON_STOP -> onStop()

@@ -11,6 +11,7 @@ import com.example.memories.feature.feature_camera.presentation.camera.navigatio
 import com.example.memories.feature.feature_feed.presentation.navigation.createFeedGraph
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.navigation.createMediaEditGraph
 import com.example.memories.feature.feature_memory.presentation.navigation.createMemoryGraph
+import com.example.memories.feature.feature_onboarding.presentation.navigation.createOnboardingGraph
 import com.example.memories.feature.feature_other.presentation.navigation.createOtherGraph
 
 
@@ -18,7 +19,7 @@ import com.example.memories.feature.feature_other.presentation.navigation.create
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination : TopLevelScreen = TopLevelScreen.Feed,
+    startDestination : Any = AppScreen.Onboarding,
     onBottomBarVisibilityChange : (Boolean)-> Unit,
 ) {
     NavHost(
@@ -26,6 +27,11 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier
     ){
+        createOnboardingGraph(
+            navController = navController,
+            onBottomBarVisibilityChange = onBottomBarVisibilityChange,
+        )
+
         createFeedGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange,
