@@ -32,6 +32,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -152,7 +156,8 @@ fun SearchScreen(
     val carouselState = rememberCarouselState() { allMemories.size }
     val configuration = LocalConfiguration.current
     val scope = rememberCoroutineScope()
-    val lazyGridState = rememberLazyGridState()
+    val lazyGridState = rememberLazyStaggeredGridState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val rainbowColorsBrush = remember {
         Brush.sweepGradient(
@@ -212,27 +217,17 @@ fun SearchScreen(
                 )
             }
         } else {
-            LazyVerticalGrid(
-                state = lazyGridState,
-                modifier = modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
-                columns = GridCells.Fixed(
-                    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        4
-                    } else {
-                        2
-                    }
-                ),
+            LazyVerticalStaggeredGrid(
+                state = lazyGridState ,
+                columns = StaggeredGridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-
+                verticalItemSpacing = 8.dp
             ) {
                 if (!state.recentSearch.isEmpty()) {
                     item(
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = StaggeredGridItemSpan.FullLine
                     ) {
                         RecentSearchSection(
                             state = state,
@@ -255,7 +250,7 @@ fun SearchScreen(
 
                 if (state.onThisDateMemories.isNotEmpty()) {
                     item(
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = StaggeredGridItemSpan.FullLine
                     ) {
                         Column(
                             modifier = modifier
@@ -359,7 +354,7 @@ fun SearchScreen(
 
                 if (state.recentMemories.isNotEmpty()) {
                     item(
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = StaggeredGridItemSpan.FullLine
                     ) {
                         Column(
                             modifier = Modifier
@@ -434,8 +429,9 @@ fun SearchScreen(
 
 
                 if (state.tags.isNotEmpty()) {
-                    stickyHeader(
-                        key = "tags"
+                    item(
+                        key = "tags",
+                        span = StaggeredGridItemSpan.FullLine
                     ) {
                         ExploreByCategorySection(
                             tags = state.tags,
@@ -495,7 +491,7 @@ fun SearchScreen(
 
                     } else {
                         item(
-                            span = { GridItemSpan(maxLineSpan) }
+                            span = StaggeredGridItemSpan.FullLine
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
