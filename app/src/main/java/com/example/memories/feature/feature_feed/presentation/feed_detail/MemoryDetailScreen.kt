@@ -2,10 +2,15 @@ package com.example.memories.feature.feature_feed.presentation.feed_detail
 
 import android.R.attr.onClick
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +57,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -116,34 +122,35 @@ fun MemoryDetailRoot(
     val context = LocalContext.current
     val snackBarState = remember { SnackbarHostState() }
 
+
     LaunchedEffect(Unit) {
-            viewmodel.eventFlow.collect { event ->
-                when (event) {
-                    is UiEvent.ShowToast -> {
-                        Toast.makeText(context, event.message.toString(), Toast.LENGTH_SHORT).show()
-                        when (event.type) {
-                            UiEvent.ToastType.DELETE -> {
-                                onBack()
-                            }
-
-                            else -> {}
-
+        viewmodel.eventFlow.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message.toString(), Toast.LENGTH_SHORT).show()
+                    when (event.type) {
+                        UiEvent.ToastType.DELETE -> {
+                            onBack()
                         }
+
+                        else -> {}
+
                     }
-
-                    is UiEvent.Error -> {
-                        snackBarState.showSnackbar(
-                            message = event.message.toString()
-                        )
-                    }
-
-                    is UiEvent.ShowShareChooser ->{
-                        context.startChooser(event.value)
-                    }
-
-
                 }
+
+                is UiEvent.Error -> {
+                    snackBarState.showSnackbar(
+                        message = event.message.toString()
+                    )
+                }
+
+                is UiEvent.ShowShareChooser -> {
+                    context.startChooser(event.value)
+                }
+
+
             }
+        }
     }
 
     MemoryDetailScreen(
@@ -189,6 +196,20 @@ fun MemoryDetailScreen(
     var showImageDetail by rememberSaveable { mutableStateOf(false) }
     var expandToolBar by remember { mutableStateOf(false) }
     val memory = state.memory
+
+    val isScrollingDown by remember {
+        var previousScrollOffset = 0
+        derivedStateOf {
+            val currentOffset = scrollState.value
+            val scrollingDown = currentOffset > previousScrollOffset
+            previousScrollOffset = currentOffset
+            scrollingDown
+        }
+    }
+
+
+
+
 
     Scaffold(
         modifier = Modifier
@@ -307,7 +328,11 @@ fun MemoryDetailScreen(
             }
 
         }
-        if (!isLoading) {
+        AnimatedVisibility(
+            !isLoading && !isScrollingDown,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 10 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 10 })
+        ) {
             Box(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -441,7 +466,7 @@ fun MemoryDetailScreen(
             onShare = {
                 onEvent(
                     MemoryDetailEvents.ShareImage(
-                        uri  = itemUri
+                        uri = itemUri
                     )
                 )
             }
