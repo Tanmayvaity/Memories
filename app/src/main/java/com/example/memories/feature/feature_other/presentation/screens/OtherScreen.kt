@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,21 +36,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.getVersionName
+import com.example.memories.feature.feature_other.presentation.AppInfoSettingType
+import com.example.memories.feature.feature_other.presentation.GeneralSettingType
+import com.example.memories.feature.feature_other.presentation.SettingClickEvent
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
+import com.example.memories.feature.feature_other.presentation.viewmodels.OtherViewModel
 import com.example.memories.navigation.AppScreen
 
 
 
 const val TAG = "OtherScreen"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherRoot(
     onNavigateToTags: (AppScreen.Tags) -> Unit,
@@ -59,137 +67,108 @@ fun OtherRoot(
     onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit,
     onNavigateToHistoryScreen : (AppScreen.History) -> Unit,
     onNavigateToBackupScreen : (AppScreen.Backup) -> Unit,
-    viewmodel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+    themeViewModel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
+    otherViewModel: OtherViewModel = viewModel()
 ) {
-    val state by viewmodel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    val state by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    var showThemeBottomSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        otherViewModel.settingEvent.collect { event ->
+            when(event){
+                SettingClickEvent.NOTIFICATION_ITEM_CLICK -> {
+                    onNavigateToSettingsScreen(AppScreen.NotificationSettings)
+                }
+                SettingClickEvent.STORAGE_ITEM_CLICK -> {
+
+                }
+                SettingClickEvent.DATABASE_BACKUP_ITEM_CLICK -> {
+                    onNavigateToBackupScreen(AppScreen.Backup)
+                }
+
+                SettingClickEvent.THEME_ITEM_CLICK -> {
+                    showThemeBottomSheet = true
+                }
+                SettingClickEvent.TAG_ITEM_CLICK -> {
+                    onNavigateToTags(AppScreen.Tags)
+                }
+                SettingClickEvent.HISTORY_ITEM_CLICK -> {
+                    onNavigateToHistoryScreen(AppScreen.History)
+                }
+                SettingClickEvent.DELETE_ALL_DATA_ITEM_CLICK -> {
+                    onNavigateToDeleteAllDataScreen(AppScreen.DeleteAllData)
+                }
+                SettingClickEvent.ABOUT_ITEM_CLICK -> {
+                    onNavigateToAboutScreen(AppScreen.About)
+                }
+                SettingClickEvent.DEVELOPER_INFO_ITEM_CLICK -> {
+                    onNavigateToDeveloperInfoScreen(AppScreen.DeveloperInfo)
+                }
+            }
+
+        }
+    }
 
     OtherScreen(
-        state = state,
-        onThemeEvent = viewmodel::onEvent,
-        onNavigateToTags = onNavigateToTags,
-        onNavigateToSettingsScreen = onNavigateToSettingsScreen,
-        onNavigateToAboutScreen = onNavigateToAboutScreen,
-        onNavigateToDeveloperInfoScreen = onNavigateToDeveloperInfoScreen,
-        onNavigateToDeleteAllDataScreen = onNavigateToDeleteAllDataScreen,
-        onNavigateToHistoryScreen = onNavigateToHistoryScreen,
-        onNavigateToBackupScreen = onNavigateToBackupScreen
+        onSettingEvent = otherViewModel::settingClickEvent
     )
+
+
+    if (showThemeBottomSheet) {
+        ThemeBottomSheet(
+            btnText = "Apply Theme",
+            heading = "Change Theme",
+            subHeading = "Choose your prefered theme",
+            isDarkMode = state,
+            onApplyTheme = {
+                showThemeBottomSheet = false
+                themeViewModel.onEvent(
+                    ThemeEvents.SetTheme
+                )
+            },
+            themeOptions = listOf(
+                MenuItem(
+                    title = "Light Mode",
+                    icon = R.drawable.ic_light_mode,
+                    iconContentDescription = "Light Mode Icon",
+                    onClick = {
+                        themeViewModel.onEvent(
+                            ThemeEvents.ChangeThemeType(
+                                ThemeTypes.LIGHT
+
+                            )
+                        )
+                    }
+                ),
+                MenuItem(
+                    title = "Dark Mode",
+                    icon = R.drawable.ic_night_mode,
+                    iconContentDescription = "Dark Mode Icon",
+                    onClick = {
+                        themeViewModel.onEvent(
+                            ThemeEvents.ChangeThemeType(
+                                ThemeTypes.DARK
+
+                            )
+                        )
+                    }
+                ),
+            ),
+            onDismiss = {
+                showThemeBottomSheet = false
+            }
+        )
+
+    }
 }
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(
-    state: ThemeTypes = ThemeTypes.LIGHT,
-    onThemeEvent: (ThemeEvents) -> Unit = {},
-    onNavigateToTags: (AppScreen.Tags) -> Unit = {},
-    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit = {},
-    onNavigateToAboutScreen : (AppScreen.About) -> Unit = {},
-    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit = {},
-    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit = {},
-    onNavigateToHistoryScreen : (AppScreen.History) -> Unit = {},
-    onNavigateToBackupScreen : (AppScreen.Backup) -> Unit = {}
+    onSettingEvent: (SettingClickEvent) -> Unit = {}
 ) {
-
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var showThemeSheet by remember { mutableStateOf(false) }
-
-
-
-
-    val generalSettingItems = listOf<MenuItem>(
-        MenuItem(
-            icon = R.drawable.ic_notification,
-            iconContentDescription = "Notifications Icon",
-            title = "Notifications",
-            content = "Manage Your Notifications",
-            onClick = {
-                onNavigateToSettingsScreen(AppScreen.NotificationSettings)
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_storage,
-            iconContentDescription = "Storage Icon",
-            title = "Storage",
-            content = "View app's storage information",
-            onClick = {}
-        ),
-        MenuItem(
-            icon = R.drawable.ic_database_backup,
-            iconContentDescription = "Database backup icon",
-            title = "Database backup",
-            content = "Take database backup",
-            onClick = {
-                onNavigateToBackupScreen(AppScreen.Backup)
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_theme,
-            iconContentDescription = "Theme icon",
-            title = "Change Theme",
-            content = "Toggle between light and dark theme",
-            onClick = {
-                showThemeSheet = true
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_tag,
-            iconContentDescription = "Tag Icon",
-            title = "Tags Info",
-            content = "Check and edit your created tags",
-            onClick = {
-                onNavigateToTags(AppScreen.Tags)
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_history,
-            iconContentDescription = "History Icon",
-            title = "View Past Memories",
-            content = "Relive your cherished moments",
-            onClick = {
-                onNavigateToHistoryScreen(AppScreen.History)
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_delete,
-            iconContentDescription = "Delete Icon",
-            title = "Delete All Data",
-            content = "Delete the entire data you have created",
-            onClick = {
-                onNavigateToDeleteAllDataScreen(AppScreen.DeleteAllData)
-            }
-        ),
-
-
-    )
-    val appInfoSettingItems = listOf<MenuItem>(
-        MenuItem(
-            icon = R.drawable.ic_app_version,
-            iconContentDescription = "App Version Icon",
-            title = "App Version",
-            content = context.getVersionName().toString(),
-            onClick = {
-//
-                onNavigateToAboutScreen(AppScreen.About)
-            }
-        ),
-        MenuItem(
-            icon = R.drawable.ic_developer,
-            iconContentDescription = "Developer Info Icon",
-            title = "Developer Info",
-            content = "View developer info",
-            onClick = {
-                onNavigateToDeveloperInfoScreen(AppScreen.DeveloperInfo)
-//                val developerUri = "https://github.com/Tanmayvaity"
-//                val intent = Intent(Intent.ACTION_VIEW, developerUri.toUri())
-//                context.startActivity(intent)
-            }
-        )
-
-    )
-
-
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -211,7 +190,7 @@ fun OtherScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(10.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(state = scrollState)
                 .background(MaterialTheme.colorScheme.background)
         ) {
@@ -224,13 +203,15 @@ fun OtherScreen(
 
                 )
 
-            generalSettingItems.forEach { item ->
+            GeneralSettingType.entries.forEach { item ->
                 CustomSettingRow(
                     drawableRes = item.icon,
-                    contentDescription = item.iconContentDescription ?: "",
+                    contentDescription = item.description ?: "",
                     heading = item.title,
-                    content = item.content ?: "",
-                    onClick = item.onClick
+                    content = item.description ?: "",
+                    onClick = {
+                        onSettingEvent(item.onClickEvent)
+                    }
                 )
             }
 
@@ -242,73 +223,20 @@ fun OtherScreen(
                 modifier = Modifier.padding(10.dp)
             )
 
-            appInfoSettingItems.forEach { item ->
+            AppInfoSettingType.entries.forEach { item ->
                 CustomSettingRow(
                     drawableRes = item.icon,
-                    contentDescription = item.iconContentDescription ?: "",
+                    contentDescription = item.description ?: "",
                     heading = item.title,
-                    content = item.content ?: "",
-                    onClick = item.onClick
+                    content = item.description ?: "",
+                    onClick = {
+                        onSettingEvent(item.onClickEvent)
+                    }
                 )
             }
         }
 
-        if (showThemeSheet) {
-            ThemeBottomSheet(
-                btnText = "Apply Theme",
-                heading = "Change Theme",
-                subHeading = "Choose your prefered theme",
-                isDarkMode = state,
-                onApplyTheme = {
-                    showThemeSheet = false
-                    onThemeEvent(
-                        ThemeEvents.SetTheme
-                    )
-                },
-                themeOptions = listOf(
-                    MenuItem(
-                        title = "Light Mode",
-                        icon = R.drawable.ic_light_mode,
-                        iconContentDescription = "Light Mode Icon",
-                        onClick = {
-                            onThemeEvent(
-                                ThemeEvents.ChangeThemeType(
-                                    ThemeTypes.LIGHT
 
-                                )
-                            )
-                        }
-                    ),
-                    MenuItem(
-                        title = "Dark Mode",
-                        icon = R.drawable.ic_night_mode,
-                        iconContentDescription = "Dark Mode Icon",
-                        onClick = {
-                            onThemeEvent(
-                                ThemeEvents.ChangeThemeType(
-                                    ThemeTypes.DARK
-
-                                )
-                            )
-                        }
-                    ),
-//                    MenuItem(
-//                        title = "System Default",
-//                        icon = R.drawable.ic_theme,
-//                        iconContentDescription = "System Default Icon",
-//                        onClick = {
-//                            onThemeEvent(ThemeEvents.ChangeThemeType(
-//                                ThemeTypes.SYSTEM
-//                            ))
-//                        }
-//                    )
-                ),
-                onDismiss = {
-                    showThemeSheet = false
-                }
-            )
-
-        }
     }
 }
 
