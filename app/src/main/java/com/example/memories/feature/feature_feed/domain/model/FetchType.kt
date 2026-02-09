@@ -2,52 +2,40 @@ package com.example.memories.feature.feature_feed.domain.model
 
 import androidx.annotation.DrawableRes
 import com.example.memories.R
+import java.util.logging.Filter
 
-enum class FetchType{
-    ALL,
-    FAVORITE,
-    HIDDEN
+interface FilterOption {
+    val title: String
+    val description: String
+    @get:DrawableRes
+    val icon: Int
 }
 
-enum class SortType{
-    CreatedForDate,
-    DateAdded,
-    Title
+enum class FetchType(
+    override val title: String,
+    override val description: String,
+    override val icon: Int
+) : FilterOption {
+    ALL("All", "All Memories", R.drawable.ic_feed),
+    FAVORITE("Favorite", "Favorite Memories", R.drawable.ic_favourite),
+//    HIDDEN("Hidden", "Hidden Memories", R.drawable.ic_hidden)
 }
-enum class SortByTag{
-    Count,
-    Label
+
+enum class SortType(
+    override val title: String,
+    override val description: String,
+    override val icon: Int
+) : FilterOption {
+    CreatedForDate("Created For Date", "Sort Memories by Date Created", R.drawable.ic_calender),
+    DateAdded("Date Added", "Sort Memories by Date Added", R.drawable.ic_timer),
+    Title("Title", "Sort Memories by Title", R.drawable.ic_title)
 }
 
 enum class SortOrder(
-    val title: String,
-    val description: String,
-    @DrawableRes val icon: Int
-) {
+    override val title: String,
+    override val description: String,
+    override val icon: Int
+) : FilterOption {
     Ascending("Ascending", "Low to High", R.drawable.ic_up),
     Descending("Descending", "High to Low", R.drawable.ic_down)
 }
-
-
-fun FetchType.toIndex():Int {
-     when(this){
-        FetchType.ALL -> return 0
-        FetchType.FAVORITE -> return 1
-        FetchType.HIDDEN -> return 2
-    }
-}
-
-fun SortType.toIndex() : Int{
-    return when(this){
-        SortType.CreatedForDate -> 0
-        SortType.DateAdded -> 1
-        SortType.Title -> 2
-    }
-}
-
-//fun OrderByType.toIndex() : Int {
-//     when(this){
-//        OrderByType.Ascending -> return 0
-//        OrderByType.Descending -> return 1
-//    }
-//}

@@ -118,7 +118,7 @@ fun FeedScreen(
     memories: LazyPagingItems<MemoryWithMediaModel>,
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
     var expandFab by rememberSaveable() { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -398,76 +398,19 @@ fun FeedScreen(
                 },
                 state = state,
                 title = "Filter & Sort Posts",
-                showActionList = listOf(
-                    MenuItem(
-                        title = "All",
-                        icon = R.drawable.ic_feed,
-                        iconContentDescription = "Feed Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeFetchType(FetchType.ALL))
-                        }
-                    ),
-                    MenuItem(
-                        title = "Favorite",
-                        icon = R.drawable.ic_favourite_filled,
-                        iconContentDescription = "Favorite Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeFetchType(FetchType.FAVORITE))
-                        }
-                    ),
-                    MenuItem(
-                        title = "Hidden",
-                        icon = R.drawable.ic_hidden,
-                        iconContentDescription = "Hidden Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeFetchType(FetchType.HIDDEN))
-                        }
-                    )
-                ),
-                sortByActionList = listOf(
-                    MenuItem(
-                        title = "Created For Date",
-                        icon = R.drawable.ic_calender,
-                        iconContentDescription = "Calendar Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeSortType(SortType.CreatedForDate))
-                        }
-                    ),
-                    MenuItem(
-                        title = "Date Added",
-                        icon = R.drawable.ic_timer,
-                        iconContentDescription = "timer Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeSortType(SortType.DateAdded))
-                        }
-                    ),
-                    MenuItem(
-                        title = "Title",
-                        icon = R.drawable.ic_title,
-                        iconContentDescription = "Title Icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeSortType(SortType.Title))
-                        }
-                    )
-                ),
-                orderByActionList = listOf(
-                    MenuItem(
-                        title = "Ascending",
-                        icon = R.drawable.ic_up,
-                        iconContentDescription = "up icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeOrderByType(SortOrder.Ascending))
-                        }
-                    ),
-                    MenuItem(
-                        title = "Descending",
-                        icon = R.drawable.ic_down,
-                        iconContentDescription = "down icon",
-                        onClick = {
-                            onEvent(FeedEvents.ChangeOrderByType(SortOrder.Descending))
-                        }
-                    )
-                )
+                sheetState = sheetState,
+                onFetchTypeClick = { type ->
+                    onEvent(FeedEvents.ChangeFetchType(type))
+                },
+                onSortByClick = { sortType ->
+                    onEvent(FeedEvents.ChangeSortType(sortType))
+                },
+                onOrderByClick = { orderType ->
+                    onEvent(FeedEvents.ChangeOrderByType(orderType))
+                },
+                fetchTypeEntries = FetchType.entries,
+                sortByEntries = SortType.entries,
+                orderByEntries = SortOrder.entries
             )
         }
     }

@@ -26,13 +26,17 @@ import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.util.PhonePreview
 import com.example.memories.core.util.SmallPhonePreview
+import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.FilterOption
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlin.collections.forEachIndexed
 
 @Composable
 fun ChipRow(
     modifier: Modifier = Modifier,
-    items: List<MenuItem> = emptyList(),
-    selectedItemIndex: Int = 0
+    items: List<FetchType> = emptyList(),
+    selectedItemIndex: Int = 0,
+    onItemClick: (FetchType) -> Unit = {}
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -49,7 +53,7 @@ fun ChipRow(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
                 selected = selectedItemIndex == index,
-                onClick = { item.onClick() },
+                onClick = { onItemClick(item) },
                 label = {
                     Text(
                         text = item.title,
@@ -78,37 +82,7 @@ fun ChipRowPreview(modifier: Modifier = Modifier) {
 
         ChipRow(
             selectedItemIndex = 1,
-            items = listOf<MenuItem>(
-                MenuItem(
-                    title = "All",
-                    onClick = {
-//                                onEvent(FeedEvents.FetchFeed)
-
-                    },
-                    iconContentDescription = "",
-                    icon = -1
-                ),
-                MenuItem(
-                    title = "Favorite",
-                    onClick = {
-
-//                                onEvent(FeedEvents.FetchFeed)
-                    },
-                    iconContentDescription = "",
-                    icon = R.drawable.ic_favourite_filled
-                ),
-                MenuItem(
-                    title = "Hidden",
-                    onClick = {
-
-//                                onEvent(FeedEvents.FetchFeed)
-                    },
-                    iconContentDescription = "",
-                    icon = R.drawable.ic_not_hidden
-                ),
-
-
-                )
+            items = FetchType.entries.toList()
         )
 
     }

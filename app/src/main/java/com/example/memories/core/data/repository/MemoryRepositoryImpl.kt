@@ -131,24 +131,24 @@ class MemoryRepositoryImpl @Inject constructor(
                         }
                     }
 
-                    FetchType.HIDDEN -> {
-                        when (sortType) {
-                            SortType.DateAdded -> when (orderByType) {
-                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
-                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
-                            }
-
-                            SortType.CreatedForDate -> when (orderByType) {
-                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
-                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
-                            }
-
-                            SortType.Title -> when (orderByType) {
-                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
-                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
-                            }
-                        }
-                    }
+//                    FetchType.HIDDEN -> {
+//                        when (sortType) {
+//                            SortType.DateAdded -> when (orderByType) {
+//                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMedia()
+//                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaAscending()
+//                            }
+//
+//                            SortType.CreatedForDate -> when (orderByType) {
+//                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStamp()
+//                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByMemoryForTimeStampAscending()
+//                            }
+//
+//                            SortType.Title -> when (orderByType) {
+//                                SortOrder.Descending -> memoryDao.getAllHiddenMemoriesWithMediaByTitle()
+//                                SortOrder.Ascending -> memoryDao.getAllHiddenMemoriesWithMediaByTitleAscending()
+//                            }
+//                        }
+//                    }
                 }
             }
         ).flow.map { pagingData ->

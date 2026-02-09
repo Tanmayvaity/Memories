@@ -3,8 +3,6 @@ package com.example.memories.feature.feature_feed.presentation.tags
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Index
-import com.example.memories.feature.feature_feed.domain.model.SortByTag
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper

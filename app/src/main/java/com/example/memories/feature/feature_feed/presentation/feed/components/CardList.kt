@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.feed.components
 
+import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -23,14 +24,17 @@ import androidx.compose.ui.unit.dp
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.FilterOption
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlin.collections.forEachIndexed
+import kotlin.enums.EnumEntries
 
 @Composable
-fun CardList(
-    items: List<MenuItem>,
+fun <T : FilterOption>CardList(
+    items: List<T>,
     selectedIndex: Int,
-    onItemClick: (MenuItem) -> Unit,
+    onItemClick: (FilterOption) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -59,8 +63,8 @@ fun CardList(
 }
 
 @Composable
-private fun RowItem(
-    item: MenuItem,
+private fun <T : FilterOption>RowItem(
+    item: T,
     selected: Boolean,
     onClick: () -> Unit
 ) {
@@ -74,7 +78,7 @@ private fun RowItem(
     ) {
         IconItem(
             drawableRes = item.icon,
-            contentDescription = item.iconContentDescription,
+            contentDescription = item.description,
             alpha = 0f,
             color = MaterialTheme.colorScheme.primary
         )
@@ -102,27 +106,7 @@ private fun RowItem(
 fun CardListPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         CardList(
-            items = listOf(
-                MenuItem(
-                    title = "All",
-                    icon = R.drawable.ic_favourite,
-                    iconContentDescription = "Favourite icon",
-                    onClick = {}
-                ),
-                MenuItem(
-                    title = "Favorite",
-                    icon = R.drawable.ic_favourite,
-                    iconContentDescription = "Favourite icon",
-                    onClick = {}
-                ),
-                MenuItem(
-                    title = "Hidden",
-                    icon = R.drawable.ic_hidden,
-                    iconContentDescription = "Hidden icon",
-                    onClick = {}
-
-                )
-            ),
+            items = FetchType.entries.toList(),
             selectedIndex = 0,
             onItemClick = {},
         )
