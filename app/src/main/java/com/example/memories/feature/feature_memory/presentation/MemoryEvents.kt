@@ -26,7 +26,7 @@ sealed class MemoryEvents {
         val orderedMediaSlots : List<MediaSlot>
     ) : MemoryEvents()
 
-    object FetchTags : MemoryEvents()
+//    object FetchTags : MemoryEvents()
 
     data class AddTag(val tag : String) : MemoryEvents()
 
@@ -40,4 +40,6 @@ sealed class MemoryEvents {
     data class FetchMemory(val id : String) : MemoryEvents()
 
     data class TagDelete(val id : String) : MemoryEvents()
+
+    data object Reset : MemoryEvents()
 }

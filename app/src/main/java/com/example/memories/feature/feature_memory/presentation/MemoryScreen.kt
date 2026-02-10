@@ -44,6 +44,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -91,18 +92,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.example.memories.LocalTheme
 import com.example.memories.R
+import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.mapContentUriToType
+import com.example.memories.feature.feature_feed.presentation.tags.TagEvents
 import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaUri
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
+import com.example.memories.feature.feature_memory.presentation.components.SelectTagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
@@ -179,11 +184,12 @@ fun MemoryScreen(
     var dateText by rememberSaveable { mutableStateOf("") }
     val totalTags = remember { mutableStateListOf<String>() }
     val datePickerState = rememberDatePickerState()
-    var tagId by remember { mutableStateOf("") }
+    var tagItem by remember { mutableStateOf<TagModel?>(null) }
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val tagBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showTagDeleteDialog by remember { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -364,12 +370,6 @@ fun MemoryScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(10.dp)
-//                        .focusRequester(tagsFocusRequester)
-//                        .onFocusChanged{
-//                            if(it.isFocused){
-//                                showDatePicker = true
-//                            }
-//                        }
                     ,
                     colors = OutlinedTextFieldDefaults.colors(
                         cursorColor = Color.Transparent,
@@ -475,98 +475,68 @@ fun MemoryScreen(
                     }
                 )
             )
-//            }
         }
+        if(showTagBottomSheet){
+            SelectTagBottomSheet(
+                onDismiss = {
+                    scope.launch {
+                        tagBottomSheetState.hide()
+                        showTagBottomSheet = false
+                    }
 
-        if (showTagBottomSheet) {
-            TagBottomSheet(
-                textFieldValue = state.tagTextFieldValue,
-                onValueChanged = { newText ->
-                    Log.d("MemoryScreen", "new Text : ${newText}")
-                    // Logic to add a tag when space or enter is pressed
-//                    newTagsTextValue = newText
-                    if (newText.contains('\n')) return@TagBottomSheet
-
+                },
+                tagQuery = state.tagTextFieldValue,
+                selectedTags = state.tagsSelectedForThisMemory,
+                onTagQueryChange = { newText ->
+                    if(newText.contains("\n"))return@SelectTagBottomSheet
                     onEvent(MemoryEvents.TagsTextFieldContentChanged(newText))
                 },
-                focusRequester = tagsFocusRequester,
-                textFieldInteraction = tagTextFieldInteractionSource,
-                readOnly = false,
-                keyboardOptions = KeyboardOptions.Default,
-                listOfChips = state.tagsSelectedForThisMemory,
-                modifier = Modifier,
-                onCrossClick = { index ->
-                    onEvent(MemoryEvents.RemoveTagsFromTextField(state.tagsSelectedForThisMemory[index]))
-                },
-                placeholder = "Add Tags",
-                sheetState = rememberModalBottomSheetState(
-                    skipPartiallyExpanded = false
-                ),
-                onDismiss = {
-                    showTagBottomSheet = false
-                },
-                onChipAddClick = {
-                    val tag = state.tagTextFieldValue.trim()
-                    Log.d("MemoryScreen", "onChipAddClick: ${tag}")
-                    if (tag.isNotEmpty()) {
+                onCreateTagClick = {tag ->
+                    if(tag.isNotEmpty()){
                         onEvent(MemoryEvents.AddTag(tag))
-//                        onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
+                        onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
                     }
+                },
+                onTagItemClick = {tag ->
+                    if(tag in state.tagsSelectedForThisMemory){
+                        onEvent(MemoryEvents.RemoveTagsFromTextField(tag))
+                    }else{
+                        onEvent(MemoryEvents.UpdateTagsInTextField(tag))
+                    }
+
+                },
+                onCrossClick = {tag ->
+                    tagItem = tag
+                    showTagDeleteDialog = true
+                },
+                onResetCLick = {
+                    onEvent(MemoryEvents.Reset)
+                },
+                onClearTextClick = {
+                    onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
                 },
                 savedTags = state.totalNumberOfTags,
-                onTagItemClick = { tag ->
-                    onEvent(MemoryEvents.UpdateTagsInTextField(tag))
-//                    onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
-                },
-                isDarkMode = isDarkModeEnabled,
-                onDelete = { id ->
-                    showTagDeleteDialog = true
-                    tagId = id
-                }
+                sheetState = tagBottomSheetState
             )
         }
 
-        if (showTagDeleteDialog) {
-            GeneralAlertDialog(
-                title = "Delete Tag Alert",
-                text = "Are you sure you want to delete this tag",
+        if(showTagDeleteDialog && tagItem!=null){
+            GeneralAlertSheet(
+                title = "Delete \"${tagItem!!.label}\" ?",
+                content = "Are you sure you want to delete this tag? This will not delete the memories " +
+                        "associated with it,only the tag itself",
+                state = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                 onDismiss = {
                     showTagDeleteDialog = false
+                    tagItem = null
                 },
-                confirmButton = {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red
-                        ),
-                        onClick = {
-                            showTagDeleteDialog = false
-                            if (tagId == null) return@Button
-
-                            onEvent(MemoryEvents.TagDelete(id = tagId))
-                        }
-                    ) {
-                        Text(
-                            text = "Delete",
-                            color = Color.White
-                        )
-                    }
-                },
-                dismissButton = {
-                    OutlinedButton(
-                        onClick = {
-                            showTagDeleteDialog = false
-                        }
-
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dismiss),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                onConfirm = {
+                    onEvent(MemoryEvents.TagDelete(tagItem!!.tagId))
+                    onEvent(MemoryEvents.RemoveTagsFromTextField(tagItem!!))
+                    showTagDeleteDialog = false
                 }
             )
         }
-
         LaunchedEffect(Unit) {
             errorFLow!!.collect { message ->
                 Log.d("MemoryScreen", "MemoryRoot: error ${message}")

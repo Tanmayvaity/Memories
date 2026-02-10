@@ -64,14 +64,14 @@ class MemoryViewModel @Inject constructor(
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val searchedTags = memoryState
         .map { it.tagTextFieldValue }
-        .debounce(500L)
+        .debounce(300L)
         .distinctUntilChanged()
         .flatMapLatest { query ->
             Log.d(TAG, "query fired with query content:${query.toString()} ")
             memoryUseCase.fetchTagsByLabelUseCase(query)
         }
         .onEach { tags ->
-            _memoryState.update { it.copy(totalNumberOfTags = tags) }
+            _memoryState.update { it.copy(totalNumberOfTags = tags.reversed()) }
         }
         .launchIn(
             scope = viewModelScope,
@@ -93,7 +93,7 @@ class MemoryViewModel @Inject constructor(
 
     fun onEvent(event: MemoryEvents) {
         when (event) {
-            is MemoryEvents.TitleChanged -> {
+            is TitleChanged -> {
                 _memoryState.update {
                     _memoryState.value.copy(
                         title = event.value,
@@ -102,7 +102,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.TitleFocusChanged -> {
+            is TitleFocusChanged -> {
                 _memoryState.update {
                     _memoryState.value.copy(
                         isTitleHintVisible = !event.focusState.isFocused && _memoryState.value.title.isBlank(),
@@ -110,7 +110,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.ContentChanged -> {
+            is ContentChanged -> {
                 _memoryState.update {
                     _memoryState.value.copy(
                         content = event.value
@@ -118,7 +118,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.ContentFocusChanged -> {
+            is ContentFocusChanged -> {
                 _memoryState.update {
                     _memoryState.value.copy(
                         isContentHintVisible = !event.focusState.isFocused && _memoryState.value.content.isBlank(),
@@ -126,19 +126,11 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.DateChanged -> {
+            is DateChanged -> {
                 _memoryState.update { it.copy(memoryForTimeStamp = event.dateInMillis) }
             }
 
-//            is MemoryEvents.DateFocusChanged -> {
-//                _memoryState.update {
-//                    _memoryState.value.copy(
-//                        isContentHintVisible = !event.focusState.isFocused && _memoryState.value.content.isBlank()
-//                    )
-//                }
-//            }
-
-            is MemoryEvents.TagDelete -> {
+            is TagDelete -> {
                 viewModelScope.launch {
                     val result = memoryUseCase.tagDeleteTagUseCase(event.id)
                     if(result is Result.Error){
@@ -147,7 +139,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.CreateMemory -> {
+            is CreateMemory -> {
                 viewModelScope.launch {
                     if(_memoryState.value.memoryForTimeStamp == null){
                         _errorFlow.send("Memory timestamp cannot be empty")
@@ -178,7 +170,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.UpdateMemory -> {
+            is UpdateMemory -> {
                 viewModelScope.launch {
 
                     if(_memoryState.value.memoryForTimeStamp == null){
@@ -215,23 +207,23 @@ class MemoryViewModel @Inject constructor(
 
                 }
             }
-            is MemoryEvents.FetchTags -> {
-                viewModelScope.launch {
-                    val result = memoryUseCase.fetchTagUseCase()
-                    when (result) {
-                        is Result.Success -> {
-                            result.data?.collect { tags ->
-                                _memoryState.update { it.copy(totalNumberOfTags = tags) }
-                            }
-                        }
+//            is FetchTags -> {
+//                viewModelScope.launch {
+//                    val result = memoryUseCase.fetchTagUseCase()
+//                    when (result) {
+//                        is Result.Success -> {
+//                            result.data?.collect { tags ->
+//                                _memoryState.update { it.copy(totalNumberOfTags = tags) }
+//                            }
+//                        }
+//
+//                        else -> {}
+//                    }
+//
+//                }
+//            }
 
-                        else -> {}
-                    }
-
-                }
-            }
-
-            is MemoryEvents.AddTag -> {
+            is AddTag -> {
                 viewModelScope.launch {
                     val isTagInsertSuccessful = memoryUseCase.addTagUseCase(event.tag)
                     if (isTagInsertSuccessful is Result.Success) {
@@ -241,7 +233,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.UpdateTagsInTextField -> {
+            is UpdateTagsInTextField -> {
                 if (_memoryState.value.tagsSelectedForThisMemory.contains(event.tag)) return
 
                 _memoryState.update {
@@ -251,7 +243,7 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.RemoveTagsFromTextField -> {
+            is RemoveTagsFromTextField -> {
                 if (_memoryState.value.tagsSelectedForThisMemory.contains(event.tag)) {
                     _memoryState.update {
                         it.copy(
@@ -261,12 +253,12 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            is MemoryEvents.TagsTextFieldContentChanged -> {
+            is TagsTextFieldContentChanged -> {
                 _memoryState.update { it.copy(tagTextFieldValue = event.value) }
 //                Log.d(TAG, "onEvent: ${tagInputText.value}")
             }
 
-            is MemoryEvents.UpdateList -> {
+            is UpdateList -> {
                 _memoryState.update {
                     it.copy(
                         uriList = event.list
@@ -275,7 +267,7 @@ class MemoryViewModel @Inject constructor(
 
             }
 
-            is MemoryEvents.FetchMemory -> {
+            is FetchMemory -> {
                 viewModelScope.launch {
                     val result = memoryUseCase.fetchMemoryByIdUseCase(event.id)
                     result?.let{ item ->
@@ -299,6 +291,15 @@ class MemoryViewModel @Inject constructor(
                         }
 
                     }
+                }
+            }
+
+            Reset -> {
+                _memoryState.update {
+                    it.copy(
+                        tagsSelectedForThisMemory = emptyList(),
+                        tagTextFieldValue = ""
+                    )
                 }
             }
         }
