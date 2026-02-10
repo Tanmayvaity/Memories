@@ -37,9 +37,9 @@ import com.example.memories.core.presentation.MenuItem
 import com.example.memories.ui.theme.MemoriesTheme
 import com.example.memories.R
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.presentation.components.CustomSettingRow
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
-import com.example.memories.feature.feature_other.presentation.screens.CustomSettingRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

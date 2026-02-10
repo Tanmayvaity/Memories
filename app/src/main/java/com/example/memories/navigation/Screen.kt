@@ -1,6 +1,7 @@
 package com.example.memories.navigation
 import com.example.memories.core.domain.model.UriType
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
 
 const val BASE_URL = "memories://app"
 
@@ -77,5 +78,8 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     data object Onboarding : AppScreen("Onboarding")
+
+    @Serializable
+    data object HiddenMemorySetting : AppScreen("HiddenMemorySetting")
 }
 

@@ -113,38 +113,38 @@ fun BottomNavBar(
 
 //    BottomAppBar() { }
 
-    BottomAppBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 10.dp,
-        scrollBehavior = scrollBehavior
-    ) {
-        TOP_LEVEL_DESTINATIONS.forEachIndexed { index, item ->
-            NavigationBarItem(
-                selected = currentDestination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
-                icon = {
-                    Icon(
-                        painter = painterResource(item.resource),
-                        contentDescription = item.name
+        BottomAppBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 10.dp,
+            scrollBehavior = scrollBehavior
+        ) {
+            TOP_LEVEL_DESTINATIONS.forEachIndexed { index, item ->
+                NavigationBarItem(
+                    selected = currentDestination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
+                    icon = {
+                        Icon(
+                            painter = painterResource(item.resource),
+                            contentDescription = item.name
+                        )
+                    },
+                    onClick = {
+                        navigateToTopLevelDestination(item)
+                    },
+                    label = {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = MaterialTheme.colorScheme.primary,
+                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                },
-                onClick = {
-                    navigateToTopLevelDestination(item)
-                },
-                label = {
-                    Text(
-                        text = item.name,
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primary,
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
 
-            )
+                )
+            }
         }
-    }
 }

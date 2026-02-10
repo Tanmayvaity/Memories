@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_other.presentation.screens
+package com.example.memories.feature.feature_other.presentation.screens.camera_settings
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background

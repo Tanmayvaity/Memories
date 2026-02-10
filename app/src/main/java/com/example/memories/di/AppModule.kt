@@ -100,6 +100,8 @@ import com.example.memories.feature.feature_notifications.domain.usecase.SetRemi
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderTimeUseCase
 import com.example.memories.feature.feature_other.data.remote.GithubService
 import com.example.memories.feature.feature_other.data.repository.GithubServiceImpl
+import com.example.memories.feature.feature_other.data.repository.HiddenMemorySettingsRepositoryImpl
+import com.example.memories.feature.feature_other.domain.repository.HiddenMemorySettingsRepository
 import com.example.memories.feature.feature_other.domain.repository.RemoteUserService
 import dagger.Module
 import dagger.Provides
@@ -529,6 +531,14 @@ object AppModule {
         return GithubServiceImpl(service)
     }
 
+
+    @Provides
+    @Singleton
+    fun provideHiddenMemorySettingRepository(
+        otherSettingsDatastore: OtherSettingsDatastore
+    ) : HiddenMemorySettingsRepository {
+        return HiddenMemorySettingsRepositoryImpl(otherSettingsDatastore)
+    }
 
 
 

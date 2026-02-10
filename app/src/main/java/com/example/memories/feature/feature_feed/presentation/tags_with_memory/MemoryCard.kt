@@ -47,9 +47,11 @@ fun MemoryCard(
     onClick : () -> Unit = {}
 ) {
     Card(
-        modifier = modifier.clickable{
+        modifier = modifier
+            .clickable{
             onClick()
-        },
+        }
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(

@@ -51,6 +51,21 @@ enum class GeneralSettingType(
 
 }
 
+enum class PrivacySettingType(
+    override val title: String,
+    override val description: String,
+    override val icon: Int,
+    override val onClickEvent: SettingClickEvent
+) : SettingItemType {
+    HIDDEN_MEMORIES_SETTING(
+        title = "Hidden Memories Security",
+        description = "Choose how to protect access to your hidden memories",
+        icon = R.drawable.ic_lock,
+        onClickEvent = SettingClickEvent.HIDDEN_ITEM_CLICK
+    ),
+
+}
+
 enum class AppInfoSettingType(
     override val title: String,
     override val description: String,
@@ -76,6 +91,7 @@ enum class SettingClickEvent {
     TAG_ITEM_CLICK,
     HISTORY_ITEM_CLICK,
     DELETE_ALL_DATA_ITEM_CLICK,
+    HIDDEN_ITEM_CLICK,
     ABOUT_ITEM_CLICK,
     DEVELOPER_INFO_ITEM_CLICK
 }

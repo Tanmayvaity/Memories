@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingCard(
-    containerColor: Color,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     border : BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     content: @Composable () -> Unit
 ) {

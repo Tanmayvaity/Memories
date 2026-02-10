@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_other.presentation.screens
+package com.example.memories.feature.feature_other.presentation.screens.delete_all_data
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -50,7 +50,6 @@ import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.feature.feature_other.presentation.viewmodels.DeleteAllDataViewModel
 import com.example.memories.feature.feature_other.presentation.viewmodels.DeleteDataState
 import com.example.memories.ui.theme.MemoriesTheme
-import kotlinx.coroutines.delay
 
 
 @Composable

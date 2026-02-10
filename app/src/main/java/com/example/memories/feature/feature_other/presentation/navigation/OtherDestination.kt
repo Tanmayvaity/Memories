@@ -3,11 +3,12 @@ package com.example.memories.feature.feature_other.presentation.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.memories.feature.feature_other.presentation.screens.AboutScreen
-import com.example.memories.feature.feature_other.presentation.screens.CameraSettingsScreen
-import com.example.memories.feature.feature_other.presentation.screens.DeleteAllDataRoot
-import com.example.memories.feature.feature_other.presentation.screens.DeveloperInfoRoot
+import com.example.memories.feature.feature_other.presentation.screens.about.AboutScreen
+import com.example.memories.feature.feature_other.presentation.screens.camera_settings.CameraSettingsScreen
+import com.example.memories.feature.feature_other.presentation.screens.delete_all_data.DeleteAllDataRoot
+import com.example.memories.feature.feature_other.presentation.screens.developer_info.DeveloperInfoRoot
 import com.example.memories.feature.feature_other.presentation.screens.OtherRoot
+import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.HiddenMemorySettingRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 
@@ -37,6 +38,9 @@ fun NavGraphBuilder.createOtherGraph(
                 navController.navigate(route)
             },
             onNavigateToBackupScreen = { route ->
+                navController.navigate(route)
+            },
+            onNavigateToHiddenMemorySettingScreen = { route ->
                 navController.navigate(route)
             }
         )
@@ -72,6 +76,15 @@ fun NavGraphBuilder.createOtherGraph(
     composable<AppScreen.DeleteAllData> {
         onBottomBarVisibilityChange(false)
         DeleteAllDataRoot(
+            onBack = {
+                navController.popBackStack()
+            }
+        )
+    }
+
+    composable<AppScreen.HiddenMemorySetting> {
+        onBottomBarVisibilityChange(false)
+        HiddenMemorySettingRoot(
             onBack = {
                 navController.popBackStack()
             }

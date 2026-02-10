@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_other.presentation.screens
 
+import android.R.attr.contentDescription
+import android.R.attr.onClick
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,10 +19,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.iconColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,16 +47,18 @@ import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
+import com.example.memories.core.presentation.components.CustomSettingRow
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.getVersionName
+import com.example.memories.core.util.noRippleClickable
 import com.example.memories.feature.feature_other.presentation.AppInfoSettingType
 import com.example.memories.feature.feature_other.presentation.GeneralSettingType
+import com.example.memories.feature.feature_other.presentation.PrivacySettingType
 import com.example.memories.feature.feature_other.presentation.SettingClickEvent
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
 import com.example.memories.feature.feature_other.presentation.viewmodels.OtherViewModel
 import com.example.memories.navigation.AppScreen
-
 
 
 const val TAG = "OtherScreen"
@@ -61,13 +67,14 @@ const val TAG = "OtherScreen"
 @Composable
 fun OtherRoot(
     onNavigateToTags: (AppScreen.Tags) -> Unit,
-    onNavigateToSettingsScreen : (AppScreen.NotificationSettings) -> Unit,
-    onNavigateToAboutScreen : (AppScreen.About) -> Unit,
-    onNavigateToDeveloperInfoScreen : (AppScreen.DeveloperInfo) -> Unit,
-    onNavigateToDeleteAllDataScreen : (AppScreen.DeleteAllData) -> Unit,
-    onNavigateToHistoryScreen : (AppScreen.History) -> Unit,
-    onNavigateToBackupScreen : (AppScreen.Backup) -> Unit,
-    themeViewModel : ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
+    onNavigateToSettingsScreen: (AppScreen.NotificationSettings) -> Unit,
+    onNavigateToAboutScreen: (AppScreen.About) -> Unit,
+    onNavigateToDeveloperInfoScreen: (AppScreen.DeveloperInfo) -> Unit,
+    onNavigateToDeleteAllDataScreen: (AppScreen.DeleteAllData) -> Unit,
+    onNavigateToHistoryScreen: (AppScreen.History) -> Unit,
+    onNavigateToBackupScreen: (AppScreen.Backup) -> Unit,
+    onNavigateToHiddenMemorySettingScreen: (AppScreen.HiddenMemorySetting) -> Unit,
+    themeViewModel: ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
     otherViewModel: OtherViewModel = viewModel()
 ) {
     val state by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
@@ -75,13 +82,15 @@ fun OtherRoot(
 
     LaunchedEffect(Unit) {
         otherViewModel.settingEvent.collect { event ->
-            when(event){
+            when (event) {
                 SettingClickEvent.NOTIFICATION_ITEM_CLICK -> {
                     onNavigateToSettingsScreen(AppScreen.NotificationSettings)
                 }
+
                 SettingClickEvent.STORAGE_ITEM_CLICK -> {
 
                 }
+
                 SettingClickEvent.DATABASE_BACKUP_ITEM_CLICK -> {
                     onNavigateToBackupScreen(AppScreen.Backup)
                 }
@@ -89,20 +98,29 @@ fun OtherRoot(
                 SettingClickEvent.THEME_ITEM_CLICK -> {
                     showThemeBottomSheet = true
                 }
+
                 SettingClickEvent.TAG_ITEM_CLICK -> {
                     onNavigateToTags(AppScreen.Tags)
                 }
+
                 SettingClickEvent.HISTORY_ITEM_CLICK -> {
                     onNavigateToHistoryScreen(AppScreen.History)
                 }
+
                 SettingClickEvent.DELETE_ALL_DATA_ITEM_CLICK -> {
                     onNavigateToDeleteAllDataScreen(AppScreen.DeleteAllData)
                 }
+
                 SettingClickEvent.ABOUT_ITEM_CLICK -> {
                     onNavigateToAboutScreen(AppScreen.About)
                 }
+
                 SettingClickEvent.DEVELOPER_INFO_ITEM_CLICK -> {
                     onNavigateToDeveloperInfoScreen(AppScreen.DeveloperInfo)
+                }
+
+                SettingClickEvent.HIDDEN_ITEM_CLICK -> {
+                    onNavigateToHiddenMemorySettingScreen(AppScreen.HiddenMemorySetting)
                 }
             }
 
@@ -199,11 +217,28 @@ fun OtherScreen(
                 text = "GENERAL",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(10.dp),
-
-                )
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
 
             GeneralSettingType.entries.forEach { item ->
+                CustomSettingRow(
+                    drawableRes = item.icon,
+                    contentDescription = item.description ?: "",
+                    heading = item.title,
+                    content = item.description ?: "",
+                    onClick = {
+                        onSettingEvent(item.onClickEvent)
+                    }
+                )
+            }
+
+            Text(
+                text = "PRIVACY AND SECURITY",
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            PrivacySettingType.entries.forEach { item ->
                 CustomSettingRow(
                     drawableRes = item.icon,
                     contentDescription = item.description ?: "",
@@ -220,9 +255,8 @@ fun OtherScreen(
                 text = "APP INFO",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier.padding(vertical = 8.dp)
             )
-
             AppInfoSettingType.entries.forEach { item ->
                 CustomSettingRow(
                     drawableRes = item.icon,
@@ -240,78 +274,4 @@ fun OtherScreen(
     }
 }
 
-@Composable
-fun CustomSettingRow(
-    modifier: Modifier = Modifier,
-    @DrawableRes drawableRes: Int,
-    contentDescription: String,
-    heading: String,
-    content: String = "",
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    iconColor: Color = MaterialTheme.colorScheme.primary,
-    iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit = {},
-    endContent: @Composable () -> Unit = {
-        Icon(
-            painter = painterResource(R.drawable.ic_right),
-            contentDescription = "Open $heading Memories",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier
-//                .weight(1f)
-                .padding(end = 10.dp)
 
-
-        )
-    }
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                onClick = onClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconItem(
-            drawableRes = drawableRes,
-            modifier = Modifier
-                .padding(10.dp),
-//                .weight(1f)
-            contentDescription = contentDescription,
-            color = iconColor,
-            backgroundColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            shape = CircleShape,
-            alpha = 0.1f,
-        )
-        Column(
-            verticalArrangement = Arrangement.Center,
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(5.dp)
-        ) {
-            Text(
-                text = heading,
-                modifier = Modifier.padding(start = 5.dp, end = 5.dp),
-                fontSize = 16.sp,
-                color = color,
-                style = MaterialTheme.typography.titleMedium
-            )
-            if (content.isNotEmpty() || content.isNotEmpty()) {
-                Text(
-                    text = content,
-                    modifier = Modifier.padding(start = 5.dp, top = 0.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-        }
-        endContent()
-
-
-    }
-}

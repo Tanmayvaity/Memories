@@ -1,5 +1,7 @@
 package com.example.memories.core.data.data_source
 
+import android.R
+import android.R.attr.enabled
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
@@ -7,7 +9,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.memories.feature.feature_other.domain.model.LockDuration
+import com.example.memories.feature.feature_other.domain.model.LockMethod
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
@@ -26,6 +32,9 @@ class OtherSettingsDatastore(
 
         val REMINDER_TIME = intPreferencesKey("reminder_time")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+
+        val HIDDEN_MEMORIES_LOCK_METHOD = stringPreferencesKey("HIDDEN_MEMORIES_LOCK_METHOD")
+        val HIDDEN_MEMORIES_LOCK_DURATION = stringPreferencesKey("HIDDEN_MEMORIES_LOCK_DURATION")
     }
 
      val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -52,6 +61,27 @@ class OtherSettingsDatastore(
         preferences[ONBOARDING_COMPLETED] ?: false
     }
 
+
+    val hiddenMemoriesLockMethod : Flow<String> = context.datastore.data.map { preferences ->
+        preferences[HIDDEN_MEMORIES_LOCK_METHOD] ?: LockMethod.NONE.name
+    }
+
+    val hiddenMemoriesLockDuration = context.datastore.data.map { preferences ->
+        preferences[HIDDEN_MEMORIES_LOCK_DURATION] ?: LockDuration.ONE_MINUTE.name
+    }
+
+
+    suspend fun setHiddenMemoriesLockMethod(method : LockMethod){
+        context.datastore.edit { preferences ->
+            preferences[HIDDEN_MEMORIES_LOCK_METHOD] = method.name
+        }
+    }
+
+    suspend fun setHiddenMemoriesLockDuration(duration : LockDuration){
+        context.datastore.edit { preferences ->
+            preferences[HIDDEN_MEMORIES_LOCK_DURATION] = duration.name
+        }
+    }
     suspend fun setDarkMode(toDarkMode : Boolean){
         context.datastore.edit { preferences ->
 //            val enable = preferences[DARK_MODE_KEY] ?: false
