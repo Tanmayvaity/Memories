@@ -18,42 +18,46 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import java.lang.Compiler.enable
+import java.lang.Exception
 
 class OtherSettingsDatastore(
-    val context : Context
+    val context: Context
 ) {
-    companion object{
+    companion object {
         private const val TAG = "OtherSettingsDatastore"
-        private val Context.datastore : DataStore<Preferences> by preferencesDataStore(name = "other_settings")
+        private val Context.datastore: DataStore<Preferences> by preferencesDataStore(name = "other_settings")
         val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
         val ALL_NOTIFICATIONS_ALLOWED = booleanPreferencesKey("all_notifications_allowed")
         val REMINDER_NOTIFICATION_ALLOWED = booleanPreferencesKey("reminder_notification_allowed")
-        val ON_THIS_DAY_NOTIFICATION_ALLOWED = booleanPreferencesKey("on_this_day_notification_allowed")
+        val ON_THIS_DAY_NOTIFICATION_ALLOWED =
+            booleanPreferencesKey("on_this_day_notification_allowed")
 
         val REMINDER_TIME = intPreferencesKey("reminder_time")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
 
         val HIDDEN_MEMORIES_LOCK_METHOD = stringPreferencesKey("HIDDEN_MEMORIES_LOCK_METHOD")
         val HIDDEN_MEMORIES_LOCK_DURATION = stringPreferencesKey("HIDDEN_MEMORIES_LOCK_DURATION")
+
+        val HIDDEN_MEMORIES_CUSTOM_PIN = stringPreferencesKey("HIDDEN_MEMORIES_CUSTOM_PIN")
     }
 
-     val isDarkModeEnabled = context.datastore.data.map { preferences ->
-         preferences[DARK_MODE_KEY]?: false
+    val isDarkModeEnabled = context.datastore.data.map { preferences ->
+        preferences[DARK_MODE_KEY] ?: false
     }
 
     val allNotificationAllowed = context.datastore.data.map { preferences ->
-        preferences[ALL_NOTIFICATIONS_ALLOWED]?: true
+        preferences[ALL_NOTIFICATIONS_ALLOWED] ?: true
     }
 
     val reminderNotificationAllowed = context.datastore.data.map { preferences ->
-        preferences[REMINDER_NOTIFICATION_ALLOWED]?: true
+        preferences[REMINDER_NOTIFICATION_ALLOWED] ?: true
     }
 
     val onThisDayNotificationAllowed = context.datastore.data.map { preferences ->
-        preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED]?: true
+        preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED] ?: true
     }
 
-    val reminderTime = context.datastore.data.map{ preferences ->
+    val reminderTime = context.datastore.data.map { preferences ->
         preferences[REMINDER_TIME] ?: (22 * 60 + 0)
     }
 
@@ -61,28 +65,48 @@ class OtherSettingsDatastore(
         preferences[ONBOARDING_COMPLETED] ?: false
     }
 
+    private val hiddenMemoriesCustomPin = context.datastore.data.map { preferences ->
+        preferences[HIDDEN_MEMORIES_CUSTOM_PIN] ?: ""
+    }
 
-    val hiddenMemoriesLockMethod : Flow<String> = context.datastore.data.map { preferences ->
-        preferences[HIDDEN_MEMORIES_LOCK_METHOD] ?: LockMethod.NONE.name
+
+    val hiddenMemoriesLockMethod: Flow<String> = context.datastore.data.map { preferences ->
+        val saved = preferences[HIDDEN_MEMORIES_LOCK_METHOD] ?: LockMethod.NONE.name
+        try {
+            LockMethod.valueOf(saved)
+            saved
+        } catch (e: Exception) {
+            LockMethod.NONE.name
+        }
     }
 
     val hiddenMemoriesLockDuration = context.datastore.data.map { preferences ->
         preferences[HIDDEN_MEMORIES_LOCK_DURATION] ?: LockDuration.ONE_MINUTE.name
     }
 
+    fun isCustomPinSet(): Flow<Boolean> {
+        return hiddenMemoriesCustomPin.map { it.isNotEmpty() }
+    }
 
-    suspend fun setHiddenMemoriesLockMethod(method : LockMethod){
+    suspend fun setHiddenMemoriesCustomPin(pin: String) {
+        context.datastore.edit { preferences ->
+            preferences[HIDDEN_MEMORIES_CUSTOM_PIN] = pin
+        }
+    }
+
+    suspend fun setHiddenMemoriesLockMethod(method: LockMethod) {
         context.datastore.edit { preferences ->
             preferences[HIDDEN_MEMORIES_LOCK_METHOD] = method.name
         }
     }
 
-    suspend fun setHiddenMemoriesLockDuration(duration : LockDuration){
+    suspend fun setHiddenMemoriesLockDuration(duration: LockDuration) {
         context.datastore.edit { preferences ->
             preferences[HIDDEN_MEMORIES_LOCK_DURATION] = duration.name
         }
     }
-    suspend fun setDarkMode(toDarkMode : Boolean){
+
+    suspend fun setDarkMode(toDarkMode: Boolean) {
         context.datastore.edit { preferences ->
 //            val enable = preferences[DARK_MODE_KEY] ?: false
             preferences[DARK_MODE_KEY] = toDarkMode
@@ -90,32 +114,34 @@ class OtherSettingsDatastore(
         }
     }
 
-    suspend fun setReminderTime(hour : Int, minute : Int){
+    suspend fun setReminderTime(hour: Int, minute: Int) {
         context.datastore.edit { preferences ->
             preferences[REMINDER_TIME] = hour * 60 + minute
         }
     }
 
-    suspend fun enableAllNotifications(enabled : Boolean){
+    suspend fun enableAllNotifications(enabled: Boolean) {
         Log.d(TAG, "enableAllNotifications: ${enabled}")
-        context.datastore.edit{ preferences ->
+        context.datastore.edit { preferences ->
             preferences[ALL_NOTIFICATIONS_ALLOWED] = enabled
         }
     }
-    suspend fun enableReminderNotification(enabled : Boolean){
+
+    suspend fun enableReminderNotification(enabled: Boolean) {
         Log.d(TAG, "enableAllNotifications: ${enabled}")
-        context.datastore.edit{ preferences ->
+        context.datastore.edit { preferences ->
             preferences[REMINDER_NOTIFICATION_ALLOWED] = enabled
         }
     }
-    suspend fun enableOnThisDayNotification(enabled : Boolean){
+
+    suspend fun enableOnThisDayNotification(enabled: Boolean) {
         Log.d(TAG, "enableAllNotifications: ${enabled}")
-        context.datastore.edit{ preferences ->
+        context.datastore.edit { preferences ->
             preferences[ON_THIS_DAY_NOTIFICATION_ALLOWED] = enabled
         }
     }
 
-    suspend fun setOnboardingCompleted(){
+    suspend fun setOnboardingCompleted() {
         context.datastore.edit { preferences ->
             preferences[ONBOARDING_COMPLETED] = true
         }

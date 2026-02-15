@@ -16,6 +16,10 @@ class HiddenMemorySettingsRepositoryImpl @Inject constructor(
     override val hiddenMemoryLockDuration: Flow<String>
         get() = otherSettingsDatastore.hiddenMemoriesLockDuration
 
+    override val isCustomPinSet: Flow<Boolean>
+        get() = otherSettingsDatastore.isCustomPinSet()
+
+
 
     override suspend fun setHiddenMemoryLockMethod(method: LockMethod) {
         otherSettingsDatastore.setHiddenMemoriesLockMethod(method)
@@ -23,5 +27,9 @@ class HiddenMemorySettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setHiddenMemoryLockDuration(duration: LockDuration) {
         otherSettingsDatastore.setHiddenMemoriesLockDuration(duration)
+    }
+
+    override suspend fun setHiddenMemoryCustomPin(pin: String) {
+        otherSettingsDatastore.setHiddenMemoriesCustomPin(pin)
     }
 }

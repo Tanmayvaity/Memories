@@ -66,4 +66,8 @@ interface MemoryRepository {
     ): Flow<List<MemoryWithMediaModel>>
 
     suspend fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMediaModel>>
+
+    suspend fun deleteAllHiddenMemories()
+
+    suspend fun unHideAllHiddenMemories()
 }

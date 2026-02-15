@@ -1,5 +1,15 @@
 package com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings
 
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,15 +37,23 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key.Companion.I
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
@@ -46,10 +64,19 @@ import com.example.memories.core.presentation.components.SettingCard
 import com.example.memories.core.util.noRippleClickable
 import com.example.memories.feature.feature_other.domain.model.LockDuration
 import com.example.memories.feature.feature_other.domain.model.LockMethod
+import com.example.memories.feature.feature_other.presentation.BiometricPromptManager
+import com.example.memories.feature.feature_other.presentation.BiometricResult
+import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components.BiometricResultBottomSheet
+import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components.BiometricSheetAction
+import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components.PinSuccessBottomSheet
+import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components.SetupPinDialog
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenMemorySettingEvents
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenMemorySettingScreenState
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenMemorySettingViewModel
+import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenScreenOneTimeEvent
 import com.example.memories.ui.theme.MemoriesTheme
+import javax.inject.Inject
+
 
 @Composable
 fun HiddenMemorySettingRoot(
@@ -57,6 +84,21 @@ fun HiddenMemorySettingRoot(
     viewModel: HiddenMemorySettingViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is HiddenScreenOneTimeEvent.ShowToast -> {
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            }
+        }
+    }
 
     HiddenMemorySettingScreen(
         onBack = onBack,
@@ -73,6 +115,40 @@ fun HiddenMemorySettingScreen(
     onEvent: (HiddenMemorySettingEvents) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    var showPinSetupDialog by rememberSaveable { mutableStateOf(false) }
+    var showPinSetupConfirmSheet by rememberSaveable { mutableStateOf(false) }
+    var showBiometricSheet by rememberSaveable { mutableStateOf(false) }
+    var currentBiometricResult by rememberSaveable { mutableStateOf<BiometricResult?>(null) }
+    var currentLockMethod by rememberSaveable { mutableStateOf<LockMethod?>(null) }
+    val activity = context as AppCompatActivity
+    val biometricManager = remember {
+        BiometricPromptManager(activity)
+    }
+
+    LaunchedEffect(Unit) {
+        biometricManager.biometricResults.collect { result ->
+            currentBiometricResult = result
+            showBiometricSheet = true
+            when (currentBiometricResult) {
+                BiometricResult.AuthenticationSuccess -> {
+                    if (currentLockMethod != null) {
+                        onEvent(
+                            HiddenMemorySettingEvents.SetLockMethod(
+                                currentLockMethod!!
+                            )
+                        )
+                    }
+                }
+
+                else -> {
+                    onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
+                    currentLockMethod = LockMethod.NONE
+                }
+            }
+
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -100,7 +176,38 @@ fun HiddenMemorySettingScreen(
 
             LockMethodSection(
                 currentLockMethod = state.currentLockMethod,
-                onSetLockMethod = { onEvent(HiddenMemorySettingEvents.SetLockMethod(it)) }
+                onSetLockMethod = { lockMethod ->
+                    if (lockMethod == LockMethod.CUSTOM_PIN) {
+                        showPinSetupDialog = true
+                        return@LockMethodSection
+                    }
+                    if (lockMethod == LockMethod.NONE) {
+                        onEvent(HiddenMemorySettingEvents.SetLockMethod(lockMethod))
+                    }
+                    currentLockMethod = lockMethod
+                    when (lockMethod) {
+                        LockMethod.DEVICE_PATTERN -> {
+
+                            biometricManager.showBiometricPrompt(
+                                title = "Unlock Hidden Memories",
+                                description = "Verify your device PIN, pattern, or password to access your hidden memories.",
+                                lockMethod = lockMethod
+                            )
+                        }
+
+                        LockMethod.DEVICE_BIOMETRIC -> {
+                            biometricManager.showBiometricPrompt(
+                                title = "Unlock Hidden Memories",
+                                description = "Use your fingerprint or face to access your hidden memories.",
+                                lockMethod = lockMethod
+                            )
+
+                        }
+
+                        else -> {}
+                    }
+
+                },
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -113,11 +220,115 @@ fun HiddenMemorySettingScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             DataManagementSection(
-                onUnhideAll = { /* TODO */ },
-                onDeleteAll = { /* TODO */ }
+                onUnhideAll = {
+                    onEvent(HiddenMemorySettingEvents.UnHideAllHiddenMemories)
+                },
+                onDeleteAll = {
+                    onEvent(HiddenMemorySettingEvents.DeleteAllHiddenMemories)
+                }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showPinSetupDialog) {
+            SetupPinDialog(
+                onDismiss = { success ->
+                    if (!success && !state.isCustomPinSet) {
+                        onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
+                        currentLockMethod = LockMethod.NONE
+                    }
+                    if (success) {
+                        showPinSetupConfirmSheet = true
+                        onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.CUSTOM_PIN))
+                        currentLockMethod = LockMethod.CUSTOM_PIN
+                    }
+                    showPinSetupDialog = false
+                },
+                onPinChange = { pin ->
+                    onEvent(HiddenMemorySettingEvents.SetCustomPin(pin))
+                }
+            )
+        }
+        if (showPinSetupConfirmSheet) {
+            PinSuccessBottomSheet(
+                onDismiss = {
+                    showPinSetupConfirmSheet = false
+                }
+            )
+        }
+
+        if (showBiometricSheet && currentBiometricResult != null) {
+            BiometricResultBottomSheet(
+                result = currentBiometricResult!!
+            ) { sheetAction ->
+                when (sheetAction) {
+                    BiometricSheetAction.OPEN_SETTINGS -> {
+                        if (Build.VERSION.SDK_INT >= 30) {
+                            val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                putExtra(
+                                    Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                                    BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+                                )
+
+                            }
+                            context.startActivity(enrollIntent)
+                        }
+                    }
+
+                    BiometricSheetAction.USE_CUSTOM_PIN -> {
+                        showPinSetupDialog = true
+                    }
+
+                    BiometricSheetAction.RETRY -> {
+                        when (currentLockMethod) {
+                            LockMethod.DEVICE_PATTERN -> {
+
+                                biometricManager.showBiometricPrompt(
+                                    title = "Unlock Hidden Memories",
+                                    description = "Verify your device PIN, pattern, or password to access your hidden memories.",
+                                    lockMethod = currentLockMethod!!
+                                )
+                            }
+
+                            LockMethod.DEVICE_BIOMETRIC -> {
+                                biometricManager.showBiometricPrompt(
+                                    title = "Unlock Hidden Memories",
+                                    description = "Use your fingerprint or face to access your hidden memories.",
+                                    lockMethod = currentLockMethod!!
+                                )
+
+                            }
+
+                            else -> {}
+                        }
+                    }
+
+                    BiometricSheetAction.DISMISS -> {
+                        showBiometricSheet = false
+//                        when (currentBiometricResult) {
+//                            BiometricResult.AuthenticationSuccess -> {
+//                                if (currentLockMethod != null) {
+//                                    onEvent(
+//                                        HiddenMemorySettingEvents.SetLockMethod(
+//                                            currentLockMethod!!
+//                                        )
+//                                    )
+//                                }
+//
+//                                showBiometricSheet = false
+//                            }
+//
+//                            else -> {
+//                                onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
+//                                currentLockMethod = LockMethod.NONE
+//                                showBiometricSheet = false
+//                            }
+//                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -158,7 +369,7 @@ private fun HeaderSection() {
 @Composable
 private fun LockMethodSection(
     currentLockMethod: LockMethod,
-    onSetLockMethod: (LockMethod) -> Unit
+    onSetLockMethod: (LockMethod) -> Unit,
 ) {
     SectionTitle("Lock Method")
     Spacer(modifier = Modifier.height(16.dp))
@@ -181,7 +392,9 @@ private fun LockMethodSection(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             FilledTonalButton(
-                                onClick = { onSetLockMethod(method) },
+                                onClick = {
+                                    onSetLockMethod(method)
+                                },
                                 modifier = Modifier.padding(top = 8.dp)
                             ) {
                                 Row(
@@ -200,7 +413,9 @@ private fun LockMethodSection(
                             }
                         }
                     },
-                    onClick = { onSetLockMethod(method) },
+                    onClick = {
+                        onSetLockMethod(method)
+                    },
                     endContent = {
                         RadioButton(
                             selected = method == currentLockMethod,

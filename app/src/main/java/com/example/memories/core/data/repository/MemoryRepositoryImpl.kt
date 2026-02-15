@@ -246,5 +246,13 @@ class MemoryRepositoryImpl @Inject constructor(
         return memoryDao.getRecentMemories(limit).map { memories -> memories.map { it.toDomain() } }
     }
 
+    override suspend fun deleteAllHiddenMemories() {
+        memoryDao.deleteAllHiddenMemories()
+    }
+
+    override suspend fun unHideAllHiddenMemories() {
+        memoryDao.unHideAllMemories()
+    }
+
 
 }

@@ -140,4 +140,7 @@ dependencies {
     // retrofit
     implementation(libs.squareup.retrofit)
     implementation(libs.retrofit.gson.convertor)
+
+    // biometric
+    implementation(libs.androidx.biometric)
 }

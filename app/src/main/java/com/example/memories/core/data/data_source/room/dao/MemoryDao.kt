@@ -29,6 +29,11 @@ interface MemoryDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMemoryTagCrossRef(memoryTagCrossRef: List<MemoryTagCrossRef>)
 
+    @Query("DELETE FROM MemoryEntity where hidden = 1")
+    suspend fun deleteAllHiddenMemories()
+
+    @Query("UPDATE MemoryEntity SET hidden = 0 WHERE hidden = 1")
+    suspend fun unHideAllMemories()
     @Transaction
     suspend fun insertMemoryWithMediaAndTag(
         memory: MemoryEntity,
