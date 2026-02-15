@@ -150,7 +150,6 @@ fun BiometricResultBottomSheet(
         onDismissRequest = { onAction(BiometricSheetAction.DISMISS) },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

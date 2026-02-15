@@ -15,6 +15,7 @@ import coil3.util.CoilUtils.result
 import com.example.memories.feature.feature_other.domain.model.LockMethod
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.serialization.Serializable
 
 
 private const val TAG = "BiometricPromptManager"
@@ -123,12 +124,18 @@ class BiometricPromptManager(
 }
 
 
-
+@Serializable
 sealed interface BiometricResult {
+    @Serializable
     data object HardwareUnavailable : BiometricResult
+    @Serializable
     data object FeatureUnavailable : BiometricResult
+    @Serializable
     data class AuthenticationError(val error : String) : BiometricResult
+    @Serializable
     data object AuthenticationFailed: BiometricResult
+    @Serializable
     data object AuthenticationSuccess: BiometricResult
+    @Serializable
     data object AuthenticationNotSet: BiometricResult
 }

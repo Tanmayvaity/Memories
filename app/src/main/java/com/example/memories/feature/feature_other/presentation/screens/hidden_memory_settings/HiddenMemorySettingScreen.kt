@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_other.presentation.screens.hidden_m
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,6 +77,7 @@ import com.example.memories.feature.feature_other.presentation.viewmodels.Hidden
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenMemorySettingViewModel
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenScreenOneTimeEvent
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
@@ -119,37 +122,59 @@ fun HiddenMemorySettingScreen(
     var showPinSetupDialog by rememberSaveable { mutableStateOf(false) }
     var showPinSetupConfirmSheet by rememberSaveable { mutableStateOf(false) }
     var showBiometricSheet by rememberSaveable { mutableStateOf(false) }
-    var currentBiometricResult by rememberSaveable { mutableStateOf<BiometricResult?>(null) }
+    var currentBiometricResult by rememberSaveable(
+        stateSaver = Saver<BiometricResult?, String>(
+            save = { if (it != null) Json.encodeToString(it) else "" },
+            restore = { if (it.isNotEmpty()) Json.decodeFromString(it) else null }
+        )
+    ) {
+        mutableStateOf(null)
+    }
     var currentLockMethod by rememberSaveable { mutableStateOf<LockMethod?>(null) }
     val activity = context as AppCompatActivity
-    val biometricManager = remember {
+    val biometricManager = remember(activity) {
         BiometricPromptManager(activity)
     }
+
 
     LaunchedEffect(Unit) {
         biometricManager.biometricResults.collect { result ->
             currentBiometricResult = result
             showBiometricSheet = true
-            when (currentBiometricResult) {
-                BiometricResult.AuthenticationSuccess -> {
-                    if (currentLockMethod != null) {
-                        onEvent(
-                            HiddenMemorySettingEvents.SetLockMethod(
-                                currentLockMethod!!
-                            )
-                        )
-                    }
-                }
-
-                else -> {
-                    onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
-                    currentLockMethod = LockMethod.NONE
-                }
+            if(result is BiometricResult.AuthenticationSuccess && currentLockMethod != null){
+                onEvent(HiddenMemorySettingEvents.SetLockMethod(currentLockMethod!!))
+                currentLockMethod = null
             }
+
+
+//            when (result) {
+//                BiometricResult.AuthenticationSuccess -> {
+//                    if (currentLockMethod != null) {
+//                        onEvent(
+//                            HiddenMemorySettingEvents.SetLockMethod(
+//                                currentLockMethod!!
+//                            )
+//                        )
+//                        currentLockMethod = null
+//                    }
+//                }
+//
+//                else -> {
+////                    if (result !is BiometricResult.AuthenticationError) {
+////                        onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
+////                        currentLockMethod = LockMethod.NONE
+////                    }
+//                }
+//            }
 
         }
     }
-
+    val enrollLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // Optionally handle the result here
+        Log.d("HiddenMemorySettingScreen", "Enroll result: ${result.resultCode}")
+    }
     Scaffold(
         topBar = {
             AppTopBar(
@@ -183,11 +208,12 @@ fun HiddenMemorySettingScreen(
                     }
                     if (lockMethod == LockMethod.NONE) {
                         onEvent(HiddenMemorySettingEvents.SetLockMethod(lockMethod))
+                        currentLockMethod = null
+                        return@LockMethodSection
                     }
                     currentLockMethod = lockMethod
                     when (lockMethod) {
                         LockMethod.DEVICE_PATTERN -> {
-
                             biometricManager.showBiometricPrompt(
                                 title = "Unlock Hidden Memories",
                                 description = "Verify your device PIN, pattern, or password to access your hidden memories.",
@@ -203,9 +229,8 @@ fun HiddenMemorySettingScreen(
                             )
 
                         }
-
-                        else -> {}
                     }
+
 
                 },
             )
@@ -234,8 +259,10 @@ fun HiddenMemorySettingScreen(
         if (showPinSetupDialog) {
             SetupPinDialog(
                 onDismiss = { success ->
-                    if (!success && !state.isCustomPinSet) {
-                        onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
+                    if (!success && !state.isCustomPinSet && currentLockMethod != null
+                        && (currentLockMethod != LockMethod.DEVICE_BIOMETRIC && currentLockMethod != LockMethod.DEVICE_PATTERN)
+                        ) {
+                        onEvent(HiddenMemorySettingEvents.SetLockMethod(currentLockMethod!!))
                         currentLockMethod = LockMethod.NONE
                     }
                     if (success) {
@@ -264,34 +291,56 @@ fun HiddenMemorySettingScreen(
             ) { sheetAction ->
                 when (sheetAction) {
                     BiometricSheetAction.OPEN_SETTINGS -> {
-                        if (Build.VERSION.SDK_INT >= 30) {
+
+//                        Toast.makeText(context,"Just some toast",Toast.LENGTH_SHORT).show()
+                        showBiometricSheet = false
+
+                        val authenticators = when (currentLockMethod) {
+                            LockMethod.DEVICE_BIOMETRIC -> {
+                                if (Build.VERSION.SDK_INT >= 30) {
+                                    BIOMETRIC_STRONG or BIOMETRIC_WEAK
+                                } else {
+                                    BIOMETRIC_STRONG
+                                }
+                            }
+                            LockMethod.DEVICE_PATTERN -> {
+                                if (Build.VERSION.SDK_INT >= 30) {
+                                    DEVICE_CREDENTIAL
+                                } else {
+                                    BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+                                }
+                            }
+                            else -> {
+                                null
+                            }
+                        }
+
+                        if (Build.VERSION.SDK_INT >= 30 && authenticators != null) {
                             val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 putExtra(
                                     Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-                                    BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+                                    authenticators
                                 )
-
                             }
-                            context.startActivity(enrollIntent)
+                            enrollLauncher.launch(enrollIntent)
                         }
                     }
 
                     BiometricSheetAction.USE_CUSTOM_PIN -> {
                         showPinSetupDialog = true
+                        showBiometricSheet = false
                     }
 
                     BiometricSheetAction.RETRY -> {
                         when (currentLockMethod) {
                             LockMethod.DEVICE_PATTERN -> {
-
                                 biometricManager.showBiometricPrompt(
                                     title = "Unlock Hidden Memories",
                                     description = "Verify your device PIN, pattern, or password to access your hidden memories.",
                                     lockMethod = currentLockMethod!!
                                 )
                             }
-
                             LockMethod.DEVICE_BIOMETRIC -> {
                                 biometricManager.showBiometricPrompt(
                                     title = "Unlock Hidden Memories",
@@ -307,25 +356,6 @@ fun HiddenMemorySettingScreen(
 
                     BiometricSheetAction.DISMISS -> {
                         showBiometricSheet = false
-//                        when (currentBiometricResult) {
-//                            BiometricResult.AuthenticationSuccess -> {
-//                                if (currentLockMethod != null) {
-//                                    onEvent(
-//                                        HiddenMemorySettingEvents.SetLockMethod(
-//                                            currentLockMethod!!
-//                                        )
-//                                    )
-//                                }
-//
-//                                showBiometricSheet = false
-//                            }
-//
-//                            else -> {
-//                                onEvent(HiddenMemorySettingEvents.SetLockMethod(LockMethod.NONE))
-//                                currentLockMethod = LockMethod.NONE
-//                                showBiometricSheet = false
-//                            }
-//                        }
                     }
                 }
             }
