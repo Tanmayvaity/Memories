@@ -442,7 +442,7 @@ fun MemoryDetailScreen(
     }
 
     if (showImageDetail && memory != null) {
-        val itemUri = memory.mediaList[pagerState.currentPage].uri.toUri()
+//        val itemUri = memory.mediaList[pagerState.currentPage].uri.toUri()
         FullScreenImageDialog(
             onDismiss = {
                 showImageDetail = false
@@ -456,17 +456,17 @@ fun MemoryDetailScreen(
             page = pagerState.currentPage,
             isDownloading = state.isDownloading,
             isSharing = state.isSharing,
-            onDownload = {
+            onDownload = { uri ->
                 onEvent(
                     MemoryDetailEvents.DownloadImage(
-                        uri = itemUri
+                        uri = uri
                     )
                 )
             },
-            onShare = {
+            onShare = { uri ->
                 onEvent(
                     MemoryDetailEvents.ShareImage(
-                        uri = itemUri
+                        uri = uri
                     )
                 )
             }

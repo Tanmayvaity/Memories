@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail.components
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.camera.viewfinder.core.impl.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import com.example.memories.R
 import coil3.compose.AsyncImage
 import com.example.memories.LocalTheme
@@ -61,8 +63,8 @@ fun FullScreenImageDialog(
     memoryTitle : String = "Summer Beach Trip",
     memoryTime : Long = System.currentTimeMillis(),
     onFavourite : () -> Unit = {},
-    onDownload : () -> Unit = {},
-    onShare : () -> Unit = {},
+    onDownload : (Uri) -> Unit = {},
+    onShare : (Uri) -> Unit = {},
     isDownloading : Boolean = false,
     isSharing : Boolean = false
 ) {
@@ -104,12 +106,12 @@ fun FullScreenImageDialog(
             ){
                 HorizontalPager(
                     state = pagerState,
-
+                    modifier = Modifier.fillMaxSize()
                 ) {pager ->
                     AsyncImage(
                         model = if(previewMode) R.drawable.ic_launcher_background else uriList[pager],
                         contentDescription = "Media item $pager",
-                        contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -152,12 +154,16 @@ fun FullScreenImageDialog(
                         )
                         LoadingIconItem(
                             drawableRes = R.drawable.ic_download,
-                            onClick = onDownload,
+                            onClick = {
+                                onDownload(uriList[pagerState.currentPage].toUri())
+                            },
                             isLoading = isDownloading
                         )
                         LoadingIconItem(
                             drawableRes = R.drawable.ic_share,
-                            onClick = onShare,
+                            onClick = {
+                                onShare(uriList[pagerState.currentPage].toUri())
+                            },
                             isLoading = isSharing
                         )
                     }
