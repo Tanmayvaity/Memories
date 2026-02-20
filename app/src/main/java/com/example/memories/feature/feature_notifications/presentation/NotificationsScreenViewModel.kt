@@ -2,8 +2,7 @@ package com.example.memories.feature.feature_notifications.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.memories.core.data.data_source.OtherSettingsDatastore
-import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
+import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NotificationsScreenViewModel @Inject constructor(
     private val notificationUseCase: NotificationUseCase,
-    private val repository: NotificationRepository
+    private val repository: AppSettingRepository
 ) : ViewModel() {
 
     val state = combine(

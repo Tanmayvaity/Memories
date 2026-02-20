@@ -2,16 +2,15 @@ package com.example.memories.feature.feature_other.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.feature.feature_other.domain.model.LockDuration
 import com.example.memories.feature.feature_other.domain.model.LockMethod
-import com.example.memories.feature.feature_other.domain.repository.HiddenMemorySettingsRepository
 import com.example.memories.feature.feature_other.presentation.viewmodels.HiddenMemorySettingEvents.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HiddenMemorySettingViewModel @Inject constructor(
-    private val hiddenMemorySettingsRepository: HiddenMemorySettingsRepository,
+    private val appSettingRepository: AppSettingRepository,
     private val memoryRepository: MemoryRepository
 ) : ViewModel() {
 
@@ -30,9 +29,9 @@ class HiddenMemorySettingViewModel @Inject constructor(
 
 
     val state = combine(
-        hiddenMemorySettingsRepository.hiddenMemoryLockMethod,
-        hiddenMemorySettingsRepository.hiddenMemoryLockDuration,
-        hiddenMemorySettingsRepository.isCustomPinSet
+        appSettingRepository.hiddenMemoryLockMethod,
+        appSettingRepository.hiddenMemoryLockDuration,
+        appSettingRepository.isCustomPinSet
     ) { method, duration , isCustomPinSet ->
         HiddenMemorySettingScreenState(
             currentLockMethod = LockMethod.valueOf(method),
@@ -52,7 +51,7 @@ class HiddenMemorySettingViewModel @Inject constructor(
         when (event) {
             is HiddenMemorySettingEvents.SetLockMethod -> {
                 viewModelScope.launch {
-                    hiddenMemorySettingsRepository.setHiddenMemoryLockMethod(event.method)
+                    appSettingRepository.setHiddenMemoryLockMethod(event.method)
                     if(event.method != LockMethod.CUSTOM_PIN && state.value.isCustomPinSet){
                         onEvent(SetCustomPin(""))
                     }
@@ -61,12 +60,12 @@ class HiddenMemorySettingViewModel @Inject constructor(
 
             is HiddenMemorySettingEvents.SetLockDuration -> {
                 viewModelScope.launch {
-                    hiddenMemorySettingsRepository.setHiddenMemoryLockDuration(event.duration)
+                    appSettingRepository.setHiddenMemoryLockDuration(event.duration)
                 }
             }
             is HiddenMemorySettingEvents.SetCustomPin -> {
                 viewModelScope.launch {
-                    hiddenMemorySettingsRepository.setHiddenMemoryCustomPin(event.pin)
+                    appSettingRepository.setHiddenMemoryCustomPin(event.pin)
                 }
             }
 

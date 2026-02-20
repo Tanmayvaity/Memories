@@ -1,11 +1,10 @@
 package com.example.memories.feature.feature_notifications.domain.usecase
 
-import com.example.memories.core.data.data_source.OtherSettingsDatastore
+import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
-import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 
 class SetOnThisDayNotificationUseCase (
-    private val repository: NotificationRepository,
+    private val repository: AppSettingRepository,
     private val scheduler: MemoryNotificationScheduler
 ) {
     suspend operator fun invoke(enabled : Boolean) {

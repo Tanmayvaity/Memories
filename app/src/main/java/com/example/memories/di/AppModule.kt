@@ -19,8 +19,6 @@ import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATI
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_3_4
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_4_5
 import com.example.memories.core.domain.repository.TagRepository
-import com.example.memories.core.data.repository.ThemeRepositoryImpl
-import com.example.memories.core.domain.repository.ThemeRespository
 import com.example.memories.core.domain.usecase.GetThemeUseCase
 import com.example.memories.core.domain.usecase.SetThemeUseCase
 import com.example.memories.core.domain.usecase.ThemeUseCase
@@ -83,7 +81,8 @@ import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
-import com.example.memories.feature.feature_notifications.data.NotificationRepositoryImpl
+import com.example.memories.core.data.repository.AppSettingRepositoryImpl
+import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SaveToCacheStorageWithUriUseCase
@@ -92,7 +91,6 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.D
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
-import com.example.memories.feature.feature_notifications.domain.repository.NotificationRepository
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
@@ -100,8 +98,6 @@ import com.example.memories.feature.feature_notifications.domain.usecase.SetRemi
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderTimeUseCase
 import com.example.memories.feature.feature_other.data.remote.GithubService
 import com.example.memories.feature.feature_other.data.repository.GithubServiceImpl
-import com.example.memories.feature.feature_other.data.repository.HiddenMemorySettingsRepositoryImpl
-import com.example.memories.feature.feature_other.domain.repository.HiddenMemorySettingsRepository
 import com.example.memories.feature.feature_other.domain.repository.RemoteUserService
 import dagger.Module
 import dagger.Provides
@@ -239,17 +235,10 @@ object AppModule {
         return OtherSettingsDatastore(context)
     }
 
-    @Provides
-    @Singleton
-    fun providesThemeRepository(
-        otherSettingsDatastore: OtherSettingsDatastore
-    ): ThemeRespository {
-        return ThemeRepositoryImpl(otherSettingsDatastore)
-    }
 
     @Provides
     @Singleton
-    fun providesThemeUseCase(repository: ThemeRespository): ThemeUseCase {
+    fun providesThemeUseCase(repository: AppSettingRepository): ThemeUseCase {
         return ThemeUseCase(
             getThemeUseCase = GetThemeUseCase(repository),
             setThemeUseCase = SetThemeUseCase(repository)
@@ -350,8 +339,8 @@ object AppModule {
     @Provides
     @Singleton
     fun providesFeedRepository(
-        repository : MemoryRepository
-    ): FetchTodayMemoriesUseCase{
+        repository: MemoryRepository
+    ): FetchTodayMemoriesUseCase {
         return FetchTodayMemoriesUseCase(repository)
     }
 
@@ -377,6 +366,7 @@ object AppModule {
         )
 
     }
+
     @Provides
     @Singleton
     fun provideTagsUseCaseWrapper(
@@ -402,18 +392,11 @@ object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideNotificationRepository(
-        otherSettingsDatastore: OtherSettingsDatastore
-    ): NotificationRepository {
-        return NotificationRepositoryImpl(otherSettingsDatastore)
-    }
 
     @Provides
     @Singleton
     fun provideNotificationUseCase(
-        repository: NotificationRepository,
+        repository: AppSettingRepository,
         scheduler: MemoryNotificationScheduler
     ): NotificationUseCase {
         return NotificationUseCase(
@@ -431,7 +414,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideInvokeNotificationUseCase(
-        repository: NotificationRepository,
+        repository: AppSettingRepository,
         scheduler: MemoryNotificationScheduler
     ): InvokeNotificationUseCase {
         return InvokeNotificationUseCase(repository, scheduler)
@@ -456,7 +439,7 @@ object AppModule {
     @Singleton
     fun provideAlarmManagerService(
         @ApplicationContext context: Context
-    ): AlarmManagerService{
+    ): AlarmManagerService {
         return AlarmManagerService(context)
     }
 
@@ -493,7 +476,7 @@ object AppModule {
         memoryRepository: MemoryRepository,
         tagRepository: TagRepository,
         recentSearchRepository: RecentSearchRepository
-    ) : SearchUseCase {
+    ): SearchUseCase {
         return SearchUseCase(
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(memoryRepository),
             fetchOnThisDayUseCase = FetchOnThisDayUseCase(memoryRepository),
@@ -510,7 +493,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit() : Retrofit{
+    fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.github.com/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -526,20 +509,19 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRemoteUseService(
-        service : GithubService
-    ) : RemoteUserService {
+        service: GithubService
+    ): RemoteUserService {
         return GithubServiceImpl(service)
     }
 
 
     @Provides
     @Singleton
-    fun provideHiddenMemorySettingRepository(
+    fun provideAppSettingRepository(
         otherSettingsDatastore: OtherSettingsDatastore
-    ) : HiddenMemorySettingsRepository {
-        return HiddenMemorySettingsRepositoryImpl(otherSettingsDatastore)
+    ): AppSettingRepository {
+        return AppSettingRepositoryImpl(otherSettingsDatastore)
     }
-
 
 
 }
