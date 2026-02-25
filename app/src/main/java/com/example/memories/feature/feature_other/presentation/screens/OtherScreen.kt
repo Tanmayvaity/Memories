@@ -1,64 +1,55 @@
 package com.example.memories.feature.feature_other.presentation.screens
 
-import android.R.attr.contentDescription
-import android.R.attr.onClick
-import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults.iconColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.CustomSettingRow
-import com.example.memories.core.presentation.components.IconItem
-import com.example.memories.core.util.getVersionName
-import com.example.memories.core.util.noRippleClickable
+import com.example.memories.core.presentation.components.LoadingIconItem
+import com.example.memories.feature.feature_other.domain.model.LockMethod
 import com.example.memories.feature.feature_other.presentation.AppInfoSettingType
+import com.example.memories.feature.feature_other.presentation.BiometricPromptManager
+import com.example.memories.feature.feature_other.presentation.BiometricResult
 import com.example.memories.feature.feature_other.presentation.GeneralSettingType
 import com.example.memories.feature.feature_other.presentation.PrivacySettingType
 import com.example.memories.feature.feature_other.presentation.SettingClickEvent
 import com.example.memories.feature.feature_other.presentation.ThemeTypes
+import com.example.memories.feature.feature_other.presentation.screens.components.LockMethodRequiredBottomSheet
 import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
+import com.example.memories.feature.feature_other.presentation.screens.components.PinDismissReason
+import com.example.memories.feature.feature_other.presentation.screens.components.PinType
+import com.example.memories.feature.feature_other.presentation.screens.components.SetupPinDialog
+import com.example.memories.feature.feature_other.presentation.viewmodels.OtherEvents
+import com.example.memories.feature.feature_other.presentation.viewmodels.OtherState
 import com.example.memories.feature.feature_other.presentation.viewmodels.OtherViewModel
 import com.example.memories.navigation.AppScreen
+import kotlinx.coroutines.delay
 
 
 const val TAG = "OtherScreen"
@@ -74,11 +65,53 @@ fun OtherRoot(
     onNavigateToHistoryScreen: (AppScreen.History) -> Unit,
     onNavigateToBackupScreen: (AppScreen.Backup) -> Unit,
     onNavigateToHiddenMemorySettingScreen: (AppScreen.HiddenMemorySetting) -> Unit,
+    onNavigateToHiddenMemory: (AppScreen.HiddenMemory) -> Unit,
     themeViewModel: ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
-    otherViewModel: OtherViewModel = viewModel()
+    otherViewModel: OtherViewModel = hiltViewModel()
 ) {
-    val state by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    val themeState by themeViewModel.isDarkModeEnabled.collectAsStateWithLifecycle()
+    val checkingPinValidity by otherViewModel.isLoading.collectAsStateWithLifecycle()
+    val state by otherViewModel.state.collectAsStateWithLifecycle()
     var showThemeBottomSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val activity = context as AppCompatActivity
+    var showCustomPinDialog by remember { mutableStateOf(false) }
+    val biometricManager = remember(activity) {
+        BiometricPromptManager(activity)
+    }
+
+
+
+    var customPinError by remember { mutableStateOf(false) }
+    var showLockMethodRequiredSheet by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+        biometricManager.biometricResults.collect { result ->
+            if(result is BiometricResult.AuthenticationSuccess && state.lockMethod != null){
+                onNavigateToHiddenMemory(AppScreen.HiddenMemory)
+                return@collect
+            }else if(result !is BiometricResult.AuthenticationError){
+                showLockMethodRequiredSheet = true
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        otherViewModel.event.collect {  outcome ->
+            if(outcome){
+                onNavigateToHiddenMemory(AppScreen.HiddenMemory)
+                delay(100)
+                showCustomPinDialog = false
+                customPinError = false
+            }
+            if(!outcome){
+                customPinError = true
+                delay(300)
+                customPinError = false
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         otherViewModel.settingEvent.collect { event ->
@@ -122,13 +155,35 @@ fun OtherRoot(
                 SettingClickEvent.HIDDEN_ITEM_CLICK -> {
                     onNavigateToHiddenMemorySettingScreen(AppScreen.HiddenMemorySetting)
                 }
+
+                SettingClickEvent.HIDDEN_MEMORY_ITEM_CLICK -> {
+                    when(state.lockMethod){
+                        LockMethod.DEVICE_BIOMETRIC , LockMethod.DEVICE_PATTERN -> {
+                            biometricManager.showBiometricPrompt(
+                                title = "Unlock Hidden Memories",
+                                description = "Use your fingerprint, face, PIN, or pattern to unlock hidden memories",
+                                lockMethod = state.lockMethod!!
+                            )
+                        }
+                        LockMethod.CUSTOM_PIN -> {
+                            showCustomPinDialog = true
+                        }
+                        LockMethod.NONE -> {
+                            onNavigateToHiddenMemory(AppScreen.HiddenMemory)
+                        }
+                        null -> {}
+                    }
+
+                }
+
             }
 
         }
     }
 
     OtherScreen(
-        onSettingEvent = otherViewModel::settingClickEvent
+        onSettingEvent = otherViewModel::settingClickEvent,
+        state = state
     )
 
 
@@ -137,7 +192,7 @@ fun OtherRoot(
             btnText = "Apply Theme",
             heading = "Change Theme",
             subHeading = "Choose your prefered theme",
-            isDarkMode = state,
+            isDarkMode = themeState,
             onApplyTheme = {
                 showThemeBottomSheet = false
                 themeViewModel.onEvent(
@@ -178,13 +233,46 @@ fun OtherRoot(
         )
 
     }
+
+
+    if(showCustomPinDialog){
+        SetupPinDialog(
+            onDismiss = { reason ->
+                if( reason == PinDismissReason.CANCELLED){
+                    showCustomPinDialog = false
+                }
+
+            },
+            pinType = PinType.UNLOCK,
+            onPinChange = { inputPin ->
+                otherViewModel.onEvent(
+                    OtherEvents.CheckPinValidity(inputPin)
+                )
+            },
+            hasErrorOccured = customPinError,
+            showChecking = checkingPinValidity
+
+        )
+    }
+    if(showLockMethodRequiredSheet){
+        LockMethodRequiredBottomSheet(
+            onDismiss = {
+                showLockMethodRequiredSheet = false
+            },
+            onGoToSettings = {
+                showLockMethodRequiredSheet = false
+                otherViewModel.settingClickEvent(SettingClickEvent.HIDDEN_ITEM_CLICK)
+            }
+        )
+    }
 }
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(
-    onSettingEvent: (SettingClickEvent) -> Unit = {}
+    onSettingEvent: (SettingClickEvent) -> Unit = {},
+    state: OtherState = OtherState()
 ) {
     val scrollState = rememberScrollState()
 
@@ -228,6 +316,19 @@ fun OtherScreen(
                     content = item.description ?: "",
                     onClick = {
                         onSettingEvent(item.onClickEvent)
+                    },
+                    endContent = if (item == GeneralSettingType.HIDDEN_MEMORIES) {
+                        {
+                            LoadingIconItem(
+                                isLoading = state.lockMethod == null,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f),
+                                drawableRes = R.drawable.ic_right,
+                                contentDescription = "Right Icon",
+                                alpha = 0f
+                            )
+                        }
+                    } else {
+                        null
                     }
                 )
             }

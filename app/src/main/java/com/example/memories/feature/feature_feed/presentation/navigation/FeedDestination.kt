@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.example.memories.core.util.isOnBackStack
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailRoot
+import com.example.memories.feature.feature_feed.presentation.hidden.HiddenMemoryRoot
 import com.example.memories.feature.feature_feed.presentation.history.HistoryRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
@@ -107,5 +108,10 @@ fun NavGraphBuilder.createFeedGraph(
             }
 
         )
+    }
+
+    composable<AppScreen.HiddenMemory> {
+        onBottomBarVisibilityChange(false)
+        HiddenMemoryRoot()
     }
 }

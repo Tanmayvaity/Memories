@@ -31,4 +31,6 @@ interface AppSettingRepository {
     suspend fun setHiddenMemoryLockDuration(duration: LockDuration)
 
     suspend fun setHiddenMemoryCustomPin(pin: String)
+
+    suspend fun isCustomPinCorrect(pin : String) : Boolean
 }

@@ -42,6 +42,9 @@ fun NavGraphBuilder.createOtherGraph(
             },
             onNavigateToHiddenMemorySettingScreen = { route ->
                 navController.navigate(route)
+            },
+            onNavigateToHiddenMemory = { route ->
+                navController.navigate(route)
             }
         )
     }

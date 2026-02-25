@@ -1,5 +1,7 @@
 package com.example.memories.core.presentation.components
 
+import android.R.attr.contentDescription
+import android.R.attr.onClick
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +14,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.iconColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,19 +44,22 @@ fun CustomSettingRow(
     showContentAtEnd : Boolean = true,
     showCustomContent : Boolean = false,
     customContent : @Composable () -> Unit = {},
-    endContent: @Composable () -> Unit = {
-        Icon(
-            painter = painterResource(R.drawable.ic_right),
-            contentDescription = "Open $heading Memories",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier
-//                .weight(1f)
-                .padding(end = 10.dp)
-
-
-        )
-    }
+    endContent: (@Composable () -> Unit)? = null
 ) {
+
+
+    val actualEndContent = remember(endContent) {
+        endContent ?: @Composable {
+            Icon(
+                painter = painterResource(R.drawable.ic_right),
+                contentDescription = "Open $heading",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.padding(end = 10.dp)
+            )
+        }
+    }
+
+
     Column {
         Row(
             modifier = modifier
@@ -61,7 +68,7 @@ fun CustomSettingRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if(!showContentAtEnd){
-                endContent()
+               actualEndContent()
             }
 
             drawableRes?.let {
@@ -108,7 +115,7 @@ fun CustomSettingRow(
 
             }
             if(showContentAtEnd){
-                endContent()
+                actualEndContent()
             }
 
 

@@ -60,4 +60,8 @@ class AppSettingRepositoryImpl @Inject constructor(
     override suspend fun setHiddenMemoryCustomPin(pin: String) {
         otherSettingsDatastore.setHiddenMemoriesCustomPin(pin)
     }
+
+    override suspend fun isCustomPinCorrect(pin: String) : Boolean {
+        return otherSettingsDatastore.isPinCorrect(pin)
+    }
 }

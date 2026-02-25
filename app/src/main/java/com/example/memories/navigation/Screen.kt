@@ -81,5 +81,9 @@ sealed class AppScreen(val route: String) {
 
     @Serializable
     data object HiddenMemorySetting : AppScreen("HiddenMemorySetting")
+
+    @Serializable
+    data object HiddenMemory : AppScreen("HiddenMemory")
+
 }
 

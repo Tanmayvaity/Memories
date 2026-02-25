@@ -47,6 +47,10 @@ enum class GeneralSettingType(
     DELETE_ALL_DATA(
         "Delete All Data", "Delete the entire data you have created", R.drawable.ic_delete,
         SettingClickEvent.DELETE_ALL_DATA_ITEM_CLICK
+    ),
+    HIDDEN_MEMORIES(
+        "Hidden Memories", "View your hidden memories", R.drawable.ic_hidden,
+        SettingClickEvent.HIDDEN_MEMORY_ITEM_CLICK
     )
 
 }
@@ -91,6 +95,7 @@ enum class SettingClickEvent {
     TAG_ITEM_CLICK,
     HISTORY_ITEM_CLICK,
     DELETE_ALL_DATA_ITEM_CLICK,
+    HIDDEN_MEMORY_ITEM_CLICK,
     HIDDEN_ITEM_CLICK,
     ABOUT_ITEM_CLICK,
     DEVELOPER_INFO_ITEM_CLICK

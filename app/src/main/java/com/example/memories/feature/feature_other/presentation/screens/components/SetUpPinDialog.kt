@@ -1,25 +1,21 @@
-package com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components
+package com.example.memories.feature.feature_other.presentation.screens.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,31 +44,36 @@ import kotlinx.coroutines.launch
 
 enum class PinType {
     SETUP,
-    CONFIRM
+    CONFIRM,
+    UNLOCK
 }
 
+enum class PinDismissReason {
+    CANCELLED,    // user pressed X or back
+    SUCCESS       // pin setup/verification completed
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SetupPinDialog(
     modifier: Modifier = Modifier,
-    onDismiss: (Boolean) -> Unit = {},
-    onPinChange: (String) -> Unit = {}
+    onDismiss: (PinDismissReason) -> Unit = {},
+    onPinChange: (String) -> Unit = {},
+    pinType: PinType = PinType.SETUP,
+    hasErrorOccured : Boolean = false,
+    showChecking : Boolean = false
 ) {
     var pin by rememberSaveable { mutableStateOf("") }
     var confirmPin by rememberSaveable { mutableStateOf("") }
-    var pinType by rememberSaveable { mutableStateOf(PinType.SETUP) }
+    var currentPinType by rememberSaveable(pinType) { mutableStateOf(pinType) }
     val scope = rememberCoroutineScope()
-
 
     var isError by remember { mutableStateOf(false) }
 
-    // Shake animation for error
     val shakeOffset = remember { Animatable(0f) }
 
     LaunchedEffect(isError) {
         if (isError) {
-            // Quick horizontal shake
             repeat(3) {
                 shakeOffset.animateTo(10f, tween(40))
                 shakeOffset.animateTo(-10f, tween(40))
@@ -82,10 +83,16 @@ fun SetupPinDialog(
         }
     }
 
+    LaunchedEffect(hasErrorOccured) {
+        if (hasErrorOccured) {
+            isError = true
+            pin = ""
+        }
+    }
 
     Dialog(
         onDismissRequest = {
-            onDismiss(false)
+            onDismiss(PinDismissReason.CANCELLED)
         },
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
@@ -98,19 +105,31 @@ fun SetupPinDialog(
                 TopAppBar(
                     title = {
                         Text(
-                            text = when(pinType){
+                            text = when (currentPinType) {
                                 PinType.SETUP -> "Create a PIN"
                                 PinType.CONFIRM -> "Confirm Your PIN"
+                                PinType.UNLOCK -> "Enter Your PIN"
                             }
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            onDismiss(false)
+                            onDismiss(PinDismissReason.CANCELLED)
                         }) {
                             Icon(Icons.Default.Close, contentDescription = "Close")
                         }
                     },
+                    actions = {
+                        if(showChecking){
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .size(16.dp)
+                                ,
+                                strokeWidth = 3.dp
+                            )
+                        }
+                    }
                 )
             },
         ) { innerPadding ->
@@ -123,7 +142,7 @@ fun SetupPinDialog(
             ) {
 
                 AnimatedContent(
-                    targetState = pinType,
+                    targetState = currentPinType,
                     transitionSpec = {
                         fadeIn(tween(200)) togetherWith fadeOut(tween(150))
                     },
@@ -133,6 +152,7 @@ fun SetupPinDialog(
                         text = when (type) {
                             PinType.SETUP -> "This PIN will be used to protect your hidden memories"
                             PinType.CONFIRM -> "Please re-enter your PIN to confirm"
+                            PinType.UNLOCK -> "Please enter your PIN to unlock"
                         },
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
@@ -145,61 +165,73 @@ fun SetupPinDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 32.dp)
-                        .offset(x = shakeOffset.value.dp)
-                    ,
-                    pin = if(pinType == PinType.SETUP) pin else confirmPin
+                        .offset(x = shakeOffset.value.dp),
+                    pin = if (currentPinType == PinType.CONFIRM) confirmPin else pin
                 )
+
                 PinPad(
                     modifier = Modifier,
                     onDigitClick = { digit ->
-                        val currentPin = if (pinType == PinType.SETUP) pin else confirmPin
-
-                        // Single guard clause
+                        val currentPin = if (currentPinType == PinType.CONFIRM) confirmPin else pin
                         if (currentPin.length >= 4) return@PinPad
+
                         scope.launch {
-                            if (pinType == PinType.SETUP) {
-                                pin += digit.toString()
-                                if (pin.length == 4) {
-                                    delay(100)
-                                    pinType = PinType.CONFIRM
-                                }
-                            } else {
-                                confirmPin += digit.toString()
-                                if (confirmPin.length == 4) {
-
-                                    delay(300)
-                                    if (pin == confirmPin) {
-                                        onPinChange(pin)
-                                        onDismiss(true)
-                                    } else {
-                                        isError = true
-                                        confirmPin = ""
+                            when (currentPinType) {
+                                PinType.SETUP -> {
+                                    pin += digit.toString()
+                                    if (pin.length == 4) {
+                                        delay(100)
+                                        currentPinType = PinType.CONFIRM
                                     }
+                                }
 
+                                PinType.CONFIRM -> {
+                                    confirmPin += digit.toString()
+                                    if (confirmPin.length == 4) {
+                                        delay(300)
+                                        if (pin == confirmPin) {
+                                            onPinChange(pin)
+                                            onDismiss(PinDismissReason.SUCCESS)
+                                        } else {
+                                            isError = true
+                                            confirmPin = ""
+                                        }
+                                    }
+                                }
 
+                                PinType.UNLOCK -> {
+                                    pin += digit.toString()
+                                    if (pin.length == 4) {
+                                        delay(300)
+                                        onPinChange(pin)
+                                        onDismiss(PinDismissReason.SUCCESS)
+//                                        if (pin == confirmPin) {
+//
+////                                            onDismiss(PinDismissReason.SUCCESS)
+//                                        } else {
+//                                            isError = true
+//                                            confirmPin = ""
+//                                        }
+                                    }
                                 }
                             }
                         }
-
                     },
                     onBackSpaceClick = {
-                        when(pinType){
-                            PinType.SETUP -> {
+                        when (currentPinType) {
+                            PinType.SETUP, PinType.UNLOCK -> {
                                 pin = pin.dropLast(1)
                             }
+
                             PinType.CONFIRM -> {
                                 confirmPin = confirmPin.dropLast(1)
                             }
                         }
                     }
-
                 )
             }
-
-
         }
     }
-
 }
 
 @Preview

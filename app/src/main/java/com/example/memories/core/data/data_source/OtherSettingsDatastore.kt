@@ -1,7 +1,6 @@
 package com.example.memories.core.data.data_source
 
-import android.R
-import android.R.attr.enabled
+
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
@@ -64,6 +63,8 @@ class OtherSettingsDatastore(
     val isOnboardingCompleted = context.datastore.data.map { preferences ->
         preferences[ONBOARDING_COMPLETED] ?: false
     }
+    
+
 
     private val hiddenMemoriesCustomPin = context.datastore.data.map { preferences ->
         preferences[HIDDEN_MEMORIES_CUSTOM_PIN] ?: ""
@@ -87,6 +88,12 @@ class OtherSettingsDatastore(
     fun isCustomPinSet(): Flow<Boolean> {
         return hiddenMemoriesCustomPin.map { it.isNotEmpty() }
     }
+
+    suspend fun isPinCorrect(pin: String): Boolean {
+        return hiddenMemoriesCustomPin.map { it == pin }.first()
+    }
+
+
 
     suspend fun setHiddenMemoriesCustomPin(pin: String) {
         context.datastore.edit { preferences ->

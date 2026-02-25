@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.components
+package com.example.memories.feature.feature_other.presentation.screens.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
