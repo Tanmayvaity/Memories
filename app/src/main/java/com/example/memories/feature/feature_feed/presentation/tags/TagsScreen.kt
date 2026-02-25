@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.tags
 
 import android.widget.Space
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -49,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -105,7 +107,7 @@ fun TagsScreen(
     var showDeleteTagSheet by remember { mutableStateOf(false) }
     var tagItem : TagWithMemoryCountModel? = null
     var showTagSheet by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -276,6 +278,14 @@ fun TagsScreen(
                 onDismiss = { showTagSheet = false },
                 isLoading = state.isTagInserting,
                 onCreateTag = {name ->
+                    if(name.isEmpty()|| name.isBlank()){
+                        Toast.makeText(
+                            context,
+                            "Tag name cannot be empty",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@CreateTagBottomSheet
+                    }
                     onEvent(TagEvents.CreateTag(name))
                     showTagSheet = false
                 }
