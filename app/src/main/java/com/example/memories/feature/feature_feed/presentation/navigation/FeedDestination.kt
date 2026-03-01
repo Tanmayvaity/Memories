@@ -112,6 +112,13 @@ fun NavGraphBuilder.createFeedGraph(
 
     composable<AppScreen.HiddenMemory> {
         onBottomBarVisibilityChange(false)
-        HiddenMemoryRoot()
+        HiddenMemoryRoot(
+            onNavigateToMemoryDetail = { route ->
+                navController.navigate(route)
+            },
+            onBack = {
+                navController.popBackStack()
+            }
+        )
     }
 }

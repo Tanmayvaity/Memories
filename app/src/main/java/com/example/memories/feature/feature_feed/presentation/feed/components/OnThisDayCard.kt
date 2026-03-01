@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.feed.components
 
+import android.R.attr.description
+import android.R.attr.onClick
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -38,11 +40,13 @@ import com.example.memories.core.util.formatTime
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OnThisDayCard(
+    modifier: Modifier = Modifier,
     yearsAgo: Int= 0,
     time : Long,
     title: String,
+    description : String? = null,
     onClick: () -> Unit= {},
-    modifier: Modifier = Modifier
+
 ) {
     Card(
         modifier = modifier
@@ -75,6 +79,15 @@ fun OnThisDayCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
+            description?.let{
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
             Spacer(Modifier.weight(1f))
             IconItem(
                 drawableRes = com.example.memories.R.drawable.ic_calender,
@@ -132,6 +145,7 @@ private fun OnThisDayCardPreview() {
         OnThisDayCard(
             yearsAgo = 3,
             title = "First Hike at Redwood National",
+            description = "Something i wan to write about you and myself",
             time = 124,
             onClick = {},
             modifier = Modifier.padding(16.dp)

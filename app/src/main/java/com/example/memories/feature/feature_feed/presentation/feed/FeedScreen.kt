@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_feed.presentation.feed
 import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -270,12 +271,16 @@ fun FeedScreen(
         LazyColumn(
             modifier = Modifier
 //                .padding(innerPadding)
+                .padding(16.dp)
                 .fillMaxWidth()
                 .clipToBounds()
                 .background(
                     if (LocalTheme.current) Color.Black
                     else MaterialTheme.colorScheme.background
                 ),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+
             contentPadding = innerPadding,
             state = lazyListState
         ) {
@@ -289,7 +294,8 @@ fun FeedScreen(
                 MemoryItemCard(
                     modifier = Modifier
                         .animateItem()
-                        .padding(16.dp),
+//                        .padding(16.dp)
+                            ,
                     memoryItem = memory!!,
                     onClick = {
                         onNavigateToMemoryDetail(

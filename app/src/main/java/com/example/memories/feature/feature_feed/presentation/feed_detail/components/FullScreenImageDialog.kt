@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail.components
 
+import android.R.attr.navigationIcon
 import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.camera.viewfinder.core.impl.ContentScale
@@ -97,12 +98,13 @@ fun FullScreenImageDialog(
                     },
                 )
             },
-        ) { _ ->
+        ) {  innerPadding->
             Column(
                 modifier = Modifier
+                    .padding(innerPadding)
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                ,
+                    .verticalScroll(scrollState),
+
             ){
                 HorizontalPager(
                     state = pagerState,

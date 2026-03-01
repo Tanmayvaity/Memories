@@ -40,6 +40,8 @@ interface MemoryRepository {
         orderByType: SortOrder
     ): Flow<PagingData<MemoryWithMediaModel>>
 
+    fun getHiddenMemories(query : String) : Flow<PagingData<MemoryWithMediaModel>>
+
     suspend fun deleteInternalMedia(uriList: List<Uri>): Result<String>
 
     suspend fun getMediaUrisToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>

@@ -207,6 +207,10 @@ interface MemoryDao {
     @Query("SELECT * FROM MemoryEntity WHERE title LIKE '%' || :query || '%' ORDER BY time_stamp DESC")
     fun getAllMemoriesWithMediaBySearch(query: String): Flow<List<MemoryWithMedia>>
 
+    @Transaction
+    @Query("SELECT * FROM MemoryEntity WHERE title LIKE '%' || :query || '%' and hidden = 1 ORDER BY time_stamp DESC")
+    fun getAllHiddenMemoriesWithMediaBySearch(query: String): PagingSource<Int,MemoryWithMedia>
+
     // ==================== NON-PAGED QUERIES ====================
 
     @Transaction

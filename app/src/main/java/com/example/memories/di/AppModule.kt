@@ -86,6 +86,8 @@ import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SaveToCacheStorageWithUriUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.GetHiddenFeedUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.HiddenUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteAllSearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
@@ -521,6 +523,20 @@ object AppModule {
         otherSettingsDatastore: OtherSettingsDatastore
     ): AppSettingRepository {
         return AppSettingRepositoryImpl(otherSettingsDatastore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHiddenUseCase(
+        memoryRepository: MemoryRepository,
+        mediaRepository : MediaRepository
+    ): HiddenUseCase {
+        return HiddenUseCase(
+            getHiddenFeedUseCase = GetHiddenFeedUseCase(memoryRepository),
+            toggleHiddenUseCase = ToggleHiddenUseCase(memoryRepository),
+            toggleFavouriteUseCase = ToggleFavouriteUseCase(memoryRepository),
+            deleteMemoryUseCase = DeleteUseCase(memoryRepository,mediaRepository)
+        )
     }
 
 

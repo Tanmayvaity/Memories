@@ -159,6 +159,23 @@ class MemoryRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getHiddenMemories(query : String): Flow<PagingData<MemoryWithMediaModel>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 5,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                memoryDao.getAllHiddenMemoriesWithMediaBySearch(query)
+            }
+        ).flow.map { pagingData ->
+            pagingData.map {
+                it.toDomain()
+            }
+        }
+    }
+
     override suspend fun deleteInternalMedia(uriList: List<Uri>): Result<String> {
         return mediaManager.deleteInternalMedia(uriList)
     }
@@ -167,7 +184,7 @@ class MemoryRepositoryImpl @Inject constructor(
         memoryId: String,
         incomingMediaIds: List<String>
     ): List<String> {
-        return memoryDao.getMediaUrisToDelete(memoryId,incomingMediaIds)
+        return memoryDao.getMediaUrisToDelete(memoryId, incomingMediaIds)
     }
 
 

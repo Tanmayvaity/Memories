@@ -82,13 +82,13 @@ import com.google.common.collect.Multimaps.index
 fun MemoryItemCard(
     modifier: Modifier = Modifier,
     memoryItem: MemoryWithMediaModel = MemoryWithMediaModel(),
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     onClick: () -> Unit = {},
     onFavouriteButtonClick: () -> Unit = {},
     onHideButtonClick: () -> Unit = {},
     onDeleteButtonClick: () -> Unit = {},
-    elevation: Int = 8,
-    shape: Shape = RoundedCornerShape(8.dp),
+    elevation: Int = 0,
+    shape: Shape = RoundedCornerShape(16.dp),
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
