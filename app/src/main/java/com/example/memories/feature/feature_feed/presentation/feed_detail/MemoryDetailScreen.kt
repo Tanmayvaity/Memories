@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +21,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -75,6 +80,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -90,6 +96,7 @@ import coil3.request.crossfade
 import coil3.toUri
 import com.example.memories.R
 import com.example.memories.core.domain.model.MediaModel
+import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
@@ -206,11 +213,6 @@ fun MemoryDetailScreen(
             scrollingDown
         }
     }
-
-
-
-
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -218,7 +220,17 @@ fun MemoryDetailScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = {},
+                title = {
+                    if (memory != null && !isLoading) {
+                        Text(
+                            text = memory.memory.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack
@@ -236,57 +248,46 @@ fun MemoryDetailScreen(
             SnackbarHost(hostState = snackBarState)
         }
     ) { innerPadding ->
-
-
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxWidth()
-                .verticalScroll(scrollState)
+        SelectionContainer(
+            modifier = Modifier.padding(innerPadding)
         ) {
-            if (memory != null && !isLoading) {
-                val item = memory.memory
-                if (memory.mediaList.isNotEmpty()) {
-//                    MediaPager(
-//                        mediaUris = null,
-//                        pagerState = pagerState,
-//                        readOnlyMediaUriList = memory.mediaList.map { it -> it.uri },
-//                        type = MediaCreationType.SHOW
-//                    )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (memory != null && !isLoading) {
+                    val item = memory.memory
+                    if (memory.mediaList.isNotEmpty()) {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.height(300.dp)
+                        ) { page ->
+                            val itemUri = memory.mediaList[page].uri
 
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.height(300.dp)
-                    ) { page ->
-                        val itemUri = memory.mediaList[page].uri
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(
-                                    if (previewMode) R.drawable.ic_launcher_background else itemUri
-                                )
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Media item $page",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    showImageDetail = true
-                                },
-                            contentScale = ContentScale.FillWidth
-                        )
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(
+                                        if (previewMode) R.drawable.ic_launcher_background else itemUri
+                                    )
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Media item $page",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showImageDetail = true
+                                    },
+                                contentScale = ContentScale.FillWidth
+                            )
+                        }
+
                     }
-
-                }
-
-
-                Box(
-                    modifier = Modifier
-//                        .background(BlueishBlack)
-                        .padding(10.dp)
-
-                ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
                         Text(
                             text = item.title,
@@ -294,39 +295,43 @@ fun MemoryDetailScreen(
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.displayLarge
                         )
+
+
                         Text(
                             text = item.memoryForTimeStamp!!.formatTime(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        TagRow(
-                            totalTags = memory.tagsList,
-                            showAdd = false,
-                            onAddClick = {},
-                            modifier = Modifier.padding(top = 5.dp),
-                            onTagClick = { id, label ->
-                                onTagClick(
-                                    AppScreen.TagWithMemories(
-                                        tagLabel = label,
-                                        id = id
-                                    )
-                                )
-                            }
 
-                        )
+                        DisableSelection {
+                            TagRow(
+                                totalTags = memory.tagsList,
+                                showAdd = false,
+                                onAddClick = {},
+                                modifier = Modifier.padding(top = 5.dp),
+                                onTagClick = { id, label ->
+                                    onTagClick(
+                                        AppScreen.TagWithMemories(
+                                            tagLabel = label,
+                                            id = id
+                                        )
+                                    )
+                                }
+
+                            )
+                        }
+
                         Text(
                             text = item.content,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
-
-
                         )
                     }
+
 
                 }
 
             }
-
         }
         AnimatedVisibility(
             !isLoading && !isScrollingDown,
@@ -482,7 +487,14 @@ fun MemoryDetailScreen(
 fun MemoryDetailScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         MemoryDetailScreen(
-            state = MemoryDetailState()
+            state = MemoryDetailState(
+                memory = MemoryWithMediaModel(
+                    memory = MemoryModel(
+                        title = "Really Emotional title bitch",
+                        content = "Really long content"
+                    ),
+                )
+            )
         )
     }
 }
