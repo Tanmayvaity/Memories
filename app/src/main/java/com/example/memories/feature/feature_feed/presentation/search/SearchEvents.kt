@@ -8,17 +8,7 @@ sealed class SearchEvents {
 
     data class AddSearch(val memoryId : String) : SearchEvents()
 
-    object FetchRecentSearch : SearchEvents()
-
-    object FetchOnThisDayData : SearchEvents()
-
-    object Expand : SearchEvents()
-
-    object FetchTags : SearchEvents()
-
     data class SelectTag(val tag : TagModel) : SearchEvents()
-
-    object FetchRecentMemories : SearchEvents()
 
     data class DeleteSearch(val memoryId : String) : SearchEvents()
 

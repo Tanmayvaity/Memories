@@ -266,8 +266,6 @@ fun FeedScreen(
 
         }
     ) { innerPadding ->
-        Log.d("FeedScreen", "FeedScreen: ${state.memories.isEmpty()}")
-
         LazyColumn(
             modifier = Modifier
 //                .padding(innerPadding)

@@ -91,6 +91,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.H
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteAllSearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByIdsUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
@@ -489,7 +490,8 @@ object AppModule {
             getMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
             fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository),
             deleteSearchByIdUseCase = DeleteSearchByIdUseCase(recentSearchRepository),
-            deleteAllSearchUseCase = DeleteAllSearchUseCase(recentSearchRepository)
+            deleteAllSearchUseCase = DeleteAllSearchUseCase(recentSearchRepository),
+            fetchMemoryByIdsUseCase = FetchMemoryByIdsUseCase(memoryRepository)
         )
     }
 

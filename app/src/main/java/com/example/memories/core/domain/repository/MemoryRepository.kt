@@ -40,7 +40,7 @@ interface MemoryRepository {
         orderByType: SortOrder
     ): Flow<PagingData<MemoryWithMediaModel>>
 
-    fun getHiddenMemories(query : String) : Flow<PagingData<MemoryWithMediaModel>>
+    fun getHiddenMemories(query: String): Flow<PagingData<MemoryWithMediaModel>>
 
     suspend fun deleteInternalMedia(uriList: List<Uri>): Result<String>
 
@@ -58,7 +58,7 @@ interface MemoryRepository {
     suspend fun getMemoryByTitle(query: String): Flow<List<MemoryWithMediaModel>>
 
 
-     fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>>
+    fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>>
 
     suspend fun getEarliestMemoryTimeStamp(): Long?
 
@@ -67,9 +67,11 @@ interface MemoryRepository {
         max: Long,
     ): Flow<List<MemoryWithMediaModel>>
 
-    suspend fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMediaModel>>
+    fun getRecentMemories(limit: Int): Flow<List<MemoryWithMediaModel>>
 
     suspend fun deleteAllHiddenMemories()
 
     suspend fun unHideAllHiddenMemories()
+
+    suspend fun getMemoriesByIds(ids: List<String>): List<MemoryWithMediaModel>
 }

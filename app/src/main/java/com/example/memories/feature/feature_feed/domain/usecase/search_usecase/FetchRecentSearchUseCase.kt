@@ -9,16 +9,8 @@ import kotlinx.coroutines.flow.Flow
 class FetchRecentSearchUseCase(
     private val repository: RecentSearchRepository
 ) {
-    operator fun invoke(): Result<Flow<List<SearchModel>>> {
-        try {
-            repository.fetchRecentSearch().also { result ->
-                return Result.Success(result)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error while fetching recent search from Search Entity $e" )
-            return Result.Error(e)
-
-        }
+    operator fun invoke(): Flow<List<SearchModel>> {
+        return repository.fetchRecentSearch()
     }
 
     companion object{

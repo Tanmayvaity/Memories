@@ -44,11 +44,11 @@ import kotlin.math.exp
 fun MemorySearchBar(
     searchText: String,
     state: SearchState,
-    onNavigateToMemoryDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
     onQueryChange: (String) -> Unit = {},
     onClearInput: () -> Unit = {},
     onItemClick : (String) -> Unit = {},
+    onCrossClick : (String) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     val horizontalPadding by animateDpAsState(
@@ -115,30 +115,29 @@ fun MemorySearchBar(
     ) {
 
         Box(modifier = Modifier.fillMaxSize()) {
-
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    strokeWidth = 3.dp,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
                 items(
-                    items = state.data,
+                    items = state.searchResults,
                     key = { it.memory.memoryId }
                 ) { item ->
                     MemoryItem(
-                        memoryItem = item,
                         modifier = Modifier
                             .animateItem()
                             .padding(bottom = 5.dp),
                         onClick = {
                             onItemClick(item.memory.memoryId)
+                        },
+                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                        title = item.memory.title,
+                        content = item.memory.content,
+                        imageUri = item.mediaList.firstOrNull()?.uri,
+                        memoryForTimeStamp = item.memory.memoryForTimeStamp ?: 0L,
+                        onIconClick = {
+                            onCrossClick(item.memory.memoryId)
                         }
                     )
                 }
@@ -149,15 +148,12 @@ fun MemorySearchBar(
 
 
 @PreviewLightDark
-@PreviewDynamicColors
-@Preview
 @Composable
 fun MemorySearchBarPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         MemorySearchBar(
             searchText = "",
             state = SearchState(),
-            onNavigateToMemoryDetail = {}
         )
     }
 }

@@ -105,19 +105,19 @@ fun GeneralAlertSheet(
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.delete_icon_anim))
     val progress by animateLottieCompositionAsState(composition)
-        ModalBottomSheet(
-            sheetState = state,
-            onDismissRequest = onDismiss,
-            containerColor = containerColor
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+    ModalBottomSheet(
+        sheetState = state,
+        onDismissRequest = onDismiss,
+        containerColor = containerColor
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp),
 
-                ) {
+            ) {
 //                IconItem(
 //                    imageVector = Icons.Filled.Delete,
 //                    contentDescription = "Delete Icon",
@@ -125,86 +125,86 @@ fun GeneralAlertSheet(
 //                    backgroundColor = Color.Red,
 //                    alpha = 0.2f,
 //                )
-                LottieAnimation(
-                    composition = composition,
-                    speed = 3f,
-                    modifier = Modifier.size(100.dp),
-                    iterations = LottieConstants.IterateForever
-                )
+            LottieAnimation(
+                composition = composition,
+                speed = 3f,
+                modifier = Modifier.size(100.dp),
+                iterations = LottieConstants.IterateForever
+            )
 
-                HeadingText(
-                    title = title.toString(),
-                    textStyle = TextStyle(
-                        textAlign = TextAlign.Center,
-                        fontSize = 22.sp
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                )
-                Text(
-                    text = content,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            HeadingText(
+                title = title.toString(),
+                textStyle = TextStyle(
                     textAlign = TextAlign.Center,
+                    fontSize = 22.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+            )
+            Text(
+                text = content,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
+                        .height(50.dp)
+                        .weight(1f),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
 
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .weight(1f),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-
+                    Text(
+                        text = stringResource(R.string.dismiss),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    ),
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .weight(1f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    if (!isLoading) {
                         Text(
-                            text = stringResource(R.string.dismiss),
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = "Delete",
+                            color = Color.White
                         )
                     }
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red
-                        ),
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .weight(1f),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        if (!isLoading) {
-                            Text(
-                                text = "Delete",
-                                color = Color.White
-                            )
-                        }
 
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(28.dp),
-                                strokeWidth = 3.dp,
-                                color = MaterialTheme.colorScheme.surface
-                            )
-                        }
-
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(28.dp),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.surface
+                        )
                     }
+
                 }
-
-
             }
+
+
         }
+    }
 
 }
 

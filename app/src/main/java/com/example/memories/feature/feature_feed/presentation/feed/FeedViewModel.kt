@@ -13,6 +13,7 @@ import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
+import com.example.memories.feature.feature_feed.presentation.search.SearchViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -68,12 +69,13 @@ class FeedViewModel @Inject constructor(
         }
         .cachedIn(viewModelScope)
 
+    init {
+        Log.d(TAG, "FeedViewModel created: ${hashCode()}")
+
+    }
+
     fun onEvent(event: FeedEvents) {
         when (event) {
-            is FeedEvents.FetchFeed -> {
-
-            }
-
             is FeedEvents.ApplyFilter -> {
                 _appliedFilters.update { it.copy(
                     fetchType = state.value.type,
@@ -112,11 +114,7 @@ class FeedViewModel @Inject constructor(
 
 
             FeedEvents.Refresh -> {
-//                viewModelScope.launch {
-//                    _isDataLoading.update { true }
-//                    fetchData()
-//                    _isDataLoading.update { false }
-//                }
+
             }
 
             is FeedEvents.ToggleFavourite -> {
@@ -156,6 +154,7 @@ class FeedViewModel @Inject constructor(
         }
 
     }
+
 
 
 

@@ -259,7 +259,7 @@ class MemoryRepositoryImpl @Inject constructor(
             .map { list -> list.map { it -> it.toDomain() } }
     }
 
-    override suspend fun getRecentMemories(limit: Int): Flow<List<MemoryWithMediaModel>> {
+    override fun getRecentMemories(limit: Int): Flow<List<MemoryWithMediaModel>> {
         return memoryDao.getRecentMemories(limit).map { memories -> memories.map { it.toDomain() } }
     }
 
@@ -269,6 +269,10 @@ class MemoryRepositoryImpl @Inject constructor(
 
     override suspend fun unHideAllHiddenMemories() {
         memoryDao.unHideAllMemories()
+    }
+
+    override suspend fun getMemoriesByIds(ids: List<String>) : List<MemoryWithMediaModel> {
+        return memoryDao.getMemoriesByIds(ids).map { it.toDomain() }
     }
 
 

@@ -9,13 +9,8 @@ import javax.inject.Inject
 class FetchTagUseCase @Inject constructor(
     val tagRepository: TagRepository
 ){
-    suspend operator fun invoke(): Result<Flow<List<TagModel>>>{
-         try {
-             val tags = tagRepository.fetchTags()
-             return Result.Success(tags)
-         }catch (e : Exception){
-             return Result.Error(e)
-         }
+     operator fun invoke(): Flow<List<TagModel>>{
+        return tagRepository.fetchTags()
 
     }
 

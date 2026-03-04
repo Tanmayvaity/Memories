@@ -76,7 +76,7 @@ fun ShimmerLayout(
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+
         ) {
             Row(
                 modifier = Modifier.padding(12.dp),

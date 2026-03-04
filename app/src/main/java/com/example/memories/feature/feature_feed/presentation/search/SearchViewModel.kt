@@ -3,6 +3,8 @@ package com.example.memories.feature.feature_feed.presentation.search
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,6 +20,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.Fee
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
 import com.example.memories.feature.feature_feed.presentation.search.SearchEvents.*
+import com.example.memories.feature.feature_feed.presentation.search.toSectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +33,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -46,6 +50,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+@Suppress("UNCHECKED_CAST")
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -53,124 +59,139 @@ class SearchViewModel @Inject constructor(
 ) : ViewModel() {
 
 
-//    val inputText = _inputText.asStateFlow()
-
-    private val _state = MutableStateFlow(SearchState())
-    val state = _state.asStateFlow()
-
     private val _inputText = MutableStateFlow("")
     val inputText = _inputText.asStateFlow()
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    val query = _inputText
-    .debounce(400)
-    .flatMapLatest { query ->
-        if (query.isBlank()) {
-            flowOf(_state.value.recentSearch)
+
+    private val _currentTag = MutableStateFlow<TagModel?>(null)
+
+    val recentSearches: StateFlow<SectionState<List<MemoryWithMediaModel>>> =
+        searchUseCase.fetchRecentSearchUseCase()
+            .flatMapLatest { searches ->
+                flow {
+                    val memories = searchUseCase
+                        .fetchMemoryByIdsUseCase(searches.map { it.memoryId })
+                    Log.d(TAG, "${memories.size}: ")
+                    emit(memories)
+                }
+
+            }
+            .toSectionState()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Lazily,
+                initialValue = SectionState.Loading
+
+
+            )
+    val searchResults: StateFlow<List<MemoryWithMediaModel>> = combine(
+        _inputText.debounce(400).distinctUntilChanged(),
+        recentSearches
+    ) { query, recentState ->
+        query to recentState
+    }.flatMapLatest { (query, recentState) ->
+        if (query.isBlank() && recentState is SectionState.Success) {
+            flowOf(recentState.data.reversed())
+        } else if (query.isBlank()) {
+            flowOf(emptyList())
         } else {
             searchUseCase.searchByTitleUseCase(query)
         }
-    }
-    .onEach { results ->
-        _state.update { it.copy(data = results) }
-    }
-    .launchIn(viewModelScope)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
-    val tags = MutableStateFlow(emptyList<TagModel>())
 
+    val onThisDayMemories: StateFlow<List<MemoryWithMediaModel>> =
+        searchUseCase.fetchOnThisDayUseCase()
+            .catch {
+                Log.e(TAG, "Error fetching on this day memories", it)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+    val recentMemories: StateFlow<SectionState<List<MemoryWithMediaModel>>> =
+        searchUseCase.fetchRecentMemoriesUseCase()
+            .toSectionState()
+//            .catch { e -> Log.e(TAG, "Error fetching recent memories", e) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SectionState.Loading)
+
+    val tags: StateFlow<SectionState<List<TagModel>>> = searchUseCase.fetchTagUseCase()
+        .onEach { tags ->
+//            delay(2000)
+            if (_currentTag.value == null && tags.isNotEmpty()) {
+                _currentTag.value = tags.first()
+            }
+        }
+        .toSectionState()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SectionState.Loading)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val memoriesForTag: Flow<PagingData<MemoryWithMediaModel>> = _state
-        .map { it.currentTag }
-        .distinctUntilChanged()
+    val memoriesForTag: Flow<PagingData<MemoryWithMediaModel>> = _currentTag
         .flatMapLatest { tag ->
-            if(tag == null){
+            if (tag == null) {
                 flowOf(PagingData.empty())
-            }else{
+            } else {
                 searchUseCase.fetchMemoryByTagUseCase(tag.tagId)
             }
         }
         .cachedIn(viewModelScope)
 
-
-//    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-//    val searchState  = _inputText
-//        .debounce(500)
-//        .flatMapLatest { query ->
-//            Log.d("SearchViewModel", "Search query : ${query}")
-//            if (query.isBlank() || query.isEmpty()) {
-//                flowOf(SearchState()) // empty state if no input
-//            } else {
-//                feedUseCase.searchByTitleUseCase(query)
-//                    .map { results ->
-////                        _state.update {
-////                            it.copy(isLoading = false,data = results)
-////                        }
-//                        SearchState(isLoading = false, data = results)
-//                    }
-//                    .onStart {
-////                        emit(SearchState(isLoading = true))
-//                        _state.update {
-//                            it.copy(isLoading = true)
-//                        }
-//                    }
-//            }
-//
-//        }
-//        .onEach {
-//            _state.update { it.copy(isLoading = false) }
-//            Log.d("SearchViewModel", "${state.value}")
-//        }
-////        .launchIn(viewModelScope)
-//        .stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.WhileSubscribed(5000),
-//            initialValue = SearchState()
-//        )
-
     init {
-        onEvent(SearchEvents.FetchRecentSearch)
-        onEvent(SearchEvents.FetchTags)
-        onEvent(SearchEvents.FetchOnThisDayData)
-        onEvent(SearchEvents.FetchRecentMemories)
+        Log.d(TAG, "SearchViewModel created: ${hashCode()}")
+//        viewModelScope.launch {
+//            _onThisDayMemories.value = searchUseCase.fetchOnThisDayUseCase()
+//        }
+
     }
 
+    val state: StateFlow<SearchState> =
+        combine(
+            inputText,
+            tags,
+            _currentTag,
+            recentSearches,
+            recentMemories,
+            searchResults,
+            onThisDayMemories,
+        ) { values: Array<Any?> ->
+            val input = values[0] as String
+            val tagsList = values[1] as SectionState<List<TagModel>>
+            val selectedTag = values[2] as TagModel?
+            val recentSearchList = values[3] as SectionState<List<MemoryWithMediaModel>>
+            val recentMemoriesList = values[4] as SectionState<List<MemoryWithMediaModel>>
+            val searchResultsList = values[5] as List<MemoryWithMediaModel>
+            val onThisDayList = values[6] as List<MemoryWithMediaModel>
+
+            SearchState(
+                inputText = input,
+                tags = tagsList,
+                selectedTag = selectedTag,
+                recentSearches = recentSearchList,
+                recentMemories = recentMemoriesList,
+                searchResults = searchResultsList,
+                onThisDay = onThisDayList,
+            )
+        }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SearchState()
+            )
 
 
     @OptIn(FlowPreview::class)
     fun onEvent(event: SearchEvents) {
         when (event) {
-
-            is SearchEvents.FetchOnThisDayData -> {
-                viewModelScope.launch {
-                    val result = searchUseCase.fetchOnThisDayUseCase()
-                    _state.update { it.copy(
-                        onThisDateMemories = result
-                    ) }
-                    Log.d(TAG, "onEvent: FetchOnThisDayDate : ${result}")
-                }
-            }
-
             is SearchEvents.InputTextChange -> {
                 _inputText.update { event.input }
-                if (_inputText.value.isEmpty() || _inputText.value.isBlank()) {
-                    _state.update {
-                        it.copy(data = it.recentSearch)
-                    }
-//                    return
-                }
-//                viewModelScope.launch {
-//                    feedUseCase.searchByTitleUseCase(_inputText.value)
-//                        .collect { results ->
-//                            _state.update {
-//                                it.copy(data = results)
-//                            }
-//                        }
-//                }
             }
 
             is SearchEvents.ClearInput -> {
-                _inputText.update { "" }
-                onEvent(SearchEvents.Expand)
+                _inputText.update {""}
             }
 
             is SearchEvents.AddSearch -> {
@@ -179,89 +200,8 @@ class SearchViewModel @Inject constructor(
                 }
             }
 
-            is SearchEvents.Expand -> {
-                _state.update {
-                    it.copy(
-                        data = it.recentSearch
-                    )
-                }
-            }
-
-            is SearchEvents.FetchTags -> {
-                viewModelScope.launch {
-                    val result = searchUseCase.fetchTagUseCase()
-                    if(result is Result.Success && result.data !=null){
-                        var initialSelectDone = false
-                        result.data.collect { tags ->
-                            _state.update { it.copy(tags = tags) }
-                            Log.d(TAG, "fetchedTags : $tags")
-
-                            if (!initialSelectDone && tags.isNotEmpty()) {
-                                _state.update { it.copy(currentTag = tags.first()) }
-                                onEvent(SelectTag(state.value.currentTag!!))
-                                initialSelectDone = true
-                            }
-                        }
-                        if(state.value.tags.isEmpty())return@launch
-                        _state.update { it.copy(currentTag = state.value.tags.first()) }
-//                        onEvent(SearchEvents.SelectTag(state.value.currentTag!!))
-                    }
-                }
-            }
-
-
-            is SearchEvents.FetchRecentSearch -> {
-                viewModelScope.launch {
-                    _state.update { it.copy(isRecentSearchLoading = true) }
-                    val result = searchUseCase.fetchRecentSearchUseCase()
-                    when (result) {
-                        is Result.Success -> {
-                            result.data!!.collect { searches ->
-                                val list = mutableListOf<MemoryWithMediaModel>()
-                                searches.forEach { search ->
-                                    searchUseCase.getMemoryByIdUseCase(search.memoryId).also { item ->
-//                                        Log.d("SearchViewModel", "onEvent:FetchRecentSearch ${item}")
-                                        list.add(item!!)
-
-//                                        Log.d(TAG, "onEvent: state updated FetchRecentSearch ${_state.value.recentSearch} ")
-                                    }
-
-                                }
-                                _state.update { it.copy(isRecentSearchLoading = false) }
-                                _state.update {
-                                    it.copy(
-                                        recentSearch = list
-                                    )
-                                }
-                            }
-                        }
-
-                        else -> {}
-                    }
-
-                }
-            }
-
             is SearchEvents.SelectTag -> {
-                _state.update { it.copy(currentTag = event.tag, isMemoriesTagLoading = true) }
-//                viewModelScope.launch {
-//                    feedUseCase.fetchMemoryByTagUseCase(event.tag.tagId).collect { memories ->
-//                        _state.update { it.copy(memories = memories, isMemoriesTagLoading = false) }
-////                        Log.d(TAG, "onEvent: SelectTag ${memories}")
-//                    }
-//                }
-            }
-
-            is SearchEvents.FetchRecentMemories -> {
-                viewModelScope.launch {
-                    val result = searchUseCase.fetchRecentMemoriesUseCase()
-                    result
-                        .catch { e -> Log.e(TAG, "onEvent: error while FetchRecentMemories ${e}", ) }
-                        .collect { memories ->
-                        _state.update { it.copy(recentMemories = memories) }
-                    }
-
-                }
+                _currentTag.update { event.tag }
             }
 
             is SearchEvents.DeleteAllSearch -> {
@@ -269,6 +209,7 @@ class SearchViewModel @Inject constructor(
                     searchUseCase.deleteAllSearchUseCase()
                 }
             }
+
             is SearchEvents.DeleteSearch -> {
                 viewModelScope.launch {
                     searchUseCase.deleteSearchByIdUseCase(event.memoryId)
@@ -286,16 +227,15 @@ class SearchViewModel @Inject constructor(
 
 }
 
+@Stable
 data class SearchState(
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val data: List<MemoryWithMediaModel> = emptyList(),
-    val recentSearch: List<MemoryWithMediaModel> = emptyList(),
-    val isRecentSearchLoading: Boolean = false,
-    val tags : List<TagModel> = emptyList(),
-    val currentTag : TagModel? = null,
-    val memories : List<MemoryWithMediaModel> = emptyList(),
-    val isMemoriesTagLoading : Boolean = false,
-    val onThisDateMemories : List<OnThisDayMemories> = emptyList(),
-    val recentMemories : List<MemoryWithMediaModel> = emptyList()
+    val inputText: String = "",
+    val tags: SectionState<List<TagModel>> = SectionState.Loading,
+    val selectedTag: TagModel? = null,
+    val recentSearches: SectionState<List<MemoryWithMediaModel>> = SectionState.Loading,
+
+    val recentMemories: SectionState<List<MemoryWithMediaModel>> = SectionState.Loading,
+
+    val searchResults: List<MemoryWithMediaModel> = emptyList(),
+    val onThisDay: List<MemoryWithMediaModel> = emptyList(),
 )

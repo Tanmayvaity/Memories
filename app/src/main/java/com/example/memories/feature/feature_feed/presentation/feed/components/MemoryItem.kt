@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import android.R
 import android.R.attr.end
+import android.R.attr.onClick
 import android.view.RoundedCorner
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
@@ -66,12 +67,15 @@ import com.example.memories.ui.theme.MemoriesTheme
 @Composable
 fun MemoryItem(
     modifier: Modifier = Modifier,
-    memoryItem: MemoryWithMediaModel = MemoryWithMediaModel(),
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    elevation : Int = 0,
     onClick: () -> Unit = {},
-    onIconClick: () -> Unit = {}
+    onIconClick: () -> Unit = {},
+    imageUri : String? = null,
+    title : String,
+    content : String,
+    memoryForTimeStamp : Long = 0L
 ) {
-    val imageUri = memoryItem.mediaList.firstOrNull()?.uri
     var showMenu by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
@@ -89,7 +93,7 @@ fun MemoryItem(
             containerColor = backgroundColor
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
+            defaultElevation = elevation.dp
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -115,20 +119,20 @@ fun MemoryItem(
                 ) {
 
                     Text(
-                        text = memoryItem.memory.title,
+                        text = title,
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = memoryItem.memory.content,
+                        text = content,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = memoryItem.memory.memoryForTimeStamp!!.formatTime(),
+                        text = memoryForTimeStamp.formatTime(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
@@ -136,10 +140,6 @@ fun MemoryItem(
                     )
 
                 }
-
-//                VerticalDivider(
-//                    modifier = Modifier.padding(horizontal = 10.dp)
-//                )
 
                 Box(
                     modifier = Modifier
@@ -170,6 +170,11 @@ fun MemoryItem(
 @Composable
 fun MemoryItemPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
-        MemoryItem()
+        MemoryItem(
+            modifier = modifier,
+            backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+            title = "Hello",
+            content = "Hello Again",
+        )
     }
 }

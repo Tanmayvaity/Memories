@@ -6,8 +6,6 @@ import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 
 sealed class FeedEvents {
-    object FetchFeed : FeedEvents()
-
     data class ChangeFetchType(val type : FetchType) : FeedEvents()
 
     data class ChangeSortType(val type : SortType) : FeedEvents()

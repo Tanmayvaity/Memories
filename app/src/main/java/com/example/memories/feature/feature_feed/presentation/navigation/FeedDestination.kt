@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_feed.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -13,6 +14,7 @@ import com.example.memories.feature.feature_feed.presentation.feed_detail.Memory
 import com.example.memories.feature.feature_feed.presentation.hidden.HiddenMemoryRoot
 import com.example.memories.feature.feature_feed.presentation.history.HistoryRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
+import com.example.memories.feature.feature_feed.presentation.search.SearchViewModel
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
 import com.example.memories.feature.feature_feed.presentation.tags_with_memory.TagWithMemoryRoot
 import com.example.memories.navigation.AppScreen
@@ -50,9 +52,9 @@ fun NavGraphBuilder.createFeedGraph(
     ){
         onBottomBarVisibilityChange(true)
         SearchRoot(
-            onNavigateToMemoryDetail = { route ->
+            onNavigate = { route ->
                 navController.navigate(route)
-            }
+            },
         )
     }
 

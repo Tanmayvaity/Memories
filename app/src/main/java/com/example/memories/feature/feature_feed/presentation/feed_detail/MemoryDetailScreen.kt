@@ -305,7 +305,7 @@ fun MemoryDetailScreen(
 
                         DisableSelection {
                             TagRow(
-                                totalTags = memory.tagsList,
+                                totalTags = memory.tagsList.sortedBy { it.label.length },
                                 showAdd = false,
                                 onAddClick = {},
                                 modifier = Modifier.padding(top = 5.dp),

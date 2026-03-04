@@ -1,6 +1,7 @@
 package com.example.memories.core.domain.model
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import java.util.UUID
 
 data class MemoryModel(
@@ -13,12 +14,14 @@ data class MemoryModel(
     val memoryForTimeStamp : Long? = null,
 )
 
+@Stable
 data class MemoryWithMediaModel(
     val memory : MemoryModel = MemoryModel(title = "Just A Title", content = "Content about a title"),
     val mediaList : List<MediaModel> = emptyList(),
     val tagsList : List<TagModel> = emptyList()
 )
 
+@Stable
 data class TagsWithMemoryModel(
     val tag : TagModel = TagModel(label = "Memory"),
     val memoryList : List<MemoryModel> = emptyList(),

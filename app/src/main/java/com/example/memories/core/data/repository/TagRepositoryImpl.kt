@@ -19,7 +19,7 @@ class TagRepositoryImpl @Inject constructor(
         tagDao.insertTag(tag.toEntity())
     }
 
-    override suspend fun fetchTags(): Flow<List<TagModel>> {
+    override fun fetchTags(): Flow<List<TagModel>> {
         return tagDao.getAllTags().map { tags -> tags.map { tag -> tag.toDomain() } }
     }
 
