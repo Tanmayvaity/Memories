@@ -48,10 +48,13 @@ interface TagDao {
 SELECT 
     t.tag_id,
     t.label,
-    COUNT(mt.memory_id) AS memory_count
+    COUNT(m.memory_id) AS memory_count
 FROM tagentity t
 LEFT JOIN MemoryTagCrossRef mt 
     ON t.tag_id = mt.tag_id
+LEFT JOIN MemoryEntity m 
+    ON mt.memory_id = m.memory_id
+    and hidden = 0
 GROUP BY t.tag_id, t.label
 ORDER BY memory_count DESC
         """
@@ -65,10 +68,13 @@ ORDER BY memory_count DESC
 SELECT 
     t.tag_id,
     t.label,
-    COUNT(mt.memory_id) AS memory_count
+    COUNT(m.memory_id) AS memory_count
 FROM tagentity t
 LEFT JOIN MemoryTagCrossRef mt 
     ON t.tag_id = mt.tag_id
+LEFT JOIN MemoryEntity m 
+    ON mt.memory_id = m.memory_id
+    and hidden = 0
 GROUP BY t.tag_id, t.label
 ORDER BY label DESC
         """
@@ -83,10 +89,13 @@ ORDER BY label DESC
 SELECT 
     t.tag_id,
     t.label,
-    COUNT(mt.memory_id) AS memory_count
+    COUNT(m.memory_id) AS memory_count
 FROM tagentity t
 LEFT JOIN MemoryTagCrossRef mt 
     ON t.tag_id = mt.tag_id
+LEFT JOIN MemoryEntity m 
+    ON mt.memory_id = m.memory_id
+    and hidden = 0
 GROUP BY t.tag_id, t.label
 ORDER BY memory_count ASC
         """
@@ -104,6 +113,9 @@ SELECT
 FROM tagentity t
 LEFT JOIN MemoryTagCrossRef mt 
     ON t.tag_id = mt.tag_id
+LEFT JOIN MemoryEntity m 
+    ON m.memory_id = m.memory_id
+    and hidden = 0
 GROUP BY t.tag_id, t.label
 ORDER BY label ASC
         """
@@ -117,11 +129,14 @@ ORDER BY label ASC
     SELECT 
         t.tag_id,
         t.label,
-        COUNT(mt.memory_id) AS memory_count
+        COUNT(m.memory_id) AS memory_count
     FROM tagentity t
     LEFT JOIN MemoryTagCrossRef mt 
         ON t.tag_id = mt.tag_id
-    WHERE t.label LIKE '%' || :query || '%'
+    LEFT JOIN MemoryEntity m 
+        ON mt.memory_id = m.memory_id
+        and hidden = 0
+    WHERE t.label LIKE '%' || :query || '%' 
     GROUP BY t.tag_id, t.label
     ORDER BY memory_count DESC
     """
