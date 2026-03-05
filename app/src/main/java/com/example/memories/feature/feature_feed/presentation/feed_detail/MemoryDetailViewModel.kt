@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
+import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
+import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -21,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MemoryDetailViewModel @Inject constructor(
     val feedUseCases: FeedUseCaseWrapper,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    val memoryActionHandler: MemoryActionHandler
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemoryDetailState())
@@ -60,81 +63,72 @@ class MemoryDetailViewModel @Inject constructor(
 
             }
 
-            is MemoryDetailEvents.FavoriteToggle -> {
+            is MemoryDetailEvents.Action -> {
                 viewModelScope.launch {
-                    _state.update {
-                        it.copy(
-                            memory = it.memory?.copy(
-                                memory = it.memory.memory.copy(favourite = !event.isFavourite)
-                            )
-                        )
-                    }
-                    feedUseCases.toggleFavouriteUseCase(
-                        event.id,
-                        isFavourite = !event.isFavourite
-                    )
-                }
-
-            }
-
-            is MemoryDetailEvents.HiddenToggle -> {
-                viewModelScope.launch {
-
-
-                    _state.update {
-                        it.copy(
-                            memory = it.memory?.copy(
-                                memory = it.memory.memory.copy(hidden = event.isHidden)
-                            )
-                        )
-                    }
-                    feedUseCases.toggleHiddenUseCase(
-                        event.id,
-                        isHidden = event.isHidden
-                    )
-                    _eventChannel.send(
-                        UiEvent.ShowToast(
-                            message = if (_state.value.memory!!.memory.hidden) "Memory hidden" else "Memory Shown",
-                            type = UiEvent.ToastType.HIDDEN
-                        )
-                    )
-
-                }
-            }
-
-            is MemoryDetailEvents.Delete -> {
-                if(state.value.memory?.memory == null) return
-
-                _isDeleting.update { true }
-                viewModelScope.launch {
-                    val result = feedUseCases.deleteMemoryUseCase(
-                        memory = _state.value.memory!!.memory,
-                        uriList = _state.value.memory!!.mediaList.map { it.uri }
-                    )
-                    _isDeleting.update { false }
-                    when (result) {
-                        is Result.Error -> {
-                            Log.e(TAG, "onEvent: error while deleting")
-                            _eventChannel.send(
-                                UiEvent.Error(
-                                    message = "Cannot Delete Memory",
+                    when(event.action){
+                        is MemoryAction.Delete -> {
+                            if(state.value.memory?.memory == null) return@launch
+                            _isDeleting.update { true }
+                                val result = memoryActionHandler.delete(
+                                    memory = _state.value.memory!!.memory,
+                                    uriList = _state.value.memory!!.mediaList.map { it.uri }
                                 )
-                            )
+                                _isDeleting.update { false }
+                                when (result) {
+                                    is Result.Error -> {
+                                        Log.e(TAG, "onEvent: error while deleting")
+                                        _eventChannel.send(
+                                            UiEvent.Error(
+                                                message = "Cannot Delete Memory",
+                                            )
+                                        )
+                                    }
+                                    is Result.Success<String> -> {
+                                        Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
+                                        _eventChannel.send(
+                                            UiEvent.ShowToast(
+                                                message = "Memory deleted",
+                                                type = UiEvent.ToastType.DELETE
+                                            )
+                                        )
+                                    }
+
+                            }
+                        }
+                        is MemoryAction.ToggleFavourite -> {
+                            _state.update {
+                                it.copy(
+                                    memory = it.memory?.copy(
+                                        memory = it.memory.memory.copy(favourite = !event.action.currentFavouriteState)
+                                    )
+                                )
+                            }
+                            memoryActionHandler.handle(event.action)
                         }
 
-                        is Result.Success<String> -> {
-                            Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
+                        is MemoryAction.ToggleHidden -> {
+                            _state.update {
+                                it.copy(
+                                    memory = it.memory?.copy(
+                                        memory = it.memory.memory.copy(hidden = !event.action.currentHiddenState)
+                                    )
+                                )
+                            }
+                            memoryActionHandler.handle(event.action)
                             _eventChannel.send(
                                 UiEvent.ShowToast(
-                                    message = "Memory deleted",
-                                    type = UiEvent.ToastType.DELETE
+                                    message = if (_state.value.memory!!.memory.hidden) "Memory hidden" else "Memory Shown",
+                                    type = UiEvent.ToastType.HIDDEN
                                 )
                             )
                         }
                     }
-                }
-            }
 
+
+
+                }
+
+            }
             is MemoryDetailEvents.DownloadImage -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isDownloading = true) }

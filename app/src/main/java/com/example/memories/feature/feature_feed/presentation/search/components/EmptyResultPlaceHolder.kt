@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.dp
 fun EmptyResultPlaceHolder(
     modifier: Modifier = Modifier,
     emptyText: String,
-    buttonText : String,
-    height: Dp,
-    onButtonClick: () -> Unit,
+    buttonText : String= "Create",
+    height: Dp= 200.dp,
+    onButtonClick: () -> Unit= {},
     buttonIcon : ImageVector = Icons.Default.Add,
-
+    showTextOnly : Boolean = false
 ) {
     Box(
         modifier = modifier
@@ -52,18 +52,20 @@ fun EmptyResultPlaceHolder(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Button(onClick = onButtonClick) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(3.dp)
-                ) {
-                    Text(text = buttonText)
-                    Icon(
+            if(!showTextOnly) {
+                Button(onClick = onButtonClick) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(3.dp)
+                    ) {
+                        Text(text = buttonText)
+                        Icon(
 //                        Icons.AutoMirrored.Filled.ArrowForward
-                        imageVector = buttonIcon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                            imageVector = buttonIcon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
         }

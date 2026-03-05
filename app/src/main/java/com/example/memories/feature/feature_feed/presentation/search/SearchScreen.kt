@@ -1,9 +1,7 @@
 package com.example.memories.feature.feature_feed.presentation.search
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +38,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
 import com.example.memories.feature.feature_feed.presentation.search.components.ExploreByCategorySection
 import com.example.memories.feature.feature_feed.presentation.search.components.MemorySearchBar
 import com.example.memories.feature.feature_feed.presentation.search.components.RecentSearchSection

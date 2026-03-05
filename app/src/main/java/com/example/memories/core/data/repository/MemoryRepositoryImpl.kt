@@ -271,8 +271,8 @@ class MemoryRepositoryImpl @Inject constructor(
         memoryDao.unHideAllMemories()
     }
 
-    override suspend fun getMemoriesByIds(ids: List<String>) : List<MemoryWithMediaModel> {
-        return memoryDao.getMemoriesByIds(ids).map { it.toDomain() }
+    override fun getMemoriesByIds(ids: List<String>) : Flow<List<MemoryWithMediaModel>> {
+        return memoryDao.getMemoriesByIds(ids).map {memories -> memories.map {   it.toDomain() }}
     }
 
 

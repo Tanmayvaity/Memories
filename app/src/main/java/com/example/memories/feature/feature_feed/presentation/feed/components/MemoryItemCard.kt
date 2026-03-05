@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +77,7 @@ import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
+import com.example.memories.ui.theme.VeryLightGray
 import com.google.common.collect.Multimaps.index
 
 
@@ -94,7 +97,7 @@ fun MemoryItemCard(
     val isPreviewModeOn = LocalInspectionMode.current
 
     val pager = if (memoryItem.mediaList.isNotEmpty()) {
-        rememberPagerState(pageCount = { if(isPreviewModeOn) 5 else memoryItem.mediaList.size })
+        rememberPagerState(pageCount = { if (isPreviewModeOn) 5 else memoryItem.mediaList.size })
     } else null
 
     Card(
@@ -126,74 +129,87 @@ fun MemoryItemCard(
                     readOnlyMediaUriList = memoryItem.mediaList.map { it.uri }
                 )
             }
-
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
                     Text(
                         text = memoryItem.memory.memoryForTimeStamp!!.formatTime(),
-                        modifier = Modifier
-                            .padding(start = 10.dp, top = 5.dp, end = 5.dp, bottom = 5.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp),
+                        style = MaterialTheme.typography.labelSmall
                     )
                     Text(
                         text = memoryItem.memory.title,
-                        modifier = Modifier
-                            .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
+                        modifier = Modifier.padding(top = 4.dp),
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = memoryItem.memory.content,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 5,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
+                        lineHeight = 20.sp,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
+                        modifier = Modifier.padding(top = 6.dp)
 
                     )
-                    Row(
-                        modifier = Modifier
-                            .padding(5.dp)
-                    ) {
-
-                        IconItem(
-                            imageVector = if (memoryItem.memory.favourite)
-                                Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "",
-                            onClick = {
-                                onFavouriteButtonClick()
-                            },
-                            alpha = 0f,
-                            color = if (memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else Color.Gray
-                        )
-                        IconItem(
-                            drawableRes = if (memoryItem.memory.hidden)
-                                R.drawable.ic_hidden else R.drawable.ic_not_hidden,
-                            contentDescription = "",
-                            onClick = {
-                                onHideButtonClick()
-                            },
-                            alpha = 0f,
-                            color = Color.Gray
-                        )
-                        IconItem(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = "",
-                            onClick = {
-                                onDeleteButtonClick()
-                            },
-                            alpha = 0f,
-                            color = Color.Red,
-                        )
-                    }
-
-
                 }
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(
+                    modifier = Modifier
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    IconItem(
+                        imageVector = if (memoryItem.memory.favourite)
+                            Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "",
+                        onClick = {
+                            onFavouriteButtonClick()
+                        },
+                        iconSize = 22.dp,
+                        alpha = 0f,
+                        color = if (memoryItem.memory.favourite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconItem(
+                        drawableRes = if (memoryItem.memory.hidden)
+                            R.drawable.ic_hidden else R.drawable.ic_not_hidden,
+                        contentDescription = "",
+                        onClick = {
+                            onHideButtonClick()
+                        },
+                        iconSize = 22.dp,
+                        alpha = 0f,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconItem(
+                        iconSize = 22.dp,
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "",
+                        onClick = {
+                            onDeleteButtonClick()
+                        },
+                        alpha = 0f,
+                        color = MaterialTheme.colorScheme.error.copy(0.6f),
+                    )
+                }
+
+
             }
+//            }
 
 
         }
@@ -210,11 +226,12 @@ fun MemoryItemCardPreview(modifier: Modifier = Modifier) {
                 memory = MemoryModel(
                     title = "Trip to the Hills",
                     content = "A peaceful day in the mountains 🌄",
+                    memoryForTimeStamp = 0L
                 ),
                 mediaList = listOf(
                     MediaModel(
                         uri = "android.resource://com.example.memories/drawable/ic_launcher_background",
-                        memoryId = ""
+                        memoryId = "",
                     )
                 )
             )

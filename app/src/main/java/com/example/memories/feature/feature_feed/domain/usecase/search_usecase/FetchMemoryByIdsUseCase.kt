@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 class FetchMemoryByIdsUseCase(
     private val repository: MemoryRepository
 ) {
-    suspend operator fun invoke(ids : List<String>): List<MemoryWithMediaModel> {
+    operator fun invoke(ids : List<String>): Flow<List<MemoryWithMediaModel>> {
         return repository.getMemoriesByIds(ids)
     }
 

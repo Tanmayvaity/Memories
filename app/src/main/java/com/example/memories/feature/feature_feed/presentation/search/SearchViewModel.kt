@@ -3,31 +3,18 @@ package com.example.memories.feature.feature_feed.presentation.search
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.domain.model.Result
-import com.example.memories.core.domain.model.SearchModel
 import com.example.memories.core.domain.model.TagModel
-import com.example.memories.core.domain.model.TagsWithMemoryModel
-import com.example.memories.feature.feature_feed.domain.model.OnThisDayMemories
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
+import com.example.memories.core.util.pagedFlowByKey
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
-import com.example.memories.feature.feature_feed.presentation.feed.FeedState
-import com.example.memories.feature.feature_feed.presentation.search.SearchEvents.*
-import com.example.memories.feature.feature_feed.presentation.search.toSectionState
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.toSectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,15 +23,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,21 +50,19 @@ class SearchViewModel @Inject constructor(
     val recentSearches: StateFlow<SectionState<List<MemoryWithMediaModel>>> =
         searchUseCase.fetchRecentSearchUseCase()
             .flatMapLatest { searches ->
-                flow {
-                    val memories = searchUseCase
-                        .fetchMemoryByIdsUseCase(searches.map { it.memoryId })
-                    Log.d(TAG, "${memories.size}: ")
-                    emit(memories)
-                }
-
+//                flow {
+//                    val memories = searchUseCase
+//                        .fetchMemoryByIdsUseCase(searches.map { it.memoryId })
+//                    Log.d(TAG, "${memories.size}: ")
+//                    emit(memories)
+//                }
+                searchUseCase.fetchMemoryByIdsUseCase(searches.map { it.memoryId })
             }
             .toSectionState()
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.Lazily,
+                started = SharingStarted.WhileSubscribed(5000),
                 initialValue = SectionState.Loading
-
-
             )
     val searchResults: StateFlow<List<MemoryWithMediaModel>> = combine(
         _inputText.debounce(400).distinctUntilChanged(),
@@ -129,23 +110,12 @@ class SearchViewModel @Inject constructor(
         .toSectionState()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SectionState.Loading)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val memoriesForTag: Flow<PagingData<MemoryWithMediaModel>> = _currentTag
-        .flatMapLatest { tag ->
-            if (tag == null) {
-                flowOf(PagingData.empty())
-            } else {
-                searchUseCase.fetchMemoryByTagUseCase(tag.tagId)
-            }
-        }
-        .cachedIn(viewModelScope)
+    val memoriesForTag = pagedFlowByKey(_currentTag, viewModelScope) { tag ->
+        searchUseCase.fetchMemoryByTagUseCase(tag.tagId)
+    }
 
     init {
         Log.d(TAG, "SearchViewModel created: ${hashCode()}")
-//        viewModelScope.launch {
-//            _onThisDayMemories.value = searchUseCase.fetchOnThisDayUseCase()
-//        }
-
     }
 
     val state: StateFlow<SearchState> =

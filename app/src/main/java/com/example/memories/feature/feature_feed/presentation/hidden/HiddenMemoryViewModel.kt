@@ -10,6 +10,9 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.UiState
 import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.GetHiddenFeedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.HiddenUseCase
+import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
+import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -32,7 +35,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HiddenMemoryViewModel @Inject constructor(
-    val hiddenUseCase: HiddenUseCase
+    val hiddenUseCase: HiddenUseCase,
+    val memoryActionHandler: MemoryActionHandler
 ) : ViewModel() {
     private val _inputText = MutableStateFlow("")
     val inputText = _inputText.asStateFlow()
@@ -52,24 +56,12 @@ class HiddenMemoryViewModel @Inject constructor(
                 _inputText.update { event.text }
             }
 
-            is HiddenMemoryEvents.Delete -> {
+            is HiddenMemoryEvents.Action -> {
                 viewModelScope.launch {
-                    hiddenUseCase.deleteMemoryUseCase(
-                        event.memory.memory,
-                        event.memory.mediaList.map { it.uri }
-                    )
+                    memoryActionHandler.handle(action = event.action)
                 }
             }
-            is HiddenMemoryEvents.ToggleFavourite -> {
-                viewModelScope.launch {
-                    hiddenUseCase.toggleFavouriteUseCase(event.memoryId,isFavourite = !event.currentFavouriteState)
-                }
-            }
-            is HiddenMemoryEvents.ToggleHidden -> {
-                viewModelScope.launch {
-                    hiddenUseCase.toggleHiddenUseCase(event.memoryId,isHidden = !event.currentHiddenState)
-                }
-            }
+
         }
     }
 
@@ -80,9 +72,7 @@ class HiddenMemoryViewModel @Inject constructor(
 
 sealed class HiddenMemoryEvents{
     data class InputTextChange(val text : String) : HiddenMemoryEvents()
-    data class Delete(val memory : MemoryWithMediaModel) : HiddenMemoryEvents()
-    data class ToggleFavourite(val memoryId : String,val currentFavouriteState : Boolean) : HiddenMemoryEvents()
-    data class ToggleHidden(val memoryId : String,val currentHiddenState : Boolean) : HiddenMemoryEvents()
+    data class Action(val action: MemoryAction) : HiddenMemoryEvents()
 }
 
 

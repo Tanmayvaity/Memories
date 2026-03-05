@@ -201,11 +201,44 @@ fun GeneralAlertSheet(
 
                 }
             }
-
-
         }
     }
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MemoryDeleteBottomSheet(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    isLoading: Boolean = false,
+    state : SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+) {
+    GeneralAlertSheet(
+        title = "Delete Memory Alert",
+        content = "Are you sure you want to delete this memory",
+        state = state,
+        isLoading = isLoading,
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TagDeleteBottomSheet(
+    tagLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    state : SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+) {
+    GeneralAlertSheet(
+        title = "Delete \"$tagLabel\"?",
+        content = "Are you sure you want to delete this tag? This will not delete the memories associated with it, only the tag itself",
+        state = state,
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
 }
 
 @PreviewLightDark
@@ -260,3 +293,6 @@ fun GeneralAlertBottomSheetPreview(modifier: Modifier = Modifier) {
         )
     }
 }
+
+
+

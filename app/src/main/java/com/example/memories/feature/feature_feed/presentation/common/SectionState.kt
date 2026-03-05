@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_feed.presentation.search
+package com.example.memories.feature.feature_feed.presentation.common
 
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.Flow

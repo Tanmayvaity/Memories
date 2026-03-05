@@ -1,14 +1,10 @@
 package com.example.memories.feature.feature_feed.presentation.tags
 
-import android.widget.Space
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,79 +12,74 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.ui.theme.MemoriesTheme
 import com.example.memories.R
-import com.example.memories.core.presentation.MenuItem
-import com.example.memories.core.presentation.components.GeneralAlertSheet
-import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.presentation.components.TagDeleteBottomSheet
+import com.example.memories.core.util.hideWithCallback
+import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
-import com.example.memories.feature.feature_other.presentation.screens.components.ThemeBottomSheet
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
+import com.example.memories.feature.feature_feed.presentation.common.isEmpty
+import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
+import com.example.memories.feature.feature_feed.presentation.components.SearchTextField
+import com.example.memories.feature.feature_feed.presentation.search.components.EmptyResultPlaceHolder
+import com.example.memories.feature.feature_feed.presentation.tags.components.CreateTagBottomSheet
+import com.example.memories.feature.feature_feed.presentation.tags.components.SortTagsBottomSheet
+import com.example.memories.feature.feature_feed.presentation.tags.components.TagCard
 import com.example.memories.navigation.AppScreen
-import com.example.memories.ui.theme.VeryLightGray
 
 @Composable
 fun TagsRoot(
     modifier: Modifier = Modifier,
     viewmodel: TagsViewModel = hiltViewModel(),
-    onBack : () -> Unit = {},
-    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit
+    onBack: () -> Unit = {},
+    onNavigateToTagWithMemory: (AppScreen.TagWithMemories) -> Unit
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
+    val tags by viewmodel.tags.collectAsStateWithLifecycle()
     val inputText by viewmodel.inputText.collectAsStateWithLifecycle()
 
     TagsScreen(
         state = state,
+        tagsState = tags,
         onBack = onBack,
         onEvent = viewmodel::onEvent,
         onNavigateToTagWithMemory = onNavigateToTagWithMemory,
-        inputText  = inputText
+        inputText = inputText
     )
 }
 
@@ -97,17 +88,19 @@ fun TagsRoot(
 fun TagsScreen(
     modifier: Modifier = Modifier,
     state: TagsState = TagsState(),
+    tagsState: SectionState<List<TagWithMemoryCountModel>>,
     onBack: () -> Unit = {},
-    onEvent : (TagEvents) -> Unit = {},
-    onNavigateToTagWithMemory : (AppScreen.TagWithMemories) -> Unit = {},
-    inputText : String = ""
+    onEvent: (TagEvents) -> Unit = {},
+    onNavigateToTagWithMemory: (AppScreen.TagWithMemories) -> Unit = {},
+    inputText: String = ""
 ) {
     var showSortBySheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteTagSheet by remember { mutableStateOf(false) }
-    var tagItem : TagWithMemoryCountModel? = null
+    var tagItem: TagWithMemoryCountModel? = null
     var showTagSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -125,42 +118,17 @@ fun TagsScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-
-            /* ---------- FIXED HEADER ---------- */
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-                OutlinedTextField(
+                SearchTextField(
                     value = inputText,
-                    onValueChange = { onEvent(TagEvents.InputTextChange(it)) },
+                    onValueChange = { input ->
+                        onEvent(TagEvents.InputTextChange(input))
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search Tags") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null
-                        )
-                    },
-                    trailingIcon = {
-                        AnimatedVisibility(inputText.isNotEmpty()){
-                            IconItem(
-                                imageVector = Icons.Default.Close,
-                                onClick = {
-                                    onEvent(TagEvents.InputTextChange(""))
-                                },
-                                contentDescription = "remove text",
-                                alpha = 0f,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
+                    placeholder = "Search Tags"
                 )
 
                 Button(
@@ -179,83 +147,89 @@ fun TagsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            /* ---------- SCROLLABLE GRID ---------- */
-            LazyVerticalGrid(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f), // ⭐ critical
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(bottom = 8.dp)
             ) {
-
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    ) {
-                        Text(
-                            text = "All Tags",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
+                Text(
+                    text = "All Tags",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                AnimatedVisibility(
+                    visible = !tagsState.isEmpty()
+                ) {
+                    TextButton(onClick = {
+                        showSortBySheet = true
+                    }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_filter_list),
+                            contentDescription = null
                         )
-
-                        TextButton(onClick = {
-                            showSortBySheet = true
-                        }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_filter_list),
-                                contentDescription = null
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text("Sort By Count")
-                        }
-                    }
-                }
-
-                items(state.tags) { tag ->
-                    Card(
-                        modifier = Modifier.combinedClickable(
-                            onClick = {
-                                onNavigateToTagWithMemory(
-                                    AppScreen.TagWithMemories(
-                                        id = tag.tagId,
-                                        tagLabel = tag.tagLabel)
-                                )
-                            },
-                            onLongClick = {
-                                tagItem = tag
-                                showDeleteTagSheet = true
-                            }
-                        ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 1f)
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = tag.tagLabel,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                            Text(
-                                text = "${tag.memoryCount} Memories",
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                        Spacer(Modifier.width(4.dp))
+                        Text("Sort By Count")
                     }
                 }
             }
+            SectionStateContainer(
+                state = tagsState,
+                loadingContent = {
+                    LoadingIndicator(
+                        showText = true,
+                        text = "Loading Tags"
+                    )
+                },
+
+                emptyContent = {
+                    EmptyResultPlaceHolder(
+                        modifier = Modifier.fillMaxSize(),
+                        showTextOnly = true,
+                        emptyText = "No Tags Created"
+                    )
+                },
+                errorContent = { error ->
+                    ErrorStateCard(
+                        onRetryClick = {}
+                    )
+                },
+                successContent = { tags ->
+                    LazyVerticalGrid(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tags) { tag ->
+                            TagCard(
+                                label = tag.tagLabel,
+                                memoryCount = tag.memoryCount,
+                                onClick = {
+                                    onNavigateToTagWithMemory(
+                                        AppScreen.TagWithMemories(
+                                            id = tag.tagId,
+                                            tagLabel = tag.tagLabel
+                                        )
+                                    )
+                                },
+                                onLongClick = {
+                                    tagItem = tag
+                                    showDeleteTagSheet = true
+                                }
+                            )
+                        }
+                    }
+                },
+            )
+
         }
 
 
-        if(showSortBySheet){
+        if (showSortBySheet) {
             SortTagsBottomSheet(
                 onDismiss = {
                     showSortBySheet = false
@@ -265,7 +239,7 @@ fun TagsScreen(
                     showSortBySheet = false
                 },
                 state = state,
-                onOrderBy = {sortOrder ->
+                onOrderBy = { sortOrder ->
                     onEvent(TagEvents.ChangeSortOrderBy(sortOrder))
                 },
                 onSortBy = {
@@ -273,12 +247,12 @@ fun TagsScreen(
                 }
             )
         }
-        if(showTagSheet){
+        if (showTagSheet) {
             CreateTagBottomSheet(
                 onDismiss = { showTagSheet = false },
                 isLoading = state.isTagInserting,
-                onCreateTag = {name ->
-                    if(name.isEmpty()|| name.isBlank()){
+                onCreateTag = { name ->
+                    if (name.isEmpty() || name.isBlank()) {
                         Toast.makeText(
                             context,
                             "Tag name cannot be empty",
@@ -292,19 +266,20 @@ fun TagsScreen(
             )
         }
 
-        if(showDeleteTagSheet && tagItem!=null){
-            GeneralAlertSheet(
-                title = "Delete \"${tagItem!!.tagLabel}\" ?",
-                content = "Are you sure you want to delete this tag? This will not delete the memories " +
-                        "associated with it,only the tag itself",
+        if (showDeleteTagSheet && tagItem != null) {
+            val hideSheet = {
+                sheetState.hideWithCallback(scope) { showDeleteTagSheet = false }
+            }
+            TagDeleteBottomSheet(
+                tagLabel = tagItem!!.tagLabel,
                 state = sheetState,
                 onDismiss = {
-                    showDeleteTagSheet = false
+                    hideSheet()
                     tagItem = null
                 },
                 onConfirm = {
                     onEvent(TagEvents.DeleteTag(tagItem!!.tagId))
-                    showDeleteTagSheet = false
+                    hideSheet()
                 }
             )
         }
@@ -319,13 +294,18 @@ fun TagsScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         TagsScreen(
             state = TagsState(
-                tags = List(30){
+                orderByType = SortOrder.Ascending,
+                sortByType = SortBy.Count,
+                isTagInserting = false
+            ),
+            tagsState = SectionState.Success(
+                listOf(
                     TagWithMemoryCountModel(
-                        tagId = "",
-                        tagLabel = "Vacation",
-                        memoryCount = 10
+                        tagId = 1.toString(),
+                        tagLabel = "Memories",
+                        memoryCount = 23
                     )
-                }
+                )
             )
         )
     }

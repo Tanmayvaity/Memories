@@ -94,6 +94,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.D
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByIdsUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
+import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
@@ -538,6 +539,19 @@ object AppModule {
             toggleHiddenUseCase = ToggleHiddenUseCase(memoryRepository),
             toggleFavouriteUseCase = ToggleFavouriteUseCase(memoryRepository),
             deleteMemoryUseCase = DeleteUseCase(memoryRepository,mediaRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMemoryActionHandler(
+        memoryRepository: MemoryRepository,
+        mediaRepository: MediaRepository
+    ) : MemoryActionHandler {
+        return MemoryActionHandler(
+            ToggleFavouriteUseCase(memoryRepository),
+            ToggleHiddenUseCase(memoryRepository),
+            DeleteUseCase(memoryRepository,mediaRepository)
         )
     }
 

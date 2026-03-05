@@ -7,37 +7,28 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
-import com.example.memories.feature.feature_feed.presentation.search.SearchViewModel
+import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.cache
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
     val feedUseCases: FeedUseCaseWrapper,
-    val savedStateHandle: SavedStateHandle
+    val savedStateHandle: SavedStateHandle,
+    val memoryActionHandler: MemoryActionHandler
 ) : ViewModel() {
 
     companion object {
@@ -77,18 +68,21 @@ class FeedViewModel @Inject constructor(
     fun onEvent(event: FeedEvents) {
         when (event) {
             is FeedEvents.ApplyFilter -> {
-                _appliedFilters.update { it.copy(
-                    fetchType = state.value.type,
-                    sortType = state.value.sortType,
-                    orderByType = state.value.orderByType
-                )}
+                _appliedFilters.update {
+                    it.copy(
+                        fetchType = state.value.type,
+                        sortType = state.value.sortType,
+                        orderByType = state.value.orderByType
+                    )
+                }
             }
 
-            is FeedEvents.ChangeFetchType ->{
+            is FeedEvents.ChangeFetchType -> {
                 _state.update {
                     it.copy(type = event.type)
                 }
             }
+
             is FeedEvents.ChangeSortType -> {
                 _state.update {
                     it.copy(sortType = event.type)
@@ -96,7 +90,7 @@ class FeedViewModel @Inject constructor(
                 Log.d(TAG, "ChangeSortType :${state.value.sortType}")
             }
 
-            is FeedEvents.ChangeOrderByType -> {
+            is FeedEvents.ChangeSortOrderBy -> {
                 _state.update {
                     it.copy(orderByType = event.type)
                 }
@@ -117,45 +111,14 @@ class FeedViewModel @Inject constructor(
 
             }
 
-            is FeedEvents.ToggleFavourite -> {
+            is FeedEvents.Action -> {
                 viewModelScope.launch {
-                    feedUseCases.toggleFavouriteUseCase(
-                        id = event.id,
-                        isFavourite = event.isFav
-                    )
-
-                }
-            }
-
-            is FeedEvents.ToggleHidden -> {
-                viewModelScope.launch {
-                    feedUseCases.toggleHiddenUseCase(
-                        id = event.id,
-                        isHidden = event.isHidden
-                    )
-                }
-            }
-
-            is FeedEvents.Delete -> {
-                viewModelScope.launch {
-                    _state.update { it.copy(isDeleting = true) }
-                    val result = feedUseCases.deleteMemoryUseCase(event.memory,event.uriList)
-                    when(result){
-                        is Result.Error -> {
-                            Log.e(TAG, "onEvent: Error while deleting", )
-                        }
-                        is Result.Success<String> -> {
-                            Log.i(TAG, "onEvent: Deleted Succesfully")
-                        }
-                    }
-                    _state.update { it.copy(isDeleting = false) }
+                    memoryActionHandler.handle(event.action)
                 }
             }
         }
 
     }
-
-
 
 
 }

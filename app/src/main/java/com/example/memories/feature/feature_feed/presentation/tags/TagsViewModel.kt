@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.toSectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -36,14 +39,14 @@ class TagsViewModel @Inject constructor(
 
     data class FetchType(
         val orderByType: SortOrder,
-        val sortByTag: SortBy
+        val sortByType: SortBy
     )
 
 
     private val _fetchType = MutableStateFlow(
         FetchType(
             orderByType = SortOrder.Descending,
-            sortByTag = SortBy.Count
+            sortByType = SortBy.Count
         )
     )
 
@@ -53,26 +56,26 @@ class TagsViewModel @Inject constructor(
     private val _inputText = MutableStateFlow<String>("")
     val inputText = _inputText.asStateFlow()
 
-    init {
-        combine(
-            _inputText.debounce(300),
-            _fetchType
-        ) { query, fetchType ->
-            Triple<String, SortOrder, SortBy>(query, fetchType.orderByType, fetchType.sortByTag)
-        }
-            .flatMapLatest { (query, sortBy, orderBy) ->
-                tagsUseCase.getTagsWithMemoryCountUseCase(query = query, sortOrder = sortBy, sortBy = orderBy)
-                    .onStart { _state.update { it.copy(isLoading = true) } }
-                    .catch {
-                        e -> _state.update { it.copy(isLoading = false, error = e.message) }
-                        Log.e("TagViewModel", "error : ${e}")
-                    }
-            }
-            .onEach { tags ->
-                _state.update { it.copy(tags = tags, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
+
+    val tags: StateFlow<SectionState<List<TagWithMemoryCountModel>>> = combine(
+        _inputText.debounce(300),
+        _fetchType
+    ) { query, fetchType ->
+        Triple<String, SortOrder, SortBy>(query, fetchType.orderByType, fetchType.sortByType)
     }
+        .flatMapLatest { (query, sortBy, orderBy) ->
+            tagsUseCase.getTagsWithMemoryCountUseCase(
+                query = query,
+                sortOrder = sortBy,
+                sortBy = orderBy
+            )
+        }
+        .toSectionState()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = SectionState.Loading
+        )
 
     fun onEvent(event: TagEvents) {
         when (event) {
@@ -93,8 +96,8 @@ class TagsViewModel @Inject constructor(
             is TagEvents.ApplyFilter -> {
                 _fetchType.update {
                     it.copy(
-                        orderByType = state.value.orderBy,
-                        sortByTag = state.value.sortBy
+                        orderByType = state.value.orderByType,
+                        sortByType = state.value.sortByType
                     )
                 }
             }
@@ -106,11 +109,11 @@ class TagsViewModel @Inject constructor(
             }
 
             is TagEvents.ChangeSortOrderBy -> {
-                _state.update { it.copy(orderBy = event.type) }
+                _state.update { it.copy(orderByType = event.type) }
             }
 
             is TagEvents.ChangeSortBy -> {
-                _state.update { it.copy(sortBy = event.type) }
+                _state.update { it.copy(sortByType = event.type) }
             }
         }
     }
@@ -120,10 +123,7 @@ class TagsViewModel @Inject constructor(
 
 
 data class TagsState(
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val tags: List<TagWithMemoryCountModel> = emptyList(),
-    val sortBy: SortBy = SortBy.Count,
-    val orderBy: SortOrder = SortOrder.Descending,
-    val isTagInserting : Boolean = false
+    val sortByType: SortBy = SortBy.Count,
+    val orderByType: SortOrder = SortOrder.Descending,
+    val isTagInserting: Boolean = false,
 )

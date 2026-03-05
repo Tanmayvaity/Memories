@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.util.pagedFlowByKey
 import com.example.memories.feature.feature_feed.domain.usecase.TagWithMemoryUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,16 +51,9 @@ class TagWithMemoryViewModel @Inject constructor(
         private const val TAG = "TagWithMemoryViewModel"
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val memoriesForTag: Flow<PagingData<MemoryWithMediaModel>> = _tagId
-        .flatMapLatest { tagId ->
-            if(tagId == null){
-                flowOf(PagingData.empty())
-            }else{
-                tagUseCase.fetchMemoryByTagUseCase(tagId)
-            }
-        }
-        .cachedIn(viewModelScope)
+    val memoriesForTag = pagedFlowByKey(_tagId, viewModelScope) { tagId ->
+        tagUseCase.fetchMemoryByTagUseCase(tagId)
+    }
 
 
     fun onEvent(event : TagWithMemoryEvents){

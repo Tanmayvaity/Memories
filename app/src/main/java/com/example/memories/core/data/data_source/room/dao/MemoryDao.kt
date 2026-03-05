@@ -34,6 +34,7 @@ interface MemoryDao {
 
     @Query("UPDATE MemoryEntity SET hidden = 0 WHERE hidden = 1")
     suspend fun unHideAllMemories()
+
     @Transaction
     suspend fun insertMemoryWithMediaAndTag(
         memory: MemoryEntity,
@@ -57,15 +58,15 @@ interface MemoryDao {
         // media logic
 
         val incomingMediaIds = mediaList.map { it.mediaId }
-        if(incomingMediaIds.isEmpty()){
+        if (incomingMediaIds.isEmpty()) {
             deleteAllMediaForMemory(memory.memoryId)
 
-        }else{
+        } else {
             val mediaIdsToDelete = getMediaIdsToDelete(
                 memoryId = memory.memoryId,
                 incomingMediaIds = incomingMediaIds
             )
-            if(mediaIdsToDelete.isNotEmpty()){
+            if (mediaIdsToDelete.isNotEmpty()) {
                 deleteMediaByIds(mediaIdsToDelete)
             }
         }
@@ -90,23 +91,29 @@ interface MemoryDao {
     @Query("DELETE FROM MediaEntity WHERE media_id IN (:mediaIds)")
     suspend fun deleteMediaByIds(mediaIds: List<String>)
 
-    @Query("""
+    @Query(
+        """
         SELECT media_id FROM MediaEntity
         WHERE memory_id = :memoryId AND media_id NOT IN (:incomingMediaIds)
-    """)
+    """
+    )
     suspend fun getMediaIdsToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>
 
-    @Query("""
+    @Query(
+        """
         SELECT uri FROM MediaEntity
         WHERE memory_id = :memoryId AND media_id NOT IN (:incomingMediaIds)
-    """)
+    """
+    )
     suspend fun getMediaUrisToDelete(memoryId: String, incomingMediaIds: List<String>): List<String>
 
 
-    @Query("""
+    @Query(
+        """
         SELECT tag_id FROM MemoryTagCrossRef
         WHERE memory_id = :memoryId AND tag_id NOT IN (:incomingTagIds)
-    """)
+    """
+    )
     suspend fun getTagIdsToRemove(memoryId: String, incomingTagIds: List<String>): List<String>
 
     @Query("DELETE FROM MemoryTagCrossRef WHERE memory_id = :memoryId AND tag_id IN (:tagIds)")
@@ -119,7 +126,7 @@ interface MemoryDao {
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp DESC limit :limit")
-    fun getRecentMemories(limit : Int) : Flow<List<MemoryWithMedia>>
+    fun getRecentMemories(limit: Int): Flow<List<MemoryWithMedia>>
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 ORDER BY time_stamp DESC")
@@ -210,7 +217,7 @@ interface MemoryDao {
     // hidden
     @Transaction
     @Query("SELECT * FROM MemoryEntity WHERE title LIKE '%' || :query || '%' and hidden = 1 ORDER BY time_stamp DESC")
-    fun getAllHiddenMemoriesWithMediaBySearch(query: String): PagingSource<Int,MemoryWithMedia>
+    fun getAllHiddenMemoriesWithMediaBySearch(query: String): PagingSource<Int, MemoryWithMedia>
 
     // ==================== NON-PAGED QUERIES ====================
 
@@ -231,15 +238,20 @@ interface MemoryDao {
     suspend fun getEarliestMemoryTimestamp(): Long?
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT * FROM MemoryEntity 
         WHERE hidden = 0 
         AND memory_for_time_stamp >= :startTimestamp 
         AND memory_for_time_stamp < :endTimestamp
         ORDER BY memory_for_time_stamp DESC
-    """)
-    fun getMemoriesBetweenTimestamps(startTimestamp: Long, endTimestamp: Long): Flow<List<MemoryWithMedia>>
+    """
+    )
+    fun getMemoriesBetweenTimestamps(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): Flow<List<MemoryWithMedia>>
 
     @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 and memory_id IN (:ids)")
-    suspend fun getMemoriesByIds(ids : List<String>) : List<MemoryWithMedia>
+    fun getMemoriesByIds(ids: List<String>): Flow<List<MemoryWithMedia>>
 }

@@ -73,5 +73,5 @@ interface MemoryRepository {
 
     suspend fun unHideAllHiddenMemories()
 
-    suspend fun getMemoriesByIds(ids: List<String>): List<MemoryWithMediaModel>
+    fun getMemoriesByIds(ids: List<String>): Flow<List<MemoryWithMediaModel>>
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 class SaveSearchIdUseCase(
     private val repository: RecentSearchRepository
 ) {
-    suspend operator fun invoke(memoryId : String){
+    suspend operator fun invoke(memoryId : String,isHidden : Boolean = false){
         repository.insertSearch(
             search = SearchModel(
                 memoryId = memoryId,

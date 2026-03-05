@@ -1,19 +1,20 @@
 package com.example.memories.feature.feature_feed.presentation.history
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.presentation.UiState
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.FetchTodayMemoriesUseCase
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.toSectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -23,39 +24,26 @@ class HistoryViewModel @Inject constructor(
     private val fetchTodayMemoriesUseCase: FetchTodayMemoriesUseCase
 ) : ViewModel() {
 
+    val date: StateFlow<LocalDate?>
+        field = MutableStateFlow(null)
 
-    val state: StateFlow<UiState<MemoryWithMediaModel>>
-        field = MutableStateFlow(UiState())
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun fetchMemories(date: LocalDate) {
-        if (date == null) return
-
-        state.update {
-            it.copy(isLoading = true, error = null)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @SuppressLint("NewApi")
+    val memories = date
+        .flatMapLatest { date ->
+            if (date == null) flowOf(emptyList())
+            else fetchTodayMemoriesUseCase(date)
         }
+        .toSectionState()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = SectionState.Loading
+        )
 
-        viewModelScope.launch {
-            fetchTodayMemoriesUseCase(date)
-                .catch { e ->
-                    state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = e
-                        )
-                    }
-
-                }
-                .collect { memories ->
-                state.update {
-                    it.copy(
-                        data = memories,
-                        isLoading = false,
-                        error = null
-                    )
-                }
-            }
-        }
+    fun onDateChange(date: LocalDate) {
+        this.date.update { date }
     }
 
 

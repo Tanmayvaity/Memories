@@ -1,22 +1,19 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
-import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
+import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 
 sealed class FeedEvents {
     data class ChangeFetchType(val type : FetchType) : FeedEvents()
 
     data class ChangeSortType(val type : SortType) : FeedEvents()
-    data class ChangeOrderByType(val type : SortOrder) : FeedEvents()
+    data class ChangeSortOrderBy(val type : SortOrder) : FeedEvents()
     object  ResetFilterState : FeedEvents()
     object Refresh : FeedEvents()
 
-    data class ToggleFavourite(val id : String,val isFav: Boolean) : FeedEvents()
-    data class ToggleHidden(val id : String,val isHidden : Boolean): FeedEvents()
-
-    data class Delete(val memory : MemoryModel,val uriList : List<String>) : FeedEvents()
+    data class Action(val action: MemoryAction) : FeedEvents()
 
     object ApplyFilter : FeedEvents()
 }

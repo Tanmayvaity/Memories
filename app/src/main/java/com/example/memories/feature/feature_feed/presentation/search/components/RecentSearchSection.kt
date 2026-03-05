@@ -27,8 +27,8 @@ import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItem
-import com.example.memories.feature.feature_feed.presentation.search.SectionState
-import com.example.memories.feature.feature_feed.presentation.search.SectionStateContainer
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
 import com.example.memories.ui.theme.MemoriesTheme
 
 

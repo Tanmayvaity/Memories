@@ -12,21 +12,18 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.TagChip
 import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
-import com.example.memories.feature.feature_feed.presentation.search.SectionState
-import com.example.memories.feature.feature_feed.presentation.search.SectionStateContainer
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable

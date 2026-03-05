@@ -1,8 +1,9 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
+import android.R.attr.onClick
 import android.util.Log
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -11,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -31,7 +32,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,19 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,20 +59,22 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.presentation.MenuItem
-import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.FilterActionSheet
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
+import com.example.memories.core.util.hideWithCallback
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
+import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
+import com.example.memories.feature.feature_feed.presentation.components.PagedListContainer
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
+import com.example.memories.feature.feature_feed.presentation.hidden.HiddenMemoryEvents
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
-import com.google.common.collect.Multimaps.index
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -266,124 +265,72 @@ fun FeedScreen(
 
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-//                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxWidth()
-                .clipToBounds()
-                .background(
-                    if (LocalTheme.current) Color.Black
-                    else MaterialTheme.colorScheme.background
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-
-            contentPadding = innerPadding,
-            state = lazyListState
-        ) {
-            items(
-                key = { index: Int -> memories[index]?.memory?.memoryId ?: index },
-                count = memories.itemCount,
-                contentType = { "memory_item" }
-            ) { index ->
-//                val memory = memories[index] ?: return@items
-                val memory = memories[index]
-                MemoryItemCard(
-                    modifier = Modifier
-                        .animateItem()
-//                        .padding(16.dp)
-                            ,
-                    memoryItem = memory!!,
-                    onClick = {
-                        onNavigateToMemoryDetail(
-                            AppScreen.MemoryDetail(memoryId = memory.memory.memoryId)
-                        )
-                        expandFab = false
-                    },
-                    onFavouriteButtonClick = {
-                        if (memory == null) {
-                            Log.e("FeedScreen", "FeedScreen: item is null")
-                            return@MemoryItemCard
-                        }
-                        onEvent(
-                            FeedEvents.ToggleFavourite(
-                                memory.memory.memoryId,
-                                !memory.memory.favourite
-                            )
-                        )
-                    },
-                    onDeleteButtonClick = {
-                        currentItem = memory
-                        Log.d("FeedScreen", "FeedScreen: ${currentItem!!.memory.toString()}")
-                        showDeleteDialog = true
-
-                    },
-                    onHideButtonClick = {
-                        onEvent(
-                            FeedEvents.ToggleHidden(
-                                memory.memory.memoryId,
-                                !memory.memory.hidden
-                            )
-                        )
-                    }
-
-                )
-            }
-
-            if (memories.loadState.append == LoadState.Loading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-
-                    ) {
-                        LoadingIndicator(
-                            text = "Fetching Memory"
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(100.dp))
-            }
-        }
-
-        if (showDeleteDialog && currentItem != null || state.isDeleting) {
-
-            GeneralAlertSheet(
-                title = "Delete Memory Alert",
-                content = "Are you sure you want to delete this memory",
-                onDismiss = {
-                    showDeleteDialog = false
+        PagedListContainer(
+            items = memories,
+            modifier = Modifier.padding(innerPadding),
+            lazyListState = lazyListState,
+            itemKey = { index -> memories[index]?.memory?.memoryId ?: index },
+            itemContentType = { "memory_item" }
+        ) { memory ->
+            MemoryItemCard(
+                modifier = Modifier.animateItem(),
+                memoryItem = memory,
+                backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                elevation = 0,
+                shape = RoundedCornerShape(16.dp),
+                onClick = {
+                    onNavigateToMemoryDetail(AppScreen.MemoryDetail(memory.memory.memoryId))
                 },
-                state = sheetState,
-                onConfirm = {
-                    showDeleteDialog = false
+                onHideButtonClick = {
                     onEvent(
-                        FeedEvents.Delete(
-                            currentItem!!.memory,
-                            currentItem!!.mediaList.map { it -> it.uri })
+                        FeedEvents.Action(
+                            MemoryAction.ToggleHidden(
+                                memory.memory.memoryId,
+                                memory.memory.hidden
+                            )
+                        )
                     )
                 },
-                isLoading = state.isDeleting
+                onFavouriteButtonClick = {
+                    onEvent(
+                        FeedEvents.Action(
+                            MemoryAction.ToggleFavourite(
+                                memory.memory.memoryId,
+                                memory.memory.favourite
+                            )
+                        )
+                    )
+                },
+                onDeleteButtonClick = {
+                    currentItem = memory
+                    showDeleteDialog = true
+                }
             )
         }
 
-        if (memories.itemCount == 0 && memories.loadState.append != LoadState.Loading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No Memories Created"
-                )
+        if (showDeleteDialog && currentItem != null || state.isDeleting) {
+            val hideSheet = {
+                sheetState.hideWithCallback(scope) { showDeleteDialog = false }
             }
-        }
+            MemoryDeleteBottomSheet(
+                onDismiss = {
+                    hideSheet()
+                },
+                onConfirm = {
+                    onEvent(
+                        FeedEvents.Action(
+                            MemoryAction.Delete(
+                                currentItem!!.memory,
+                                currentItem!!.mediaList.map { it -> it.uri })
+                        )
+                    )
+                    hideSheet()
+                },
+                state = sheetState,
+                isLoading = state.isDeleting
+            )
 
+        }
         if (showSheet) {
             FilterActionSheet(
                 onDismiss = {
@@ -410,7 +357,7 @@ fun FeedScreen(
                     onEvent(FeedEvents.ChangeSortType(sortType))
                 },
                 onOrderByClick = { orderType ->
-                    onEvent(FeedEvents.ChangeOrderByType(orderType))
+                    onEvent(FeedEvents.ChangeSortOrderBy(orderType))
                 },
                 fetchTypeEntries = FetchType.entries,
                 sortByEntries = SortType.entries,

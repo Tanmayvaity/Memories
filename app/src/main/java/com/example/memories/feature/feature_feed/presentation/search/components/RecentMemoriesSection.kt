@@ -8,15 +8,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,8 +33,8 @@ import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
-import com.example.memories.feature.feature_feed.presentation.search.SectionState
-import com.example.memories.feature.feature_feed.presentation.search.SectionStateContainer
+import com.example.memories.feature.feature_feed.presentation.common.SectionState
+import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable

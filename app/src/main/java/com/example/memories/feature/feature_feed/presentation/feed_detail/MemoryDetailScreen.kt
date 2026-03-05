@@ -106,8 +106,11 @@ import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
+import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
 import com.example.memories.core.util.formatTime
+import com.example.memories.core.util.hideWithCallback
 import com.example.memories.core.util.startChooser
+import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 import com.example.memories.feature.feature_feed.presentation.feed.FeedEvents
 import com.example.memories.feature.feature_feed.presentation.feed_detail.components.FullScreenImageDialog
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
@@ -128,6 +131,8 @@ fun MemoryDetailRoot(
     val isDeleting by viewmodel.isDeleting.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackBarState = remember { SnackbarHostState() }
+
+
 
 
     LaunchedEffect(Unit) {
@@ -380,9 +385,11 @@ fun MemoryDetailScreen(
                             second = if (memory.memory.hidden) "UnHide" else "Hide",
                             third = {
                                 onEvent(
-                                    MemoryDetailEvents.HiddenToggle(
-                                        memory.memory.memoryId,
-                                        !memory.memory.hidden
+                                    MemoryDetailEvents.Action(
+                                        MemoryAction.ToggleHidden(
+                                            memory.memory.memoryId,
+                                            memory.memory.hidden
+                                        )
                                     )
                                 )
                             }
@@ -392,9 +399,11 @@ fun MemoryDetailScreen(
                             second = if (memory.memory.favourite) "UnFavourite" else "Favourite",
                             third = {
                                 onEvent(
-                                    MemoryDetailEvents.FavoriteToggle(
-                                        id = memory.memory.memoryId,
-                                        isFavourite = memory.memory.favourite
+                                    MemoryDetailEvents.Action(
+                                        MemoryAction.ToggleFavourite(
+                                            memory.memory.memoryId,
+                                            memory.memory.favourite
+                                        )
                                     )
                                 )
                             }
@@ -430,20 +439,51 @@ fun MemoryDetailScreen(
             }
         }
     }
-    if (showDeleteDialog || isDeleting) {
-        GeneralAlertSheet(
-            title = "Delete Memory Alert",
-            content = "Are you sure you want to delete this memory",
+    if (showDeleteDialog || isDeleting && memory != null) {
+//        GeneralAlertSheet(
+//            title = "Delete Memory Alert",
+//            content = "Are you sure you want to delete this memory",
+//            onDismiss = {
+//                showDeleteDialog = false
+//            },
+//            state = sheetState,
+//            onConfirm = {
+//                showDeleteDialog = false
+//                onEvent(
+//                    MemoryDetailEvents.Action(
+//                        MemoryAction.Delete(
+//                            memory = memory!!.memory,
+//                            uriList = memory.mediaList.map { it.uri }
+//                        )
+//                    )
+//                )
+//            },
+//            isLoading = isDeleting
+//        )
+
+        val hideSheet = {
+            sheetState.hideWithCallback(scope) { showDeleteDialog = false }
+        }
+
+        MemoryDeleteBottomSheet(
             onDismiss = {
                 showDeleteDialog = false
             },
-            state = sheetState,
             onConfirm = {
+                onEvent(
+                    MemoryDetailEvents.Action(
+                        MemoryAction.Delete(
+                            memory!!.memory,
+                            memory.mediaList.map { it -> it.uri })
+                    )
+                )
                 showDeleteDialog = false
-                onEvent(MemoryDetailEvents.Delete)
             },
+            state = sheetState,
             isLoading = isDeleting
         )
+
+
     }
 
     if (showImageDetail && memory != null) {
