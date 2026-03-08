@@ -2,6 +2,7 @@ package com.example.memories.feature.feature_media_edit.domain.repository
 
 import android.graphics.Bitmap
 import android.net.Uri
+import com.airbnb.lottie.L
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
@@ -52,5 +53,8 @@ interface MediaRepository {
     suspend fun saveToCacheStorageWithUri(
         uri : Uri
     ): Result<Uri>
+
+
+    fun generateSharableUri(isImage : Boolean = false) : Uri?
 
 }

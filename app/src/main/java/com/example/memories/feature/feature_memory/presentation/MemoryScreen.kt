@@ -1,56 +1,55 @@
 package com.example.memories.feature.feature_memory.presentation
 
-import android.R.attr.label
-import android.R.attr.maxLines
+import android.R.id.message
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -65,24 +64,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewDynamicColors
-import androidx.compose.ui.tooling.preview.PreviewFontScale
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -90,35 +82,30 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import coil3.compose.AsyncImage
 import com.example.memories.LocalTheme
 import com.example.memories.R
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.presentation.components.GeneralAlertDialog
+import com.example.memories.core.presentation.MediaResult
+import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.GeneralAlertSheet
-import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.core.presentation.components.MediaCreationType
-import com.example.memories.core.presentation.components.MediaPager
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.formatTime
-import com.example.memories.core.util.mapContentUriToType
-import com.example.memories.feature.feature_feed.presentation.tags.TagEvents
-import com.example.memories.feature.feature_media_edit.presentation.media_edit.MediaUri
+import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.ActionSelectorBottomSheet
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.CreationState.*
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
 import com.example.memories.feature.feature_memory.presentation.components.SelectTagBottomSheet
-import com.example.memories.feature.feature_memory.presentation.components.TagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-
 
 @Composable
 fun MemoryRoot(
@@ -127,24 +114,94 @@ fun MemoryRoot(
     onBackPress: () -> Unit,
     onGoToHomeScreen: (TopLevelScreen.Feed) -> Unit,
     onTagClick: (AppScreen.TagWithMemories) -> Unit,
-    uriList: List<UriType>
+    onNavigateToCamera : (AppScreen.Camera) -> Unit ,
+    uriList: List<UriType>,
+    takenUri : String?,
 ) {
     val state by viewModel.memoryState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
-        if(state.creationState == CreationState.CREATE && uriList.isNotEmpty()){
+        if (state.creationState == CreationState.CREATE && uriList.isNotEmpty()) {
             viewModel.onEvent(MemoryEvents.UpdateList(uriList))
         }
 
     }
+
+    LaunchedEffect(takenUri) {
+        if(takenUri != null && state.currentPosition != null && state.type == MediaActionType.CUSTOM_APP_CAMERA_FEATURE){
+            viewModel.onEvent(MemoryEvents.AddMediaUri(takenUri,state.currentPosition!!))
+            viewModel.onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.NONE))
+        }
+    }
+
+
+    LaunchedEffect(Unit) {
+        viewModel.mediaResultChannel.collect { result ->
+            when(result){
+                is MediaResult.Error -> {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = result.message,
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Short
+                        )
+                    }
+                }
+                is MediaResult.Success<CreationState> -> {
+                    when(result.data){
+                        CreationState.CREATE -> {
+                            onGoToHomeScreen(TopLevelScreen.Feed)
+                        }
+
+                        CreationState.UPDATE -> {
+                            onBackPress()
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+
+//
+//    LaunchedEffect(Unit) {
+//        errorFLow!!.collect { message ->
+//            Log.d("MemoryScreen", "MemoryRoot: error ${message}")
+//            scope.launch {
+//                snackbarHostState.showSnackbar(
+//                    message = message,
+//                    withDismissAction = true,
+//                    duration = SnackbarDuration.Short
+//                )
+//            }
+//        }
+//    }
+
+//    LaunchedEffect(Unit) {
+//        successFlow!!.collect { message ->
+//            when (state.creationState) {
+//                CreationState.CREATE -> {
+//
+//                }
+//
+//                CreationState.UPDATE -> {
+//                    onBackPress()
+//                }
+//
+//            }
+//
+//        }
+//    }
+
     MemoryScreen(
         onBackPress = onBackPress,
         onEvent = viewModel::onEvent,
         state = state,
-        onCreateClick = onGoToHomeScreen,
-        errorFLow = viewModel.errorFlow,
-        successFlow = viewModel.successFlow,
-        isDarkModeEnabled = LocalTheme.current,
-        onTagClick = onTagClick
+        onTagClick = onTagClick,
+        onNavigateToCamera = onNavigateToCamera,
+        snackbarHostState = snackbarHostState
     )
 
 
@@ -158,32 +215,17 @@ fun MemoryScreen(
     onBackPress: () -> Unit = {},
     onEvent: (MemoryEvents) -> Unit = {},
     state: MemoryState,
-    onCreateClick: (TopLevelScreen.Feed) -> Unit = {},
-    errorFLow: Flow<String>? = null,
-    successFlow: Flow<String>? = null,
-    isDarkModeEnabled: Boolean = false,
-    onTagClick: (AppScreen.TagWithMemories) -> Unit = {}
+    onTagClick: (AppScreen.TagWithMemories) -> Unit = {},
+    onNavigateToCamera: (AppScreen.Camera) -> Unit = {},
+    snackbarHostState: SnackbarHostState,
 ) {
-    val isPreviewMode = LocalInspectionMode.current
     val scrollState = rememberScrollState()
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val titleInteractionSource = remember { MutableInteractionSource() }
     var showDatePicker by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = {
-            5
-        })
     val context = LocalContext.current
     var showTagBottomSheet by rememberSaveable { mutableStateOf(false) }
-    var newTagsTextValue by rememberSaveable { mutableStateOf("") }
-    val tagsFocusRequester = remember { FocusRequester() }
-    val tagTextFieldInteractionSource = remember { MutableInteractionSource() }
-    var dateText by rememberSaveable { mutableStateOf("") }
-    val totalTags = remember { mutableStateListOf<String>() }
-    val datePickerState = rememberDatePickerState()
     var tagItem by remember { mutableStateOf<TagModel?>(null) }
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
@@ -191,6 +233,7 @@ fun MemoryScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val tagBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showTagDeleteDialog by remember { mutableStateOf(false) }
+    var showMediaPickerSelectorSheet by remember { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             lifecycle = event
@@ -203,35 +246,37 @@ fun MemoryScreen(
         }
     }
 
-    val mediaUriList = rememberSaveable {
-        mutableStateListOf<MediaUri>().apply {
-            repeat(5) {
-                add(null)
-            }
+
+
+    val openDeviceCameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { successful ->
+        if(successful && state.tempMediaUri != null && state.currentPosition != null && state.type == MediaActionType.DEVICE_CAMERA){
+            onEvent(MemoryEvents.AddMediaUri(state.tempMediaUri,state.currentPosition))
+            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.NONE))
         }
+
     }
 
     val mediaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
 
-
-        if (uri != null) {
-            mediaUriList[pagerState.currentPage] = uri.toString()
+        if (uri != null && state.currentPosition != null && state.type == MediaActionType.PHOTO_PICKER) {
+            onEvent(
+                MemoryEvents.AddMediaUri(
+                    uri = uri.toString(),
+                    position = state.currentPosition
+                )
+            )
+            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.NONE))
         }
-
-
     }
 
-    LaunchedEffect(state.uriList) {
-        if (state.uriList.isNotEmpty()) {
-            mediaUriList.clear()
-            mediaUriList.addAll(state.uriList.map { it.uri })
-            repeat(5 - mediaUriList.size) {
-                mediaUriList.add(null)
-            }
+    LaunchedEffect(state.tempMediaUri) {
+        if(state.tempMediaUri != null && state.type == MediaActionType.DEVICE_CAMERA){
+            openDeviceCameraLauncher.launch(state.tempMediaUri.toUri())
         }
-
     }
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -261,18 +306,11 @@ fun MemoryScreen(
                 actions = {
                     TextButton(
                         onClick = {
-//                            Log.i("MemoryScreen", "MemoryScreen: ${uriList == null}")
-
                             when (state.creationState) {
                                 CREATE -> {
                                     onEvent(
                                         MemoryEvents.CreateMemory(
-                                            uriList = mediaUriList.filter { it != null }.map { it ->
-                                                UriType(
-                                                    it,
-                                                    it!!.toUri().mapContentUriToType(context)
-                                                )
-                                            },
+                                            uriList = state.uriMap.map { it.value },
                                             title = state.title,
                                             content = state.content
                                         )
@@ -280,19 +318,15 @@ fun MemoryScreen(
                                 }
 
                                 UPDATE -> {
-                                    val slots = mediaUriList
-                                        .filterNotNull()
+                                    val slots = state.uriMap
+                                        .map { it ->
+                                            it.value
+                                        }
                                         .map { uri ->
-                                            val existingMedia =
-                                                state.originalMediaList.find { it.uri == uri }
-                                            if (existingMedia == null) {
-                                                MediaSlot.New(
-                                                    UriType(
-                                                        uri,
-                                                        uri.toUri().mapContentUriToType(context)
-                                                    )
-                                                )
-                                            } else {
+                                            val existingMedia = state.originalMediaList.find { it.uri == uri.uri }
+                                            if(existingMedia == null){
+                                                MediaSlot.New(uri)
+                                            }else{
                                                 MediaSlot.Existing(existingMedia)
                                             }
                                         }
@@ -329,6 +363,7 @@ fun MemoryScreen(
         Box(
             modifier = Modifier
                 .padding(innerPadding)
+                .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
             Column(
@@ -337,23 +372,81 @@ fun MemoryScreen(
                     .padding(10.dp)
                     .verticalScroll(scrollState),
             ) {
-                MediaPager(
-                    mediaUris = mediaUriList,
-                    pagerState = pagerState,
-                    imageContentScale = ContentScale.Fit,
-                    pagerHeight = 350.dp,
-                    onAddMediaClick = {
-                        mediaLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    onRemoveMediaClick = {
-                        mediaUriList[pagerState.currentPage] = null
-                    },
-                    type = MediaCreationType.NOT_BITMAP,
-                    bitmapList = null
-                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.heightIn(max = 300.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(5) { itemIndex ->
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .clip(
+                                    RoundedCornerShape(25.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(25.dp)
+                                )
+                        ) {
+                            val item = state.uriMap[itemIndex]
 
+                            AnimatedContent(
+                                item
+                            ) { state ->
+                                if (state != null) {
+                                    AsyncImage(
+                                        model = state.uri
+                                            ?: R.drawable.ic_launcher_background,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                    )
+                                    IconItem(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove media",
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp),
+                                        alpha = 0.3f,
+                                        onClick = {
+                                            onEvent(MemoryEvents.RemoveMediaUri(itemIndex))
+                                        },
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+//                                }
+                                }
+                                else{
+                                    IconItem(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add media",
+                                        backgroundColor = MaterialTheme.colorScheme.surface,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp),
+                                        alpha = 0f,
+                                        onClick = {
+                                            onEvent(MemoryEvents.UpdateCurrentPosition(itemIndex))
+                                            showMediaPickerSelectorSheet = true
+                                        },
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+
+
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
                 OutlinedTextField(
                     value = state.memoryForTimeStamp?.formatTime(format = "dd/MM/YYYY") ?: "",
                     onValueChange = {},
@@ -368,9 +461,7 @@ fun MemoryScreen(
                         )
                     },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp)
-                    ,
+                        .fillMaxSize(),
                     colors = OutlinedTextFieldDefaults.colors(
                         cursorColor = Color.Transparent,
                         errorCursorColor = Color.Transparent
@@ -390,11 +481,11 @@ fun MemoryScreen(
                         }
                     }
                 )
-
-
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
                 TagRow(
                     totalTags = state.tagsSelectedForThisMemory,
-                    modifier = Modifier.padding(start = 10.dp, end = 10.dp),
                     showAdd = true,
                     onAddClick = {
                         showTagBottomSheet = true
@@ -411,9 +502,9 @@ fun MemoryScreen(
                 )
                 CustomTextField(
                     modifier = Modifier
+                        .padding(vertical = 16.dp)
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(top = 15.dp, end = 10.dp),
+                        .background(MaterialTheme.colorScheme.background),
                     isHintVisible = state.isTitleHintVisible,
                     hintContent = state.titleHintContent,
                     content = state.title,
@@ -443,8 +534,69 @@ fun MemoryScreen(
                     },
 
                     )
+                Spacer(modifier = Modifier.height(16.dp))
 
             }
+        }
+
+
+
+        if(showMediaPickerSelectorSheet){
+            ActionSelectorBottomSheet(
+                onDismiss = {
+                    showMediaPickerSelectorSheet = false
+                },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                sheetTitle = "Media Picker",
+                showLoading = false,
+                loadingItemIndex = null,
+                items = listOf(
+                    MenuItem(
+                        title = "Use Device Camera",
+                        icon = R.drawable.ic_camera,
+                        content = "Open System Default Camera App",
+                        onClick = {
+                            Toast.makeText(
+                                context,
+                                "Device  Camera",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.DEVICE_CAMERA))
+                            onEvent(MemoryEvents.OpenDeviceCamera)
+                            showMediaPickerSelectorSheet = false
+                        }
+                    ),
+                    MenuItem(
+                        title = "Use Memories' custom Camera feature",
+                        icon = R.drawable.ic_aperture,
+                        content = "Use Memories' custom camera feature for capturing media",
+                        onClick = {
+                            Toast.makeText(
+                                context,
+                                "Custom Camera",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.CUSTOM_APP_CAMERA_FEATURE))
+                            onNavigateToCamera(AppScreen.Camera)
+                            showMediaPickerSelectorSheet = false
+                        }
+                    ),
+                    MenuItem(
+                        title = "Choose From gallery",
+                        icon = R.drawable.ic_feed,
+                        content = "Select from your device photos",
+                        onClick = {
+                            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.PHOTO_PICKER))
+                            mediaLauncher.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
+                            )
+                            showMediaPickerSelectorSheet = false
+                        }
+                    ),
+                )
+            )
         }
 
         if (showDatePicker) {
@@ -456,9 +608,6 @@ fun MemoryScreen(
                 onConfirm = { dateInMillis ->
 //                    onEvent(MemoryEvents.ReminderDateChanged(dateInMillis))
                     onEvent(MemoryEvents.DateChanged(dateInMillis))
-                    dateInMillis?.let { it ->
-                        dateText = it.formatTime(format = "dd/MMM/YYYY")
-                    }
                     focusManager.clearFocus()
                     showDatePicker = false
                 },
@@ -476,7 +625,7 @@ fun MemoryScreen(
                 )
             )
         }
-        if(showTagBottomSheet){
+        if (showTagBottomSheet) {
             SelectTagBottomSheet(
                 onDismiss = {
                     scope.launch {
@@ -488,24 +637,24 @@ fun MemoryScreen(
                 tagQuery = state.tagTextFieldValue,
                 selectedTags = state.tagsSelectedForThisMemory,
                 onTagQueryChange = { newText ->
-                    if(newText.contains("\n"))return@SelectTagBottomSheet
+                    if (newText.contains("\n")) return@SelectTagBottomSheet
                     onEvent(MemoryEvents.TagsTextFieldContentChanged(newText))
                 },
-                onCreateTagClick = {tag ->
-                    if(tag.isNotEmpty()){
+                onCreateTagClick = { tag ->
+                    if (tag.isNotEmpty()) {
                         onEvent(MemoryEvents.AddTag(tag))
                         onEvent(MemoryEvents.TagsTextFieldContentChanged(""))
                     }
                 },
-                onTagItemClick = {tag ->
-                    if(tag in state.tagsSelectedForThisMemory){
+                onTagItemClick = { tag ->
+                    if (tag in state.tagsSelectedForThisMemory) {
                         onEvent(MemoryEvents.RemoveTagsFromTextField(tag))
-                    }else{
+                    } else {
                         onEvent(MemoryEvents.UpdateTagsInTextField(tag))
                     }
 
                 },
-                onCrossClick = {tag ->
+                onCrossClick = { tag ->
                     tagItem = tag
                     showTagDeleteDialog = true
                 },
@@ -520,7 +669,7 @@ fun MemoryScreen(
             )
         }
 
-        if(showTagDeleteDialog && tagItem!=null){
+        if (showTagDeleteDialog && tagItem != null) {
             GeneralAlertSheet(
                 title = "Delete \"${tagItem!!.label}\" ?",
                 content = "Are you sure you want to delete this tag? This will not delete the memories " +
@@ -537,42 +686,13 @@ fun MemoryScreen(
                 }
             )
         }
-        LaunchedEffect(Unit) {
-            errorFLow!!.collect { message ->
-                Log.d("MemoryScreen", "MemoryRoot: error ${message}")
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = message,
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short
-                    )
-                }
-            }
-        }
 
-        LaunchedEffect(Unit) {
-            successFlow!!.collect { message ->
-                when (state.creationState) {
-                    CreationState.CREATE -> {
-                        onCreateClick(TopLevelScreen.Feed)
-                    }
-
-                    CreationState.UPDATE -> {
-                        onBackPress()
-                    }
-
-                }
-
-            }
-        }
 
 
     }
 }
 
-@PreviewFontScale
-@PreviewDynamicColors
-@PreviewLightDark
+@Preview
 @Composable
 fun MemoryScreenPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
@@ -580,6 +700,7 @@ fun MemoryScreenPreview(modifier: Modifier = Modifier) {
             onBackPress = {},
             onEvent = {},
             state = MemoryState(isLoading = true),
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }

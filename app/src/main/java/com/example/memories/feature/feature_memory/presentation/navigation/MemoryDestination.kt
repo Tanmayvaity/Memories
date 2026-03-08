@@ -1,12 +1,16 @@
 package com.example.memories.feature.feature_memory.presentation.navigation
 
+import android.R.attr.data
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import androidx.savedstate.serialization.saved
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.isOnBackStack
@@ -38,6 +42,7 @@ fun NavGraphBuilder.createMemoryGraph(
         )
     ) {
         val args = it.toRoute<AppScreen.Memory>()
+        val mediaUri by it.savedStateHandle.getStateFlow<String?>("media_uri",null).collectAsStateWithLifecycle()
         onBottomBarVisibilityChange(false)
         MemoryRoot(
             onBackPress = {
@@ -54,7 +59,11 @@ fun NavGraphBuilder.createMemoryGraph(
             onTagClick = { route ->
                 navController.navigate(route)
             },
-            uriList = args.uriTypeWrapperList
+            onNavigateToCamera = { route ->
+                navController.navigate(route)
+            },
+            uriList = args.uriTypeWrapperList,
+            takenUri = mediaUri,
         )
     }
 }

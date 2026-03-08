@@ -2,6 +2,7 @@ package com.example.memories.core.data.data_source.media
 
 import android.R
 import android.R.attr.bitmap
+import android.R.attr.type
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -344,6 +345,7 @@ class MediaManager(
             onFailure = { Result.Error(it) }
         )
     }
+
     private fun getMimeType(
         uri: Uri
     ): String {
@@ -793,6 +795,45 @@ class MediaManager(
     fun Float.normalizeRotation(): Float {
         val normalized = this % 360f
         return if (normalized < 0) normalized + 360f else normalized
+    }
+
+
+    fun generateSharableUri(isImage: Boolean = true): Uri? {
+        val dirName = if (isImage) "images" else "videos"
+        val prefix = if (isImage) "IMG_" else "VID_"
+        val extension = if (isImage) "jpg" else "mp4"
+        val baseDir = context.cacheDir
+        val targetDir = File(baseDir, dirName).apply {
+            if (!exists()) {
+                mkdirs()
+            }
+
+        }
+        val file = File(
+            targetDir,
+            "$prefix${System.currentTimeMillis()}.$extension"
+        )
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+    }
+
+    fun createMediaFile(
+        isImage: Boolean = true,
+        baseDir: File = context.cacheDir
+    ): File {
+        val dirName = if (isImage) "images" else "videos"
+        val prefix = if (isImage) "IMG_" else "VID_"
+        val extension = if (isImage) "jpg" else "mp4"
+
+        val targetDir = File(baseDir, dirName).apply {
+            if (!exists()) mkdirs()
+        }
+
+        return File(targetDir, "$prefix${System.currentTimeMillis()}.$extension")
     }
 
 

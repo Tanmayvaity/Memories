@@ -94,4 +94,10 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun saveToCacheStorageWithUri(uri: Uri): Result<Uri> {
         return mediaManager.saveToCacheStorageWithUri(uri)
     }
+
+    override fun generateSharableUri(isImage: Boolean): Uri? {
+        return mediaManager.generateSharableUri(isImage)
+    }
+
+
 }

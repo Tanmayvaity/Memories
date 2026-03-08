@@ -28,9 +28,6 @@ fun NavGraphBuilder.createFeedGraph(
     composable<TopLevelScreen.Feed> {
         onBottomBarVisibilityChange(true)
         FeedRoot(
-            onCameraClick = { route ->
-                navController.navigate(route)
-            },
             onNavigateToImageEdit = { route ->
                 navController.navigate(route)
             },

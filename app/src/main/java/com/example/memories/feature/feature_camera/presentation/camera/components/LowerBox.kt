@@ -43,19 +43,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.memories.R
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
+import com.example.memories.ui.theme.MemoriesTheme
 
 @OptIn(ExperimentalAnimationApi::class)
-@Preview
 @Composable
 fun LowerBox(
     modifier: Modifier = Modifier,
-    onToggleCamera: () -> Unit = {},
     onClick: () -> Unit = {},
     onCameraModeClick: (CameraMode) -> Unit = {},
     cameraMode: CameraMode = CameraMode.PHOTO,
     isVideoPlaying: Boolean = false,
-    isPictureTimerRunning: Boolean = false
+    isPictureTimerRunning: Boolean = false,
+    isImageSaving: Boolean = false
 ) {
     val cameraActionItems: List<CameraMode> = CameraMode.entries.filter { it != CameraMode.VIDEO }
     var selectedIndex by remember { mutableStateOf(cameraMode.mapToIndex()) }
@@ -100,11 +101,19 @@ fun LowerBox(
                     contentDescription = "Capture Photo",
                     modifier = Modifier
                         .animateContentSize()
-                        .size(if(isPictureTimerRunning && !isVideoPlaying) 32.dp else 58.dp)
+                        .size(if (isPictureTimerRunning && !isVideoPlaying) 32.dp else 58.dp)
                         .background(animateColor, CircleShape)
                         .padding(2.dp),
                     tint = animateColor
                 )
+
+                if (isImageSaving) {
+                    LoadingIndicator(
+                        showText = false,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+
             }
             // Take Picture layer
 //            Row(
@@ -129,9 +138,7 @@ fun LowerBox(
 //                }
 
 
-
-
-                //external circle
+            //external circle
 
 
 //                AnimatedVisibility(
@@ -147,8 +154,7 @@ fun LowerBox(
 //                }
 
 
-
-                // Camera Action Items
+            // Camera Action Items
 
 
 //            }
@@ -182,7 +188,7 @@ fun LowerBox(
                                     }
                                     .padding(start = 10.dp, end = 10.dp)
                                     .clickable(
-                                        enabled = if(isPictureTimerRunning)false else true,
+                                        enabled = if (isPictureTimerRunning) false else true,
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null,
                                         onClick = {
@@ -212,14 +218,31 @@ fun LowerBox(
     }
 }
 
+
+@Preview
+@Composable
+private fun LowerBoxPreview() {
+    MemoriesTheme {
+        LowerBox(
+            isImageSaving = true,
+            isPictureTimerRunning = false,
+            isVideoPlaying = false,
+            cameraMode = CameraMode.VIDEO
+        )
+    }
+}
+
+
 fun CameraMode.mapToIndex(): Int {
     return when (this) {
         CameraMode.PHOTO -> {
             0
         }
+
         CameraMode.PORTRAIT -> {
             1
         }
+
         CameraMode.VIDEO -> {
             2
         }

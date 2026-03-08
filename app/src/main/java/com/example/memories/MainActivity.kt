@@ -159,7 +159,8 @@ class MainActivity : AppCompatActivity() {
                     LocalTheme provides themeState
                 ) {
                     MemoriesTheme(
-                        darkTheme = themeState
+                        darkTheme = themeState,
+                        dynamicColor = false
                     ) {
 
                         AppNav(navController)

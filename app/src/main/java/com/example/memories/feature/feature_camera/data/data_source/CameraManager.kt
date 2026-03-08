@@ -41,6 +41,7 @@ import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
@@ -228,8 +229,8 @@ class CameraManager(
         cameraControl?.setLinearZoom(scale)
     }
 
-    suspend fun takePicture(): Result<Uri> {
-        val file = createTempFile(context)
+    suspend fun takePicture(file : File?): Result<Uri> {
+//        val file = createTempFile(context)
 
         if(file == null) return Result.Error(NullPointerException("File is null"))
 
@@ -263,7 +264,6 @@ class CameraManager(
             val executor: Executor = Executors.newSingleThreadExecutor()
 
             imageCaptureUseCase.takePicture(outputFileOptions, executor, imageSavedCallback)
-
 
         }
     }

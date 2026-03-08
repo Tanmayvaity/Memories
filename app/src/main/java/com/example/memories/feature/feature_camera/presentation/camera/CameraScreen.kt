@@ -3,9 +3,9 @@ package com.example.memories.feature.feature_camera.presentation.camera
 import android.Manifest
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.camera.compose.CameraXViewfinder
@@ -56,16 +56,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.memories.R
 import com.example.memories.core.domain.model.CameraSettingsState
+import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.presentation.components.RationaleDialog
-import com.example.memories.core.domain.model.Type
-import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
-import com.example.memories.core.util.mapContentUriToType
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
-import com.example.memories.navigation.AppScreen
 import kotlinx.coroutines.delay
 import java.util.Locale
 import java.util.UUID
@@ -74,10 +71,10 @@ private const val TAG = "CameraScreen"
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun CameraRoute(
+fun CameraRoot(
     modifier: Modifier = Modifier,
-    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
-    onBack: () -> Unit = {}
+    viewModel: CameraViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel<CameraViewModel>(),
+    onBack: (String?) -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -87,6 +84,28 @@ fun CameraRoute(
     var showCameraScreen by remember { mutableStateOf<Boolean?>(null) }
     val viewModel: CameraViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+
+
+    LaunchedEffect(Unit) {
+        viewModel.mediaEventFlow.collect { event ->
+            when(event){
+                is MediaResult.Error -> {
+                    Toast.makeText(
+                        context,
+                        "error : ${event.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                is MediaResult.Success -> {
+                    onBack(event.data)
+                    Log.i(TAG, "CameraScreen: success while capturing ${event.data.toString()}")
+                }
+            }
+
+        }
+    }
 
     // check permission
 
@@ -102,6 +121,7 @@ fun CameraRoute(
         showAudioRationale = false
         showCameraScreen = true
     }
+
     PermissionHelper(
         lifecycleOwner = lifecycleOwner,
         onGranted = {
@@ -169,7 +189,7 @@ fun CameraRoute(
             },
             onDismiss = {
                 showAudioRationale = false
-                onBack()
+                onBack(null)
             }
         )
     }
@@ -182,9 +202,10 @@ fun CameraRoute(
         permissionStatus = showCameraScreen,
         state = state,
         onEvent = viewModel::onEvent,
-        viewModel = viewModel,
-        onNavigateToImageEdit = onNavigateToImageEdit,
-        onBack = onBack,
+        onBack = {
+            onBack(null)
+        },
+
         cameraSettingsState = state.cameraSettingsState
     )
 
@@ -199,8 +220,6 @@ fun CameraScreen(
     permissionStatus: Boolean?,
     state: CameraState,
     onEvent: (CameraEvent) -> Unit = {},
-    viewModel: CameraViewModel = hiltViewModel<CameraViewModel>(),
-    onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onBack: () -> Unit = {},
     cameraSettingsState: CameraSettingsState? = null
 ) {
@@ -211,16 +230,8 @@ fun CameraScreen(
         }
     }
 
-
-    val context = LocalContext.current
-    val app = context.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
-    var showImagePreview by remember { mutableStateOf(false) }
-    val mediaUri by viewModel.capturedMediaUri.collectAsStateWithLifecycle()
-    val timer by viewModel.timeElapsed.collectAsStateWithLifecycle()
-    var showTimerPopUpMenu by remember { mutableStateOf(false) }
     var co by remember { mutableStateOf(Offset(0f, 0f)) }
-    val pictureTimer by viewModel.takePictureTimerTimeElapsed.collectAsStateWithLifecycle()
     var showTimer by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
@@ -243,35 +254,6 @@ fun CameraScreen(
     }
 
 
-//    val ratio = if(state.aspectRatio == AspectRatio.RATIO_16_9)
-
-//    val mediaLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.PickVisualMedia()
-//    ) { uri ->
-//
-//        if (uri != null) {
-//
-//            val uriWrapper = UriType(
-//                uri = uri.toString(),
-//                type = uri.mapContentUriToType(context)
-//            )
-//            Log.d(TAG, "CameraScreen: ${uriWrapper.uri}")
-//            Log.d(TAG, "CameraScreen: ${uriWrapper.type}")
-//            onNavigateToImageEdit(
-//                AppScreen.MediaEdit(
-//                    uriWrapper
-//                )
-//            )
-//        }
-//
-//    }
-
-    LaunchedEffect(Unit) {
-        viewModel.errorFlow.collect { message ->
-            Log.e(TAG, "CameraScreen: error while capturing $message")
-        }
-
-    }
     val coordinateTransformer = remember(
         state.aspectRatio, state.lensFacing
     ) { MutableCoordinateTransformer() }
@@ -289,10 +271,6 @@ fun CameraScreen(
         LaunchedEffect(autofocusRequestId) {
             delay(2000)
             autofocusRequest = autofocusRequestId to Offset.Unspecified
-
-
-//            if (!isUserInteractingWithSlider) {
-//
         }
     }
 
@@ -387,7 +365,6 @@ fun CameraScreen(
             },
             onTimerSet = {
                 onEvent(CameraEvent.ToggleTimerMode)
-                showTimerPopUpMenu = true
             },
             isVideoPlaying = state.videoState == VideoState.Started,
             isPictureTimerRunning = state.timerMode == TimerMode.Running,
@@ -399,27 +376,11 @@ fun CameraScreen(
         LowerBox(
             modifier = Modifier
                 .align(Alignment.BottomCenter),
+            isImageSaving = state.cameraMediaSaving,
             isPictureTimerRunning = state.timerMode == TimerMode.Running,
-//            onChooseFromGallery = {
-//                mediaLauncher.launch(
-//                    PickVisualMediaRequest(
-//                        ActivityResultContracts.PickVisualMedia.ImageAndVideo
-//                    )
-//                )
-//            },
             onClick = {
-//                val file = createTempFile(
-//                    context
-//                )
-//
-//                val videoFile = createVideoFile(
-//                    context
-//                )
-//                Log.d(TAG, "CameraScreen: ${videoFile.path}")
-
-
-                if (viewModel.state.value.timerMode == TimerMode.Started) {
-                    viewModel.onEvent(CameraEvent.Timer)
+                if (state.timerMode == TimerMode.Started) {
+                    onEvent(CameraEvent.Timer)
                     return@LowerBox
                 }
 
@@ -428,20 +389,13 @@ fun CameraScreen(
                     return@LowerBox
                 }
 
-                if (viewModel.state.value.mode == CameraMode.VIDEO && viewModel.state.value.videoState == VideoState.Started) {
-                    viewModel.onEvent(CameraEvent.Stop)
+                if (state.mode == CameraMode.VIDEO && state.videoState == VideoState.Started) {
+                    onEvent(CameraEvent.Stop)
                     return@LowerBox
                 }
 
-                if (viewModel.state.value.mode == CameraMode.VIDEO &&
-                    viewModel.state.value.videoState == VideoState.Idle
-                ) {
-                    viewModel.onEvent(CameraEvent.Take)
-                    return@LowerBox
-                } else {
-                    viewModel.onEvent(CameraEvent.Take)
-                    return@LowerBox
-                }
+
+                onEvent(CameraEvent.Take)
             },
             onCameraModeClick = { mode: CameraMode ->
                 when (mode) {
@@ -465,21 +419,10 @@ fun CameraScreen(
 
         )
 
-        // tap indicator for debugging
-//        Surface(
-//            modifier = Modifier
-//                .offset{co.round()}
-//                .offset((-5.dp),(-5.dp))
-//                .height(10.dp).width(10.dp)
-//                .background(Color.White)
-//
-//        ) {
-//
-//        }
-
         if (state.videoState == VideoState.Started) {
+
             Text(
-                text = String.format(Locale.ENGLISH, "%02d:%02d", timer / 60, timer % 60),
+                text = String.format(Locale.ENGLISH, "%02d:%02d",  state.timeElapsed/ 60, state.timeElapsed % 60),
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -505,7 +448,7 @@ fun CameraScreen(
 
         if (showTimer) {
             Text(
-                text = pictureTimer.toString(),
+                text = state.pictureTimerTimeElapsed.toString(),
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -516,20 +459,6 @@ fun CameraScreen(
 
 
     }
-
-//    LaunchedEffect(mediaUri) {
-//        if (mediaUri.uri != null && mediaUri.type!!.isImageFile()) {
-//            onNavigateToImageEdit(AppScreen.MediaEdit(listOf(mediaUri)))
-//            onEvent(CameraEvent.Reset)
-//        }
-//    }
-//
-//    LaunchedEffect(mediaUri) {
-//        if (mediaUri.uri != null && mediaUri.type!!.isVideoFile()) {
-//            onNavigateToImageEdit(AppScreen.MediaEdit(listOf(mediaUri)))
-//            onEvent(CameraEvent.Reset)
-//        }
-//    }
 
 
     LaunchedEffect(lifecycleOwner, state.lensFacing, state.aspectRatio) {
@@ -542,17 +471,14 @@ fun CameraScreen(
     LaunchedEffect(state.videoState) {
         if (state.videoState == VideoState.Started) {
             Log.d(TAG, "started")
-//            Toast.makeText(context,"Video Started",Toast.LENGTH_SHORT).show()
         }
 
         if (state.videoState == VideoState.Idle) {
             Log.d(TAG, "idle")
-//            Toast.makeText(context,"Video idle",Toast.LENGTH_SHORT).show()
         }
 
         if (state.videoState == VideoState.Stop) {
             Log.d(TAG, "Stop")
-//            Toast.makeText(context,"Video Stop",Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -565,10 +491,6 @@ fun CameraScreen(
             onBack()
         }
     }
-
-
-
-
 }
 
 

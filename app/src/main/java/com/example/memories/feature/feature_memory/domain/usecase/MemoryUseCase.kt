@@ -13,5 +13,6 @@ data class MemoryUseCase(
     val fetchTagsByLabelUseCase: FetchTagsByLabelUseCase,
     val fetchMemoryByIdUseCase : GetMemoryByIdUseCase,
     val updateMemoryUseCase : MemoryUpdateUseCase,
-    val tagDeleteTagUseCase: DeleteTagUseCase
+    val tagDeleteTagUseCase: DeleteTagUseCase,
+    val generateSharableUriUseCase: GenerateSharableUriUseCase
 )

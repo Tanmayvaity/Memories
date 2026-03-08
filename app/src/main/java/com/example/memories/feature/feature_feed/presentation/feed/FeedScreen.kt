@@ -83,7 +83,6 @@ import kotlinx.coroutines.launch
 fun FeedRoot(
     modifier: Modifier = Modifier,
     viewModel: FeedViewModel = hiltViewModel(),
-    onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
@@ -110,7 +109,6 @@ fun FeedRoot(
 fun FeedScreen(
     state: FeedState,
     onEvent: (FeedEvents) -> Unit,
-    onCameraClick: (AppScreen.Camera) -> Unit = {},
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
@@ -168,19 +166,6 @@ fun FeedScreen(
                     )
                 },
                 showDivider = false,
-                showAction = true,
-                actionContent = {
-                    IconItem(
-                        backgroundColor = MaterialTheme.colorScheme.background,
-                        color = MaterialTheme.colorScheme.primary,
-                        drawableRes = R.drawable.ic_camera,
-                        contentDescription = "Camera",
-                        onClick = {
-                            Log.d("FeedScreen", "camera clicked")
-                            onCameraClick(AppScreen.Camera)
-                        }
-                    )
-                },
                 showNavigationIcon = false,
                 navigationContent = {
                     IconItem(

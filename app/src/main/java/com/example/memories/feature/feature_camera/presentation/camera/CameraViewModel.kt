@@ -1,11 +1,14 @@
 package com.example.memories.feature.feature_camera.presentation.camera
 
+import android.net.Uri
+import android.provider.SyncStateContract.Helpers.update
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
@@ -36,17 +39,21 @@ class CameraViewModel @Inject constructor(
     private val _capturedMediaUri = MutableStateFlow<UriType>(UriType())
     val capturedMediaUri = _capturedMediaUri.asStateFlow()
 
-    private val _errorChannel = Channel<String>()
-    val errorFlow = _errorChannel.receiveAsFlow()
+    private val _mediaEventChannel = Channel<MediaResult<String?>>()
+    val mediaEventFlow = _mediaEventChannel.receiveAsFlow()
 
-    private val _timeElapsed = MutableStateFlow<Long>(0)
-    val timeElapsed = _timeElapsed.asStateFlow()
 
-    private val _takePictureTimerTimeElapsed = MutableStateFlow<Int>(3)
-    val takePictureTimerTimeElapsed = _takePictureTimerTimeElapsed.asStateFlow()
+//    private val _errorChannel = Channel<String>()
+////    val errorFlow = _errorChannel.receiveAsFlow()
 
-    private var timerJob : Job? = null
-    private var pictureTimerJob : Job? = null
+//    private val _timeElapsed = MutableStateFlow<Long>(0)
+//    val timeElapsed = _timeElapsed.asStateFlow()
+//
+//    private val _takePictureTimerTimeElapsed = MutableStateFlow<Int>(3)
+//    val takePictureTimerTimeElapsed = _takePictureTimerTimeElapsed.asStateFlow()
+
+    private var timerJob: Job? = null
+    private var pictureTimerJob: Job? = null
 
     init {
         onEvent(CameraEvent.Fetch)
@@ -55,17 +62,17 @@ class CameraViewModel @Inject constructor(
 //        Log.d(TAG, "${_state.value.cameraSettingsState.toString()}")
     }
 
-    companion object{
+    companion object {
         const val TAG = "CameraViewModel"
     }
 
     private fun bindToCamera(
         lifecycleOwner: LifecycleOwner,
         lensFacing: LensFacing,
-        torch : Boolean
+        torch: Boolean
     ) {
         viewModelScope.launch {
-            cameraUseCase.bindToCameraUseCase( lifecycleOwner,lensFacing,torch)
+            cameraUseCase.bindToCameraUseCase(lifecycleOwner, lensFacing, torch)
         }
     }
 
@@ -75,7 +82,7 @@ class CameraViewModel @Inject constructor(
             is CameraEvent.Preview -> {
                 val lensFacing = _state.value.lensFacing
                 val torch = _state.value.torchState
-                bindToCamera( event.lifecycleOwner,lensFacing,torch)
+                bindToCamera(event.lifecycleOwner, lensFacing, torch)
             }
 
             is CameraEvent.SurfaceCallback -> {
@@ -106,12 +113,13 @@ class CameraViewModel @Inject constructor(
                 reset()
                 Log.d(TAG, "onEvent: photo mode")
             }
+
             CameraEvent.PortraitMode -> {
-               _state.update {
-                   _state.value.copy(
-                       mode = CameraMode.PORTRAIT
-                   )
-               }
+                _state.update {
+                    _state.value.copy(
+                        mode = CameraMode.PORTRAIT
+                    )
+                }
                 reset()
                 Log.d(TAG, "onEvent: portrait mode")
             }
@@ -127,9 +135,11 @@ class CameraViewModel @Inject constructor(
             }
 
             is CameraEvent.Zoom -> {
-                _state.update { _state.value.copy(
-                    zoomScale = event.scale
-                ) }
+                _state.update {
+                    _state.value.copy(
+                        zoomScale = event.scale
+                    )
+                }
                 cameraUseCase.zoomRangeUseCase(event.scale)
 //                Log.d("CameraViewModel", "zoom : ${event.scale}")
 
@@ -139,71 +149,91 @@ class CameraViewModel @Inject constructor(
             CameraEvent.Reset -> {
                 reset()
             }
+
             is CameraEvent.ToggleAspectRatio -> {
                 _state.update {
                     _state.value.copy(
-                        aspectRatio =  if (_state.value.aspectRatio == AspectRatio.RATIO_16_9) AspectRatio.RATIO_4_3 else AspectRatio.RATIO_16_9
+                        aspectRatio = if (_state.value.aspectRatio == AspectRatio.RATIO_16_9) AspectRatio.RATIO_4_3 else AspectRatio.RATIO_16_9
                     )
                 }
 
                 cameraUseCase.setAspectRatioUseCase(_state.value.aspectRatio)
             }
 
-            is CameraEvent.TapToFocus ->{
+            is CameraEvent.TapToFocus -> {
                 cameraUseCase.tapToFocusUseCase(event.offset)
             }
 
-            is CameraEvent.Take ->{
-                if(_state.value.mode == CameraMode.VIDEO) {
+            is CameraEvent.Take -> {
+                if (_state.value.mode == CameraMode.VIDEO) {
                     _state.update {
                         it.copy(videoState = VideoState.Started)
                     }
                 }
 
                 viewModelScope.launch {
+
+                    _state.update { it.copy(cameraMediaSaving = true) }
+
                     val result = cameraUseCase.takeMediaUseCase(_state.value.mode)
-                    when(result){
+                    when (result) {
                         is Result.Error -> {
-                            Log.e(TAG, "onEvent: error : ${result.error.message} ", )
+                            _mediaEventChannel.send(MediaResult.Error(result.error.message!!))
+                            Log.e(TAG, "onEvent: error : ${result.error.message} ")
+                            _state.update { it.copy(cameraMediaSaving = false) }
                         }
+
                         is Result.Success -> {
-//                            val uriType = UriType(
-//                                uri = result.data.toString(),
-//                                type = result.data.mapToType()
-//                            )
-                            _capturedMediaUri.update { result.data!! }
-                            Log.d(TAG, "onEvent: success ${_capturedMediaUri.value.uri.toString()}")
+                            _state.update { it.copy(cameraMediaSaving = false) }
+                            val uriType = UriType(
+                                uri = result.data.toString(),
+                                type = result.data!!.type
+                            )
+                            result.data?.let { it ->
+                                _mediaEventChannel.send(MediaResult.Success(it.uri))
+                                Log.d(TAG, "onEvent: success ${it.uri.toString()}")
+                                Log.d(TAG, "onEvent: mode : ${state.value.mode}")
+                            }
+
+//                            _capturedMediaUri.update { result.data!! }
+//                            Log.d(TAG, "onEvent: success ${_capturedMediaUri.value.uri.toString()}")
                         }
 
                     }
-                    Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
+//                    Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
                 }
 
-                if(_state.value.videoState == VideoState.Started){
+                if (_state.value.videoState == VideoState.Started) {
                     timerJob = viewModelScope.launch {
-                        while(isActive){
+                        while (isActive) {
                             delay(1000)
-                            _timeElapsed.update { it +1 }
+                            _state.update {
+                                it.copy(
+                                    timeElapsed = state.value.timeElapsed + 1
+                                )
+                            }
                         }
                     }
                 }
-        }
+            }
 
-            is CameraEvent.Pause ->{
+            is CameraEvent.Pause -> {
                 _state.update {
                     it.copy(videoState = VideoState.Pause)
                 }
                 cameraUseCase.pauseRecordingUseCase()
                 Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
             }
-            is CameraEvent.Resume ->{
+
+            is CameraEvent.Resume -> {
                 _state.update {
                     it.copy(videoState = VideoState.Resume)
                 }
                 cameraUseCase.resumeRecordingUseCase()
                 Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
             }
-            is CameraEvent.Stop ->{
+
+            is CameraEvent.Stop -> {
                 timerJob?.cancel()
                 _state.update {
                     it.copy(videoState = VideoState.Stop)
@@ -217,7 +247,7 @@ class CameraViewModel @Inject constructor(
                 Log.i(TAG, "onEvent: videoState = ${_state.value.videoState}")
             }
 
-            is CameraEvent.Cancel ->{
+            is CameraEvent.Cancel -> {
                 cameraUseCase.cancelRecordingUseCase()
                 timerJob?.cancel()
                 _state.update { it.copy(videoState = VideoState.Idle) }
@@ -240,10 +270,15 @@ class CameraViewModel @Inject constructor(
                 cancelTimer()
                 pictureTimerJob = viewModelScope.launch {
                     _state.update { it.copy(timerMode = TimerMode.Running) }
-                    if(_state.value.timerMode == TimerMode.Running){
-                        while(isActive && _takePictureTimerTimeElapsed.value >=1){
+                    if (_state.value.timerMode == TimerMode.Running) {
+                        while (isActive && state.value.pictureTimerTimeElapsed >= 1) {
                             delay(1000)
-                            _takePictureTimerTimeElapsed.update { it - 1 }
+//                            state.value.pictureTimerTimeElapsed.update { it - 1 }
+                            _state.update {
+                                it.copy(
+                                    pictureTimerTimeElapsed = state.value.pictureTimerTimeElapsed - 1
+                                )
+                            }
                         }
                         onEvent(CameraEvent.Take)
                     }
@@ -259,11 +294,11 @@ class CameraViewModel @Inject constructor(
             }
 
             CameraEvent.ToggleTimerMode -> {
-                if(_state.value.timerMode == TimerMode.Idle){
+                if (_state.value.timerMode == TimerMode.Idle) {
                     _state.update { it.copy(timerMode = TimerMode.Started) }
                     return
                 }
-                if(_state.value.timerMode == TimerMode.Started || _state.value.timerMode == TimerMode.Running){
+                if (_state.value.timerMode == TimerMode.Started || _state.value.timerMode == TimerMode.Running) {
                     _state.update { it.copy(timerMode = TimerMode.Idle) }
                     return
                 }
@@ -275,22 +310,21 @@ class CameraViewModel @Inject constructor(
         }
     }
 
-    private fun reset(){
-        _capturedMediaUri.update { it.copy(uri = null,type = null) }
-        _timeElapsed.update { 0 }
+    private fun reset() {
+        _capturedMediaUri.update { it.copy(uri = null, type = null) }
+        _state.update { it.copy(timeElapsed = 0) }
     }
 
-    private fun cancelTimer(){
-        _state.update {it.copy(timerMode = TimerMode.Idle) }
+    private fun cancelTimer() {
+        _state.update { it.copy(timerMode = TimerMode.Idle) }
         pictureTimerJob?.cancel()
         pictureTimerJob = null
-        _takePictureTimerTimeElapsed.update { 3 }
+
+        _state.update { it.copy(pictureTimerTimeElapsed = 3)}
+
+//        _takePictureTimerTimeElapsed.update { 3 }
         Log.d(TAG, "onEvent: picture timer job cancelled")
     }
-
-
-
-
 
 
 }

@@ -1,6 +1,5 @@
 package com.example.memories.feature.feature_media_edit.presentation.media_edit
 
-import android.content.Intent
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.Log
@@ -40,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
@@ -56,7 +54,7 @@ import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEvents
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaViewModel
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.RotationDirection
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.EditModalBottomSheet
+import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.ActionSelectorBottomSheet
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -738,7 +736,7 @@ private fun MoreOptionsSheet(
     loadingState: Boolean,
     loadingItemIndex: Int? = null,
 ) {
-    EditModalBottomSheet(
+    ActionSelectorBottomSheet(
         onDismiss = onDismiss,
         sheetState = sheetState,
         sheetTitle = "More Options",

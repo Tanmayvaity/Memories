@@ -42,4 +42,17 @@ sealed class MemoryEvents {
     data class TagDelete(val id : String) : MemoryEvents()
 
     data object Reset : MemoryEvents()
+
+
+    data class AddMediaUri(val uri : String,val position : Int) : MemoryEvents()
+    data class RemoveMediaUri(val position : Int) : MemoryEvents()
+
+
+    object OpenDeviceCamera : MemoryEvents()
+
+
+    data class UpdateCurrentPosition(val position : Int) : MemoryEvents()
+
+
+    data class UpdateMediaActionType(val type : MediaActionType) : MemoryEvents()
 }

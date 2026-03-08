@@ -6,6 +6,7 @@ import androidx.camera.core.SurfaceRequest
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
+import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_camera.data.data_source.CameraManager
@@ -16,6 +17,7 @@ import javax.inject.Inject
 
 class CameraRepositoryImpl @Inject constructor(
     private val cameraManager : CameraManager,
+    private val mediaManager: MediaManager,
     private val cameraSettingsDatastore: CameraSettingsDatastore
 ) : CameraRepository {
     override fun setSurfaceCallback(callback: (SurfaceRequest) -> Unit) {
@@ -39,7 +41,8 @@ class CameraRepositoryImpl @Inject constructor(
     }
 
     override suspend  fun takePicture(): Result<Uri> {
-        return cameraManager.takePicture()
+        val file = mediaManager.createMediaFile()
+        return cameraManager.takePicture(file)
     }
 
     override fun setAspectRatio(aspect: AspectRatio) {

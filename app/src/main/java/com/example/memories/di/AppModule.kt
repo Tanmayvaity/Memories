@@ -95,6 +95,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
+import com.example.memories.feature.feature_memory.domain.usecase.GenerateSharableUriUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
@@ -130,9 +131,10 @@ object AppModule {
     @Singleton
     fun provideCameraRepository(
         cameraManager: CameraManager,
-        cameraSettingsDatastore: CameraSettingsDatastore
+        cameraSettingsDatastore: CameraSettingsDatastore,
+        mediaManager: MediaManager
     ): CameraRepository {
-        return CameraRepositoryImpl(cameraManager, cameraSettingsDatastore)
+        return CameraRepositoryImpl(cameraManager,mediaManager, cameraSettingsDatastore)
     }
 
     @Provides
@@ -327,7 +329,8 @@ object AppModule {
     @Singleton
     fun providesMemoryUseCase(
         memoryRepository: MemoryRepository,
-        tagRepository: TagRepository
+        tagRepository: TagRepository,
+        mediaRepository: MediaRepository
     ): MemoryUseCase {
         return MemoryUseCase(
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
@@ -336,7 +339,8 @@ object AppModule {
             fetchTagsByLabelUseCase = FetchTagsByLabelUseCase(tagRepository),
             fetchMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
             updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository),
-            tagDeleteTagUseCase = DeleteTagUseCase(tagRepository)
+            tagDeleteTagUseCase = DeleteTagUseCase(tagRepository),
+            generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository)
         )
     }
 

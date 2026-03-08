@@ -17,11 +17,14 @@ class TakeMediaUseCase(
         cameraMode: CameraMode
     ): Result<UriType>{
 
-        val resultUri = if(cameraMode == CameraMode.PHOTO || cameraMode == CameraMode.PORTRAIT){
-            repository.takePicture()
-        }else{
-            repository.takeVideo()
-        }
+//        val resultUri = if(cameraMode == CameraMode.PHOTO || cameraMode == CameraMode.PORTRAIT){
+//            repository.takePicture()
+//        }
+////        else{
+////            repository.takeVideo()
+////        }
+
+        val resultUri = repository.takePicture()
 
         return when(resultUri){
             is Result.Error -> {

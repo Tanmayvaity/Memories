@@ -17,33 +17,36 @@ fun NavGraphBuilder.createNotificationGraph(
     navController : NavHostController,
     onBottomBarVisibilityChange : (Boolean) -> Unit,
 ){
-    composable<AppScreen.Memory>(
-        typeMap = mapOf(
-            typeOf<UriType>() to CustomNavType.uriWrapperType,
-            typeOf<Type>() to CustomNavType.mediaType,
-            typeOf<List<UriType>>() to CustomNavType.uriWrapperListType
-        ),
-    ) {
-        val args = it.toRoute<AppScreen.Memory>()
-        onBottomBarVisibilityChange(false)
-        MemoryRoot(
-            onBackPress = {
-                navController.popBackStack()
-            },
-            onGoToHomeScreen = {route ->
-                navController.navigate(route){
-                    popUpTo(navController.graph.startDestinationId){
-                        inclusive = false
-                    }
-                    launchSingleTop = true
-                }
-            },
-            onTagClick = {route ->
-                navController.navigate(route)
-            },
-            uriList = args.uriTypeWrapperList
-        )
-    }
+//    composable<AppScreen.Memory>(
+//        typeMap = mapOf(
+//            typeOf<UriType>() to CustomNavType.uriWrapperType,
+//            typeOf<Type>() to CustomNavType.mediaType,
+//            typeOf<List<UriType>>() to CustomNavType.uriWrapperListType
+//        ),
+//    ) {
+//        val args = it.toRoute<AppScreen.Memory>()
+//        onBottomBarVisibilityChange(false)
+//        MemoryRoot(
+//            onBackPress = {
+//                navController.popBackStack()
+//            },
+//            onGoToHomeScreen = {route ->
+//                navController.navigate(route){
+//                    popUpTo(navController.graph.startDestinationId){
+//                        inclusive = false
+//                    }
+//                    launchSingleTop = true
+//                }
+//            },
+//            onTagClick = {route ->
+//                navController.navigate(route)
+//            },
+//            uriList = args.uriTypeWrapperList,
+//            onNavigateToCamera = { route ->
+//                navController.navigate(it)
+//            }
+//        )
+//    }
 
     composable<AppScreen.NotificationSettings> {
         onBottomBarVisibilityChange(false)
