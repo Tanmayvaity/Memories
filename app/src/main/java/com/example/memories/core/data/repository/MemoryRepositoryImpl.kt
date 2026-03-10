@@ -196,8 +196,8 @@ class MemoryRepositoryImpl @Inject constructor(
         return memoryDao.updateHidden(id, isHidden)
     }
 
-    override suspend fun getMemoryById(id: String): MemoryWithMediaModel? {
-        return memoryDao.getMemoryById(id)?.toDomain()
+    override fun getMemoryById(id: String): Flow<MemoryWithMediaModel?> {
+        return memoryDao.getMemoryById(id).map { memory -> memory?.toDomain() }
     }
 
     override suspend fun delete(memory: MemoryModel): Int {

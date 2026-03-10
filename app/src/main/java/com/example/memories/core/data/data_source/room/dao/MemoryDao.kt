@@ -223,7 +223,7 @@ interface MemoryDao {
 
     @Transaction
     @Query("SELECT * FROM MemoryEntity WHERE memory_id = :id")
-    suspend fun getMemoryById(id: String): MemoryWithMedia?
+    fun getMemoryById(id: String): Flow<MemoryWithMedia?>
 
     @Query("UPDATE MemoryEntity SET hidden = :isHidden WHERE memory_id = :id")
     suspend fun updateHidden(id: String, isHidden: Boolean)

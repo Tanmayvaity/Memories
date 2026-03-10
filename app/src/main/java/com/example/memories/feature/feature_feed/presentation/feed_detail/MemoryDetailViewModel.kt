@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,13 +53,17 @@ class MemoryDetailViewModel @Inject constructor(
                 _isLoading.update { true }
                 viewModelScope.launch {
                     val memory = feedUseCases.getMemoryByIdUseCase(event.id)
-                    if (memory != null) {
-                        _state.update {
-                            it.copy(memory = memory)
+                    memory.collectLatest { memoryItem ->
+                        if (memoryItem != null) {
+                            _state.update {
+                                it.copy(memory = memoryItem)
+                            }
                         }
+                        _isLoading.update { false }
+                        Log.d(TAG, "MemoryDetailEvents.Fetch : ${memory.toString()}")
                     }
-                    _isLoading.update { false }
-                    Log.d(TAG, "MemoryDetailEvents.Fetch : ${memory.toString()}")
+
+
                 }
 
             }

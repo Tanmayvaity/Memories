@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -283,7 +284,7 @@ class MemoryViewModel @Inject constructor(
 
             is FetchMemory -> {
                 viewModelScope.launch {
-                    val result = memoryUseCase.fetchMemoryByIdUseCase(event.id)
+                    val result = memoryUseCase.fetchMemoryByIdUseCase(event.id).first()
                     result?.let { item ->
                         _memoryState.update {
                             it.copy(

@@ -51,7 +51,7 @@ interface MemoryRepository {
     suspend fun updateHiddenState(id: String, isHidden: Boolean)
 
 
-    suspend fun getMemoryById(id: String): MemoryWithMediaModel?
+    fun getMemoryById(id: String): Flow<MemoryWithMediaModel?>
 
     suspend fun delete(memory: MemoryModel): Int
 
