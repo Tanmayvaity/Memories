@@ -15,6 +15,7 @@ import com.example.memories.feature.feature_feed.presentation.common.toSectionSt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,6 +47,9 @@ class SearchViewModel @Inject constructor(
 
     private val _inputText = MutableStateFlow("")
     val inputText = _inputText.asStateFlow()
+
+    val isSearching: StateFlow<Boolean>
+        field = MutableStateFlow<Boolean>(false)
 
     private val _currentTag = MutableStateFlow<TagModel?>(null)
 
@@ -70,18 +76,34 @@ class SearchViewModel @Inject constructor(
     ) { query, recentState ->
         query to recentState
     }.flatMapLatest { (query, recentState) ->
-        if (query.isBlank() && recentState is SectionState.Success) {
-            flowOf(recentState.data.reversed())
-        } else if (query.isBlank()) {
-            flowOf(emptyList())
-        } else {
-            searchUseCase.searchByTitleUseCase(query)
+        when {
+            query.isBlank() && recentState is SectionState.Success -> {
+                isSearching.update { false }
+                flowOf(recentState.data.reversed())
+            }
+
+            query.isBlank() -> {
+                isSearching.update { false }
+                flowOf(emptyList())
+            }
+
+            else -> {
+                Log.d(TAG, "search query executed ")
+                searchUseCase.searchByTitleUseCase(query)
+                    .onStart {
+                        isSearching.update { true }
+                    }
+                    .onEach {
+                        isSearching.update { false }
+                    }
+            }
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
 
     val onThisDayMemories: StateFlow<List<MemoryWithMediaModel>> =
@@ -161,7 +183,7 @@ class SearchViewModel @Inject constructor(
             }
 
             is SearchEvents.ClearInput -> {
-                _inputText.update {""}
+                _inputText.update { "" }
             }
 
             is SearchEvents.AddSearch -> {

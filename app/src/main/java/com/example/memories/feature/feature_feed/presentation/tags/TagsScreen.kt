@@ -298,15 +298,16 @@ fun TagsScreenPreview(modifier: Modifier = Modifier) {
                 sortByType = SortBy.Count,
                 isTagInserting = false
             ),
-            tagsState = SectionState.Success(
-                listOf(
-                    TagWithMemoryCountModel(
-                        tagId = 1.toString(),
-                        tagLabel = "Memories",
-                        memoryCount = 23
-                    )
-                )
-            )
+//            tagsState = SectionState.Success(
+//                listOf(
+//                    TagWithMemoryCountModel(
+//                        tagId = 1.toString(),
+//                        tagLabel = "Memories",
+//                        memoryCount = 23
+//                    )
+//                )
+//            )
+            tagsState = SectionState.Error()
         )
     }
 }

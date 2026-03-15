@@ -60,6 +60,7 @@ fun SearchRoot(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val memoriesForTag = viewModel.memoriesForTag.collectAsLazyPagingItems()
     val searchText by viewModel.inputText.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     SearchScreen(
         modifier = modifier,
         state = state,
@@ -68,7 +69,8 @@ fun SearchRoot(
         onNavigateToMemoryDetail = onNavigate,
         onNavigateToMemoryCreate = onNavigate,
         onNavigateToTagCreate = onNavigate,
-        memoriesForTag = memoriesForTag
+        memoriesForTag = memoriesForTag,
+        isSearching = isSearching
     )
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,7 +83,8 @@ fun SearchScreen(
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
     onNavigateToTagCreate: (AppScreen.Tags) -> Unit = {},
-    memoriesForTag: LazyPagingItems<MemoryWithMediaModel>
+    memoriesForTag: LazyPagingItems<MemoryWithMediaModel>,
+    isSearching : Boolean = false
 ) {
     val theme = LocalTheme.current
     var tagClickIndex by rememberSaveable { mutableStateOf(0) }
@@ -138,7 +141,8 @@ fun SearchScreen(
                     Log.d("SearchScreen", "SearchScreen: clicked")
                     onEvent(SearchEvents.AddSearch(memoryId))
                     onNavigateToMemoryDetail(AppScreen.MemoryDetail(memoryId))
-                }
+                },
+                isSearching = isSearching
 
             )
 
