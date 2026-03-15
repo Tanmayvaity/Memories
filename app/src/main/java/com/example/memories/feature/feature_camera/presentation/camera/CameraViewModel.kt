@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MediaResult
-import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
@@ -41,16 +40,6 @@ class CameraViewModel @Inject constructor(
 
     private val _mediaEventChannel = Channel<MediaResult<String?>>()
     val mediaEventFlow = _mediaEventChannel.receiveAsFlow()
-
-
-//    private val _errorChannel = Channel<String>()
-////    val errorFlow = _errorChannel.receiveAsFlow()
-
-//    private val _timeElapsed = MutableStateFlow<Long>(0)
-//    val timeElapsed = _timeElapsed.asStateFlow()
-//
-//    private val _takePictureTimerTimeElapsed = MutableStateFlow<Int>(3)
-//    val takePictureTimerTimeElapsed = _takePictureTimerTimeElapsed.asStateFlow()
 
     private var timerJob: Job? = null
     private var pictureTimerJob: Job? = null

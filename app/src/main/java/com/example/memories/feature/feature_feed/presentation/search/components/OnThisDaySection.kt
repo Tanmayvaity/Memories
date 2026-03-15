@@ -35,7 +35,6 @@ import coil3.compose.AsyncImage
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.util.formatTime
-import com.example.memories.core.util.isImageFile
 import com.example.memories.feature.feature_feed.presentation.feed.components.OnThisDayCard
 import com.example.memories.R
 
@@ -100,9 +99,11 @@ private fun OnThisDayCarouselItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uri = memory.mediaList.firstOrNull()?.uri
+    val media = memory.mediaList.firstOrNull()
+    val uri = media?.uri
+    val type = media?.type
 
-    if (uri != null && isImageFile(uri)) {
+    if (uri != null && type != null && type.isImageFile()) {
         Box(modifier = modifier.fillMaxSize()) {
             AsyncImage(
                 model = uri,

@@ -9,5 +9,6 @@ data class MediaModel(
     val hidden: Boolean = false,
     val favourite: Boolean = false,
     val timeStamp : Long = System.currentTimeMillis(),
-    val position : Int = 0
+    val position : Int = 0,
+    val type : Type = Type.UNKNOWN_TYPE
 )

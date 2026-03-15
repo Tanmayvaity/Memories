@@ -60,7 +60,7 @@ class MemoryDetailViewModel @Inject constructor(
                             }
                         }
                         _isLoading.update { false }
-                        Log.d(TAG, "MemoryDetailEvents.Fetch : ${memory.toString()}")
+                        Log.d(TAG, "MemoryDetailEvents.Fetch : ${memoryItem}")
                     }
 
 

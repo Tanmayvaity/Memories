@@ -70,10 +70,10 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.ContextualMenuItem
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.IconItem
-import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
@@ -121,12 +121,11 @@ fun MemoryItemCard(
         ) {
             if (pager != null) {
                 MediaPager(
-                    mediaUris = null,
+                    uris = memoryItem.mediaList.map { UriType(it.uri, it.type) },
                     pagerState = pager,
                     pagerHeight = 250.dp,
                     imageContentScale = ContentScale.Crop,
-                    type = MediaCreationType.SHOW,
-                    readOnlyMediaUriList = memoryItem.mediaList.map { it.uri }
+                    playVideoCapability = false
                 )
             }
             Column(

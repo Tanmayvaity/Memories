@@ -100,6 +100,7 @@ dependencies {
     // coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network)
+    implementation(libs.coil.video)
 
     // hilt
     ksp(libs.hilt.compiler)

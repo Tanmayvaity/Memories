@@ -9,6 +9,11 @@ import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.request.crossfade
+import coil3.video.VideoFrameDecoder
 import com.example.memories.core.data.data_source.notification.NotificationService
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import dagger.hilt.android.HiltAndroidApp
@@ -18,9 +23,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
-class MemoriesApplication : Application(), Configuration.Provider{
+class MemoriesApplication : Application(), Configuration.Provider, SingletonImageLoader.Factory {
 
-    @Inject lateinit var workerFactory : HiltWorkerFactory
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -34,9 +40,10 @@ class MemoriesApplication : Application(), Configuration.Provider{
         createNotificationChannels()
     }
 
-    private fun createNotificationChannels(){
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val onThisDayReminderChannel = NotificationChannel(
             NotificationService.ON_THIS_DAY_CHANNEL,
@@ -57,9 +64,18 @@ class MemoriesApplication : Application(), Configuration.Provider{
         }
 
         notificationManager.createNotificationChannels(
-            listOf(onThisDayReminderChannel,dailyReminderChannel)
+            listOf(onThisDayReminderChannel, dailyReminderChannel)
         )
 
+    }
+
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(VideoFrameDecoder.Factory())
+            }
+            .crossfade(true)
+            .build()
     }
 
 

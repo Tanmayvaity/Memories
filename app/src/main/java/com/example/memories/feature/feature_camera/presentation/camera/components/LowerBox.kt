@@ -58,8 +58,8 @@ fun LowerBox(
     isPictureTimerRunning: Boolean = false,
     isImageSaving: Boolean = false
 ) {
-    val cameraActionItems: List<CameraMode> = CameraMode.entries.filter { it != CameraMode.VIDEO }
-    var selectedIndex by remember { mutableStateOf(cameraMode.mapToIndex()) }
+    val cameraActionItems: List<CameraMode> = CameraMode.entries
+    var selectedIndex by remember { mutableStateOf(cameraMode.ordinal) }
     val animateColor by animateColorAsState(
         if (isVideoPlaying) Color.Red else Color.White,
         label = "inside color"
@@ -107,7 +107,7 @@ fun LowerBox(
                     tint = animateColor
                 )
 
-                if (isImageSaving) {
+                if (isImageSaving && !isVideoPlaying) {
                     LoadingIndicator(
                         showText = false,
                         modifier = Modifier.size(32.dp),

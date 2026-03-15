@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import com.example.memories.core.data.data_source.media.FilterShaders
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
@@ -87,7 +88,7 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.applyFilter(uri,shaderCode,degrees)
     }
 
-    override suspend fun saveToCacheStorage(uri: Uri, bitmap: Bitmap): Result<Uri> {
+    override suspend fun saveToCacheStorage(uri: Uri, bitmap: Bitmap): Result<UriType> {
         return mediaManager.saveToCacheStorage(uri,bitmap)
     }
 

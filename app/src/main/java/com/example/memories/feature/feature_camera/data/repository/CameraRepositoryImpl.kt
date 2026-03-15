@@ -9,6 +9,7 @@ import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_camera.data.data_source.CameraManager
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
@@ -40,7 +41,7 @@ class CameraRepositoryImpl @Inject constructor(
         return cameraManager.zoom(scale)
     }
 
-    override suspend  fun takePicture(): Result<Uri> {
+    override suspend  fun takePicture(): Result<UriType> {
         val file = mediaManager.createMediaFile()
         return cameraManager.takePicture(file)
     }
@@ -54,7 +55,7 @@ class CameraRepositoryImpl @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend  fun takeVideo(): Result<Uri> {
+    override suspend  fun takeVideo(): Result<UriType> {
         return cameraManager.takeVideo()
     }
 

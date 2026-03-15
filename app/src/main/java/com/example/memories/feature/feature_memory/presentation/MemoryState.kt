@@ -26,13 +26,20 @@ data class MemoryState(
     val isLoading: Boolean = false,
     val tempMediaUri : String? = null,
     val currentPosition : Int? = null,
-    val type : MediaActionType? = null
+    val type : MediaActionType? = null,
+    val mediaType: MediaType = MediaType.NONE
 )
 
 
 enum class CreationState {
     CREATE,
     UPDATE
+}
+
+enum class MediaType{
+    IMAGE,
+    VIDEO,
+    NONE
 }
 
 enum class MediaActionType{

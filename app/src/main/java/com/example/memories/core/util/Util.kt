@@ -1,6 +1,7 @@
 package com.example.memories.core.util
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -9,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
@@ -99,40 +101,10 @@ fun createSettingsIntent(
 fun isSdkSmallerOrEqualToX(
     sdkVersion : Int
 ): Boolean{
-    return android.os.Build.VERSION.SDK_INT <= sdkVersion
+    return Build.VERSION.SDK_INT <= sdkVersion
 }
 
-fun isVideoFile(path: String?): Boolean {
-    val mimeType = URLConnection.guessContentTypeFromName(path)
-    return mimeType != null && mimeType.startsWith("video")
-}
-fun isImageFile(path: String?): Boolean {
-    val mimeType = URLConnection.guessContentTypeFromName(path)
-    return mimeType != null && mimeType.startsWith("image")
-}
 
-//TODO : refactor mapToType and mapContentUriToType
-fun Uri?.mapToType(): Type{
-    if(this == null) {
-        throw NullPointerException("Uri is null")
-    }
-
-    return if(isVideoFile(this.toString())){
-        Type.VIDEO_MP4
-    }else{
-        Type.IMAGE_JPG
-    }
-}
-
-fun Uri?.mapContentUriToType(context : Context): Type {
-    if(this == null) {
-        throw NullPointerException("Uri is null")
-    }
-
-    return if (context.contentResolver.getType(this)
-            ?.startsWith("video") == true
-    ) Type.VIDEO_MP4 else Type.IMAGE_JPG
-}
 
 fun Long.formatTime():String{
     val date = Date(this)
@@ -187,3 +159,6 @@ fun Context.startChooser(uri : Uri?){
     this.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
 }
 
+
+val Any.TAG : String
+    get() = this::class.java.simpleName

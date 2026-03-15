@@ -32,9 +32,12 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
@@ -229,7 +232,7 @@ class CameraManager(
         cameraControl?.setLinearZoom(scale)
     }
 
-    suspend fun takePicture(file : File?): Result<Uri> {
+    suspend fun takePicture(file : File?): Result<UriType> {
 //        val file = createTempFile(context)
 
         if(file == null) return Result.Error(NullPointerException("File is null"))
@@ -249,7 +252,13 @@ class CameraManager(
                         Log.e(TAG, "onImageSaved: savedUri is null")
                         return
                     }
-                    continuation.resume(Result.Success(outputFileResults.savedUri))
+                    val uri = outputFileResults.savedUri.toString()
+                    continuation.resume(Result.Success(
+                        UriType(
+                            uri = uri,
+                            type = Type.fromUri(uri.toUri(),context)
+                        )
+                    ))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -269,7 +278,7 @@ class CameraManager(
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun takeVideo(): Result<Uri> = suspendCancellableCoroutine { continuation ->
+    suspend fun takeVideo(): Result<UriType> = suspendCancellableCoroutine { continuation ->
         val file = createVideoFile(context)
         if (videoCaptureUseCase == null) {
             val error = IllegalStateException("VideoCaptureUseCase use case not initialized")
@@ -304,7 +313,12 @@ class CameraManager(
                                     return continuation.resume(Result.Error(Throwable("Uri is null")))
 
                                 }
-                                continuation.resume(Result.Success(videoUri))
+                                continuation.resume(Result.Success(
+                                    UriType(
+                                        uri = videoUri.toString(),
+                                        type = Type.fromUri(videoUri, context)
+                                    )
+                                ))
                             } else {
                                 Log.e(
                                     TAG,

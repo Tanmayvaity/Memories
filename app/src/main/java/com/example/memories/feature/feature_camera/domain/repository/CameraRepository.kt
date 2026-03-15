@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.LifecycleOwner
 import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_camera.domain.model.AspectRatio
 import com.example.memories.feature.feature_camera.domain.model.LensFacing
 
@@ -22,13 +23,13 @@ interface CameraRepository {
 
     fun zoom(scale : Float)
 
-    suspend fun takePicture(): Result<Uri>
+    suspend fun takePicture(): Result<UriType>
 
     fun setAspectRatio(aspect : AspectRatio)
 
     fun tapToFocus(offset: Offset)
 
-    suspend fun takeVideo(): Result<Uri>
+    suspend fun takeVideo(): Result<UriType>
 
     fun pauseRecording()
     fun resumeRecording()

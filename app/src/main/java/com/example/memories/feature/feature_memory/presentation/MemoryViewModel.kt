@@ -1,26 +1,15 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import android.util.Log
-import androidx.compose.runtime.collectAsState
-import androidx.core.app.PendingIntentCompat.send
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.toRoute
-import coil3.util.CoilUtils.result
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MediaResult
-import com.example.memories.core.util.mapToType
-import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
-import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailViewModel
-import com.example.memories.feature.feature_feed.presentation.search.SearchState
+import com.example.memories.core.presentation.MediaResult.*
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.feature.feature_memory.presentation.MemoryEvents.*
-import com.example.memories.navigation.AppScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -58,11 +47,6 @@ class MemoryViewModel @Inject constructor(
 
     }
 
-//    private val _errorFlow = Channel<String>()
-//    val errorFlow = _errorFlow.receiveAsFlow()
-//
-//    private val _successFlow = Channel<String>()
-//    val successFlow = _successFlow.receiveAsFlow()
 
     private val _mediaResultChannel = Channel<MediaResult<CreationState>>()
     val mediaResultChannel = _mediaResultChannel.receiveAsFlow()
@@ -88,8 +72,6 @@ class MemoryViewModel @Inject constructor(
         .launchIn(
             scope = viewModelScope,
         )
-
-
 
 
     init {
@@ -146,7 +128,7 @@ class MemoryViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result = memoryUseCase.tagDeleteTagUseCase(event.id)
                     if (result is Result.Error) {
-                        _mediaResultChannel.send(MediaResult.Error(result.error.message.toString()))
+                        _mediaResultChannel.send(Error(result.error.message.toString()))
                     }
                 }
             }
@@ -154,7 +136,7 @@ class MemoryViewModel @Inject constructor(
             is CreateMemory -> {
                 viewModelScope.launch {
                     if (_memoryState.value.memoryForTimeStamp == null) {
-                        _mediaResultChannel.send(MediaResult.Error("Memory timestamp cannot be empty"))
+                        _mediaResultChannel.send(Error("Memory timestamp cannot be empty"))
                         return@launch
                     }
                     _memoryState.update { it.copy(isLoading = true) }
@@ -168,12 +150,12 @@ class MemoryViewModel @Inject constructor(
                     when (result) {
                         is Result.Error -> {
                             Log.e(TAG, "onEvent: Create Memory  ${result.error.message}")
-                            _mediaResultChannel.send(MediaResult.Error(result.error.message.toString()))
+                            _mediaResultChannel.send(Error(result.error.message.toString()))
                             _memoryState.update { it.copy(isLoading = false) }
                         }
 
                         is Result.Success<String> -> {
-                            _mediaResultChannel.send(MediaResult.Success(CreationState.CREATE))
+                            _mediaResultChannel.send(Success(CreationState.CREATE))
                             _memoryState.update { it.copy(isLoading = false) }
                         }
                     }
@@ -186,7 +168,7 @@ class MemoryViewModel @Inject constructor(
                 viewModelScope.launch {
 
                     if (_memoryState.value.memoryForTimeStamp == null) {
-                        _mediaResultChannel.send(MediaResult.Error("Memory timestamp cannot be empty"))
+                        _mediaResultChannel.send(Error("Memory timestamp cannot be empty"))
                         return@launch
                     }
 
@@ -207,12 +189,12 @@ class MemoryViewModel @Inject constructor(
                         when (result) {
                             is Result.Error -> {
                                 Log.e(TAG, "onEvent: Update Memory : ${result.error.message}")
-                                _mediaResultChannel.send(MediaResult.Error(result.error.message.toString()))
+                                _mediaResultChannel.send(Error(result.error.message.toString()))
                                 _memoryState.update { it.copy(isLoading = false) }
                             }
 
                             is Result.Success<String> -> {
-                                _mediaResultChannel.send(MediaResult.Success(CreationState.UPDATE))
+                                _mediaResultChannel.send(Success(CreationState.UPDATE))
                                 _memoryState.update { it.copy(isLoading = false) }
                             }
                         }
@@ -296,8 +278,8 @@ class MemoryViewModel @Inject constructor(
 
                                 uriMap = item.mediaList.mapIndexed { index, media ->
                                     index to UriType(
-                                        media
-                                            .uri, media.uri.toUri().mapToType()
+                                        media.uri,
+                                        media.type
                                     )
                                 }.toMap(),
                                 tagsSelectedForThisMemory = item.tagsList,
@@ -324,16 +306,16 @@ class MemoryViewModel @Inject constructor(
             }
 
             is AddMediaUri -> {
-                val providedMap = event.position to UriType(
-                    uri = event.uri,
-                    type = event.uri.toUri().mapToType()
-                )
+
+                val providedMap = event.position to event.uriType
                 _memoryState.update {
                     it.copy(
                         uriMap = (it.uriMap + providedMap)
                     )
+
                 }
             }
+
             is RemoveMediaUri -> {
                 _memoryState.update {
                     it.copy(
@@ -342,14 +324,30 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
-            OpenDeviceCamera -> {
+            is OpenDeviceCamera -> {
                 viewModelScope.launch {
-                    val uri = memoryUseCase.generateSharableUriUseCase(true)
-                    _memoryState.update {
-                        it.copy(
-                            tempMediaUri = uri.toString()
-                        )
+                    val isImage = when (event.mediaType) {
+                        MediaType.IMAGE -> {
+                            true
+                        }
+
+                        MediaType.VIDEO -> {
+                            false
+                        }
+
+                        else -> {
+                            null
+                        }
                     }
+                    isImage?.let { isImage ->
+                        val uri = memoryUseCase.generateSharableUriUseCase(isImage)
+                        _memoryState.update {
+                            it.copy(
+                                tempMediaUri = uri.toString()
+                            )
+                        }
+                    }
+
                 }
             }
 
@@ -366,6 +364,14 @@ class MemoryViewModel @Inject constructor(
                 _memoryState.update {
                     it.copy(
                         type = event.type
+                    )
+                }
+            }
+
+            is UpdateMediaType -> {
+                _memoryState.update {
+                    it.copy(
+                        mediaType = event.mediaType
                     )
                 }
             }

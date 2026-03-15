@@ -3,12 +3,13 @@ package com.example.memories.feature.feature_media_edit.presentatiion.media_edit
 import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.fadeIn
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.toUri
 import coil3.util.CoilUtils.result
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.util.mapToType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
@@ -133,7 +134,7 @@ class MediaViewModel @Inject constructor(
                 viewModelScope.launch {
                     val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
                         listOf(event.uri),
-                        listOf(state.value.shaderList[event.page]) ,
+                        listOf(state.value.shaderList[event.page]),
                         listOf(event.degrees)
                     )
                     if (result.getOrNull() == null) {
@@ -151,8 +152,14 @@ class MediaViewModel @Inject constructor(
                         }
 
                         is Result.Success -> {
+                            if(result.data == null || result.data.isEmpty() || result.data.first().uri == null){
+                                _downloadEvents.send(
+                                    MediaEditOneTimeEvents.ShowSnackBar("Returned Uri is null")
+                                )
+                                return@launch
+                            }
                             _downloadEvents.send(
-                                MediaEditOneTimeEvents.ShowShareChooser(result.data!!.first())
+                                MediaEditOneTimeEvents.ShowShareChooser(result.data!!.first().uri!!.toUri())
                             )
                             _state.update { it.copy(isSharing = false) }
                         }
@@ -187,12 +194,7 @@ class MediaViewModel @Inject constructor(
                         is Result.Success -> {
                             _downloadEvents.send(
                                 MediaEditOneTimeEvents.NavigateToMemory(
-                                    value = result.data!!.filter { it != null }.map { uri ->
-                                        UriType(
-                                            uri = uri.toString(),
-                                            type = uri.mapToType()
-                                        )
-                                    }
+                                    value = result.data!!
                                 )
                             )
                             _state.update { it.copy(isDownloadingForNavigation = false) }

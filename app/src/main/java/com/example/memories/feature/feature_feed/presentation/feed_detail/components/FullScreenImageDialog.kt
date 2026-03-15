@@ -3,7 +3,6 @@ package com.example.memories.feature.feature_feed.presentation.feed_detail.compo
 import android.R.attr.navigationIcon
 import android.annotation.SuppressLint
 import android.net.Uri
-import androidx.camera.viewfinder.core.impl.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,9 +47,12 @@ import androidx.core.net.toUri
 import com.example.memories.R
 import coil3.compose.AsyncImage
 import com.example.memories.LocalTheme
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIconItem
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
+import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
 import okhttp3.internal.format
@@ -61,21 +64,31 @@ import java.time.LocalTime
 fun FullScreenImageDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
-    uriList : List<String> = emptyList(),
-    page : Int= 0,
-    memoryTitle : String = "Summer Beach Trip",
-    memoryTime : Long = System.currentTimeMillis(),
-    onFavourite : () -> Unit = {},
-    onDownload : (Uri) -> Unit = {},
-    onShare : (Uri) -> Unit = {},
-    isDownloading : Boolean = false,
-    isSharing : Boolean = false
+    uriList: List<UriType> = emptyList(),
+    page: Int = 0,
+    memoryTitle: String = "Summer Beach Trip",
+    memoryTime: Long = System.currentTimeMillis(),
+    onFavourite: () -> Unit = {},
+    onDownload: (Uri) -> Unit = {},
+    onShare: (Uri) -> Unit = {},
+    isDownloading: Boolean = false,
+    isSharing: Boolean = false,
+    contentScale: ContentScale = ContentScale.Fit
 ) {
 
     val pagerState = rememberPagerState { uriList.size }
     val previewMode = LocalInspectionMode.current
     val darkTheme = LocalTheme.current
     val scrollState = rememberScrollState()
+
+
+    fun onActionsClickCallback(block: (Uri) -> Unit) {
+        val currentUri = uriList[pagerState.currentPage].uri
+        currentUri?.let { uri ->
+            block(uri.toUri())
+        }
+    }
+
 
     LaunchedEffect(Unit) {
         pagerState.scrollToPage(page)
@@ -100,78 +113,85 @@ fun FullScreenImageDialog(
                     },
                 )
             },
-        ) {  innerPadding->
+        ) { innerPadding ->
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
                     .verticalScroll(scrollState),
 
-            ){
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) {pager ->
-                    AsyncImage(
-                        model = if(previewMode) R.drawable.ic_launcher_background else uriList[pager],
-                        contentDescription = "Media item $pager",
-                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                Column(
-//                    modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
                 ) {
-                    MediaPageIndicatorLine(
-                        currentPage = pagerState.currentPage,
-                        pageCount = uriList.size,
-                        activePageColor = MaterialTheme.colorScheme.onBackground,
-                        inactivePageColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ){
-                        Column(
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(
-                                text = memoryTitle,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = memoryTime.formatTime(format = "dd MMM yyyy"),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+//                HorizontalPager(
+//                    state = pagerState,
+//                    modifier = Modifier.fillMaxSize()
+//                ) {pager ->
+//
+//                    AsyncImage(
+//                        model = if(previewMode) R.drawable.ic_launcher_background else uriList[pager],
+//                        contentDescription = "Media item $pager",
+//                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
 
-                        }
-                        LoadingIconItem(
-                            drawableRes = R.drawable.ic_favourite,
-                            onClick = onFavourite
+
+                MediaPager(
+                    modifier = Modifier.fillMaxWidth(),
+                    uris = uriList,
+                    imageContentScale = contentScale,
+                    pagerState = pagerState
+                )
+
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = memoryTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        LoadingIconItem(
-                            drawableRes = R.drawable.ic_download,
-                            onClick = {
-                                onDownload(uriList[pagerState.currentPage].toUri())
-                            },
-                            isLoading = isDownloading
+                        Text(
+                            text = memoryTime.formatTime(format = "dd MMM yyyy"),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        LoadingIconItem(
-                            drawableRes = R.drawable.ic_share,
-                            onClick = {
-                                onShare(uriList[pagerState.currentPage].toUri())
-                            },
-                            isLoading = isSharing
-                        )
+
                     }
+                    LoadingIconItem(
+                        drawableRes = R.drawable.ic_favourite,
+                        onClick = onFavourite
+                    )
+                    LoadingIconItem(
+                        drawableRes = R.drawable.ic_download,
+                        onClick = {
+                            onActionsClickCallback { uri ->
+                                onDownload(uri)
+                            }
+                        },
+                        isLoading = isDownloading
+                    )
+                    LoadingIconItem(
+                        drawableRes = R.drawable.ic_share,
+                        onClick = {
+                            onActionsClickCallback { uri ->
+                                onShare(uri)
+                            }
+
+                        },
+                        isLoading = isSharing
+                    )
                 }
+
             }
         }
     }
@@ -181,11 +201,13 @@ fun FullScreenImageDialog(
 @PreviewLightDark
 @Composable
 private fun FullScreenImageDialogPreview() {
+    val data = List(5) { UriType("", Type.IMAGE_JPG) }
+
     MemoriesTheme {
         FullScreenImageDialog(
             onDismiss = {},
             onConfirm = {},
-            uriList = listOf("",""),
+            uriList = data,
         )
     }
 }

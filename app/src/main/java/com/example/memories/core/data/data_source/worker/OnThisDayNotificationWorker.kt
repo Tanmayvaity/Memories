@@ -12,9 +12,9 @@ import androidx.work.WorkerParameters
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.notification.NotificationService
+import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.core.util.hasPostNotificationPermission
-import com.example.memories.core.util.mapToType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -108,7 +108,7 @@ class OnThisDayNotificationWorker @AssistedInject constructor(
 
                 val bitmap = if (first.mediaList.isNotEmpty()) {
                     val uri = first.mediaList[0].uri
-                    val isTypeImage = uri.toUri().mapToType().isImageFile()
+                    val isTypeImage = first.mediaList[0].type.isImageFile()
 
                     if (isTypeImage) mediaManager.uriToBitmap(uri.toUri()).getOrNull() else null
                 } else null

@@ -57,7 +57,8 @@ class MemoryCreateUseCase @Inject constructor(
                         MediaModel(
                             memoryId = "",
                             uri = it.toString(),
-                            position = index
+                            position = index,
+                            type = uriList[index].type!!
                         )
                     },
                     tagList = tagList

@@ -59,7 +59,8 @@ class MemoryUpdateUseCase @Inject constructor(
                                         MediaModel(
                                             memoryId = item.memoryId,
                                             uri = uri.toString(),
-                                            position = index
+                                            position = index,
+                                            type = mediaSlot.uriType.type!!
                                         )
                                     )
                                 }

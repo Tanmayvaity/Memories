@@ -98,12 +98,13 @@ import com.example.memories.R
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.GeneralAlertDialog
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
@@ -192,6 +193,7 @@ fun MemoryDetailScreen(
     snackBarState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val previewMode = LocalInspectionMode.current
+    val context = LocalContext.current
     val pagerState =
         rememberPagerState { if (previewMode) 5 else state.memory?.mediaList?.size ?: 0 }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -265,28 +267,41 @@ fun MemoryDetailScreen(
                 if (memory != null && !isLoading) {
                     val item = memory.memory
                     if (memory.mediaList.isNotEmpty()) {
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier.height(300.dp)
-                        ) { page ->
-                            val itemUri = memory.mediaList[page].uri
+//                        HorizontalPager(
+//                            state = pagerState,
+//                            modifier = Modifier.heightIn(max = 300.dp)
+//                        ) { page ->
+//                            val itemUri = memory.mediaList[page].uri
+//
+////                            AsyncImage(
+////                                model = ImageRequest.Builder(LocalContext.current)
+////                                    .data(
+////                                        if (previewMode) R.drawable.ic_launcher_background else itemUri
+////                                    )
+////                                    .crossfade(true)
+////                                    .build(),
+////                                contentDescription = "Media item $page",
+////                                modifier = Modifier
+////                                    .fillMaxWidth()
+////                                    .clickable {
+////                                        showImageDetail = true
+////                                    },
+////                                contentScale = ContentScale.FillWidth
+////                            )
+//
+//                            MediaPager(
+//                                uris =
+//                            )
+//                        }
 
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(
-                                        if (previewMode) R.drawable.ic_launcher_background else itemUri
-                                    )
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "Media item $page",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        showImageDetail = true
-                                    },
-                                contentScale = ContentScale.FillWidth
-                            )
-                        }
+                        MediaPager(
+                            uris = memory.mediaList.map { UriType(it.uri,it.type) },
+                            imageContentScale = ContentScale.FillWidth,
+                            imageModifier = Modifier.clickable{
+                                showImageDetail = true
+                            },
+                            playVideoCapability = false
+                        )
 
                     }
                     Column(
@@ -495,7 +510,7 @@ fun MemoryDetailScreen(
             onConfirm = {
                 showImageDetail = false
             },
-            uriList = memory?.mediaList?.map { it.uri } ?: emptyList(),
+            uriList = memory?.mediaList?.map { UriType(it.uri,it.type) } ?: emptyList(),
             memoryTitle = memory.memory.title,
             memoryTime = memory.memory.memoryForTimeStamp!!,
             page = pagerState.currentPage,

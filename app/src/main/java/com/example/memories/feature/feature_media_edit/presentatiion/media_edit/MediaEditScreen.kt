@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_media_edit.presentation.media_edit
 
+import android.R.attr.rotation
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.Log
@@ -22,6 +23,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -40,10 +46,11 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
+import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
-import com.example.memories.core.presentation.components.MediaCreationType
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.startChooser
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
@@ -95,7 +102,7 @@ fun MediaEditRoot(
                 }
 
                 is MediaEditOneTimeEvents.NavigateToMemory -> {
-                    onNextClick(AppScreen.Memory(null,event.value))
+                    onNextClick(AppScreen.Memory(null, event.value))
                 }
             }
         }
@@ -121,7 +128,7 @@ fun MediaEditScreen(
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-
+    val context = LocalContext.current
     var showEditBottomSheet by remember { mutableStateOf(false) }
     var loadingItemIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     val pagerState = rememberPagerState(initialPage = 0) { MAX_MEDIA_PAGES }
@@ -160,6 +167,34 @@ fun MediaEditScreen(
         uri?.let { mediaUriList[currentPage] = it.toString() }
     }
 
+    val filterEffect = if (runtimeShader != null) {
+        android.graphics.RenderEffect.createRuntimeShaderEffect(
+            runtimeShader,
+            "inputShader"
+        )
+    } else {
+        null
+    }
+
+//    val adjustmentEffect = if(adjustmentShader != null){
+//       android.graphics.RenderEffect.createRuntimeShaderEffect(
+//            adjustmentShader,
+//            "inputShader"
+//        )
+//    }else{
+//        null
+//    }
+
+
+//    val chainEffect = when {
+//        filterEffect != null && adjustmentEffect != null ->
+//            android.graphics.RenderEffect.createChainEffect(filterEffect,adjustmentEffect)
+//
+//        adjustmentEffect != null -> adjustmentEffect
+//        filterEffect != null -> filterEffect
+//        else -> null
+//    }
+
     // Scroll to current adjustment/filter when page or selection changes
     LaunchedEffect(currentPage, state.currentAdjustTypeList[currentPage]) {
         adjustListState.animateScrollToItem(state.currentAdjustTypeList[currentPage].ordinal)
@@ -176,7 +211,7 @@ fun MediaEditScreen(
     }
 
     LaunchedEffect(state.isSharing) {
-        if(!state.isSharing){
+        if (!state.isSharing) {
             showEditBottomSheet = false
         }
     }
@@ -199,7 +234,7 @@ fun MediaEditScreen(
                         )
                     )
                 },
-                enabled = mediaUriList.any{ it != null},
+                enabled = mediaUriList.any { it != null },
                 isLoading = state.isDownloadingForNavigation
             )
         },
@@ -219,26 +254,78 @@ fun MediaEditScreen(
                 .consumeWindowInsets(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
+//            MediaPager(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .padding(vertical = 10.dp)
+//                    .clip(RoundedCornerShape(16.dp))
+//                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+//                bitmapList = null,
+//                mediaUris = mediaUriList,
+//                imageContentScale = ContentScale.Fit,
+//                type = MediaCreationType.NOT_BITMAP,
+//                pagerState = pagerState,
+//                onAddMediaClick = {
+//                    mediaLauncher.launch(
+//                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+//                    )
+//                },
+//                onRemoveMediaClick = { mediaUriList[currentPage] = null },
+//                runtimeShader = runtimeShader,
+//                adjustmentShader = null,
+//                rotation = animatedRotation
+//            )
+
+
             MediaPager(
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 10.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                bitmapList = null,
-                mediaUris = mediaUriList,
-                imageContentScale = ContentScale.Fit,
-                type = MediaCreationType.NOT_BITMAP,
-                pagerState = pagerState,
-                onAddMediaClick = {
-                    mediaLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                uris = mediaUriList.toList().map { it ->
+                    UriType(it, it?.let { uri ->
+                        Type.fromUri(uri.toUri(), context)
+                    })
                 },
-                onRemoveMediaClick = { mediaUriList[currentPage] = null },
-                runtimeShader = runtimeShader,
-                adjustmentShader = null,
-                rotation = animatedRotation
+                imageContentScale = ContentScale.Fit,
+                pagerState = pagerState,
+                imageModifier = Modifier.graphicsLayer {
+                    renderEffect = filterEffect?.asComposeRenderEffect()
+                    rotationZ = animatedRotation
+                },
+                emptyPageContent = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconItem(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add media",
+                            alpha = 0.3f,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            onClick = {
+                                mediaLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
+                        )
+                    }
+                },
+                pageOverlay = { page ->
+                    IconItem(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove media",
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp),
+                        alpha = 0.3f,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        onClick = {
+                            mediaUriList[page] = null
+                        }
+                    )
+                }
             )
 
             AdjustmentPanel(
@@ -313,7 +400,7 @@ private fun MediaEditTopBar(
     onBackPress: () -> Unit,
     onNextClick: () -> Unit,
     enabled: Boolean,
-    isLoading : Boolean,
+    isLoading: Boolean,
 ) {
     AppTopBar(
         showNavigationIcon = true,
@@ -328,11 +415,11 @@ private fun MediaEditTopBar(
                 modifier = Modifier.padding(end = 8.dp),
                 enabled = enabled
             ) {
-                if(!isLoading){
+                if (!isLoading) {
                     Text(
                         text = "Next",
                     )
-                }else{
+                } else {
                     CircularProgressIndicator(
                         strokeWidth = 3.dp,
                         color = MaterialTheme.colorScheme.onPrimary,

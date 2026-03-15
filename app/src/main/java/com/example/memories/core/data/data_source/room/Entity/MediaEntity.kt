@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.memories.core.domain.model.Type
 import java.util.UUID
 
 @Entity(
@@ -33,5 +34,6 @@ data class MediaEntity(
     val timeStamp : Long,
     val longitude : Long?,
     val latitude : Long?,
-    val position : Int = 0
+    val position : Int = 0,
+    val type : Type = Type.UNKNOWN_TYPE
 )

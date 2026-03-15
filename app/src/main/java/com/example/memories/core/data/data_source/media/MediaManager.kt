@@ -28,23 +28,23 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.Type
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.util.createTempFile
 import com.example.memories.core.util.createVideoFile
-import com.example.memories.core.util.mapToType
-import com.example.memories.feature.feature_feed.domain.model.MediaObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.UnsupportedOperationException
+import com.example.memories.core.util.TAG
 
 class MediaManager(
     val context: Context
 ) {
 
-    companion object {
-        private const val TAG = "MediaManager"
-    }
+//    companion object {
+//        private const val TAG = "MediaManager"
+//    }
 
 
     // reads the list of provided uri, copies them to the generated file and returns the list of File
@@ -78,60 +78,6 @@ class MediaManager(
         return@withContext internalFiles
     }
 
-    // takes list of uri in cache directory and copies them to external storage
-    suspend fun saveToInternalStorage2(uriList: List<Uri>): Result<List<Uri>> =
-        withContext(Dispatchers.IO) {
-            val resultUriList = mutableListOf<Uri>()
-            val resolver = context.contentResolver
-            try {
-                Log.d(TAG, "saveToInternalStorage: ${uriList == null}")
-                uriList.forEach { uri ->
-                    Log.d(TAG, "saveToInternalStorage: ${uri} ${R.attr.type}")
-                    val type = uri.mapToType()
-                    val file = if (type == Type.IMAGE_JPG || type == Type.IMAGE_PNG) {
-                        createTempFile(
-                            context,
-                            "images",
-                            context.getExternalFilesDir(null)!!,
-                            "IMG_"
-                        )
-                    } else {
-                        createVideoFile(
-                            context,
-                            "videos",
-                            context.getExternalFilesDir(null)!!,
-                            "VID_"
-                        )
-                    }
-                    Log.d(TAG, "saveToInternalStorage: file : ${file!!.path}")
-
-                    resolver.openInputStream(uri)?.use { input ->
-                        FileOutputStream(file)?.use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    file?.let {
-//                        val uriType = UriType(
-//                            uri = file.toUri().toString(),
-//                            type = type
-//                        )
-                        resultUriList.add(file.toUri())
-                        Log.d(TAG, "saveToInternalStorage: ${uri.path}")
-                        Log.i(TAG, "uri saved successfully")
-                    }
-
-
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Log.e(TAG, "saveToInternalStorage: ${e.message}")
-                return@withContext Result.Error(e)
-            }
-
-            return@withContext Result.Success(resultUriList)
-        }
-
-
     suspend fun saveToInternalStorage(
         uriList: List<Uri>,
     ): Result<List<Uri>> = withContext(Dispatchers.IO) {
@@ -149,7 +95,7 @@ class MediaManager(
                 val type = getType(mimeType)
                 if (type == Type.UNKNOWN_TYPE) throw IllegalArgumentException("Unknown type")
 
-                if (type == Type.VIDEO_MP4) throw UnsupportedOperationException("Video saving not implemented")
+//                if (type == Type.VIDEO_MP4) throw UnsupportedOperationException("Video saving not implemented")
 
 
                 Log.i(
@@ -169,28 +115,38 @@ class MediaManager(
                     targetDir,
                     "$prefix${System.currentTimeMillis()}.$extension"
                 )
-                val bitmap = uriToBitmap(uri).getOrNull()
-                    ?: throw IllegalStateException("Bitmap is null")
-                val size = getBitmapSize(bitmap)
-                Log.i(TAG, "saveToInternalStorage: bitmap size -> ${size.toFloat() / 1024 / 1024}")
 
-                resolver.openOutputStream(file.toUri())?.use { output ->
-                    val format = when {
-                        type == Type.IMAGE_JPG -> Bitmap.CompressFormat.JPEG
-                        type == Type.IMAGE_PNG -> Bitmap.CompressFormat.PNG
-                        else -> Bitmap.CompressFormat.JPEG
+                if(type.isImageFile()){
+                    val bitmap = uriToBitmap(uri).getOrNull()
+                        ?: throw IllegalStateException("Bitmap is null")
+                    val size = getBitmapSize(bitmap)
+                    Log.i(TAG, "saveToInternalStorage: bitmap size -> ${size.toFloat() / 1024 / 1024}")
+
+                    resolver.openOutputStream(file.toUri())?.use { output ->
+                        val format = when {
+                            type == Type.IMAGE_JPG -> Bitmap.CompressFormat.JPEG
+                            type == Type.IMAGE_PNG -> Bitmap.CompressFormat.PNG
+                            else -> Bitmap.CompressFormat.JPEG
+                        }
+                        bitmap.compress(format, 80, output)
+                        Log.i(
+                            TAG,
+                            "saveToInternalStorage: bitmap size after compression -> ${
+                                file.length().toFloat() / 1024 / 1024
+                            }"
+                        )
+                    } ?: throw IllegalStateException("Unable to open output stream")
+                    Log.d(TAG, "saveToInternalStorage: file name : ${file.name} at ${file.path}")
+
+                    bitmap.recycle()
+                }else{
+                    resolver.openInputStream(uri)?.use { input ->
+                        FileOutputStream(file)?.use { output ->
+                            input.copyTo(output)
+                        }
                     }
-                    bitmap.compress(format, 80, output)
-                    Log.i(
-                        TAG,
-                        "saveToInternalStorage: bitmap size after compression -> ${
-                            file.length().toFloat() / 1024 / 1024
-                        }"
-                    )
-                } ?: throw IllegalStateException("Unable to open output stream")
-                Log.d(TAG, "saveToInternalStorage: file name : ${file.name} at ${file.path}")
-
-                bitmap.recycle()
+                    Log.d(TAG, "saveToInternalStorage: file : ${file.name} : ${file.path}")
+                }
 
                 file.toUri()
             }
@@ -203,7 +159,7 @@ class MediaManager(
     suspend fun saveToCacheStorage(
         uri: Uri,
         bitmap: Bitmap
-    ): Result<Uri> = withContext(Dispatchers.IO) {
+    ): Result<UriType> = withContext(Dispatchers.IO) {
 
         val resolver = context.contentResolver
         val baseDir = context.cacheDir
@@ -283,7 +239,10 @@ class MediaManager(
             )
             bitmap.recycle()
 
-            contentUri
+            UriType(
+                uri = contentUri.toString(),
+                type = type
+            )
         }.fold(
             onSuccess = { Result.Success(it) },
             onFailure = { Result.Error(it) }
@@ -299,10 +258,8 @@ class MediaManager(
             ?: throw IllegalStateException("Cache files dir not available")
         runCatching {
             val mimeType = getMimeType(uri)
-
             val extension = getExtension(mimeType)
-
-            val type = getType(mimeType)
+            val type = Type.fromUri(uri,context)
             if (type == Type.UNKNOWN_TYPE) throw IllegalArgumentException("Unknown type")
 
             if (type == Type.VIDEO_MP4) throw UnsupportedOperationException("Video saving not implemented")
@@ -549,73 +506,6 @@ class MediaManager(
                 return@withContext Result.Error(e)
             }
         }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    suspend fun fetchMediaFromShared(
-        offset: Int = 0,
-        limit: Int = 10
-    ): List<MediaObject> = withContext(Dispatchers.IO) {
-        val images = mutableListOf<MediaObject>()
-        val collection =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                MediaStore.Images.Media.getContentUri(
-                    MediaStore.VOLUME_EXTERNAL
-                )
-            } else {
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            }
-
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.RELATIVE_PATH
-        )
-//        val selection = if (fromApp) "${MediaStore.Images.Media.RELATIVE_PATH} = ?" else
-//            "${MediaStore.Images.Media.RELATIVE_PATH} != ?"
-
-
-        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
-        val selectionArgs = arrayOf("Pictures/Memories/")
-        val sortOrder = MediaStore.Images.Media.DATE_ADDED
-
-        val queryArgs = Bundle()
-
-        queryArgs.also {
-//            it.putString(ContentResolver.QUERY_ARG_SQL_SELECTION,selection)
-//            it.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,selectionArgs)
-            it.putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, arrayOf(sortOrder))
-            it.putInt(
-                ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-            )
-            it.putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
-            it.putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
-
-        }
-        var count = 0;
-
-        context.contentResolver.query(
-            collection,
-            projection,
-            queryArgs,
-            null
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val name = cursor.getString(nameColumn)
-                val contentUri = ContentUris.withAppendedId(collection, id)
-                val bitmap = context.contentResolver.loadThumbnail(contentUri, Size(640, 480), null)
-                val media = MediaObject(uri = contentUri, displayName = name, bitmap = bitmap)
-                images.add(media)
-                count = count + 1
-            }
-        }
-        Log.d(TAG, "fetchMediaFromShared: rows : ${count}")
-        return@withContext images
-    }
-
 
     private fun getCollection(): Uri {
         val collection =

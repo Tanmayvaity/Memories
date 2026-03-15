@@ -3,6 +3,7 @@ package com.example.memories.di
 import android.content.Context
 import android.util.Log
 import androidx.room.Room
+import androidx.room.TypeConverter
 import androidx.work.WorkManager
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
@@ -80,7 +81,9 @@ import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUs
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
+import com.example.memories.core.data.data_source.room.converters.MediaTypeConverter
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_6_7
 import com.example.memories.core.data.repository.AppSettingRepositoryImpl
 import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
@@ -271,7 +274,8 @@ object AppModule {
                 MEMORY_MIGRATION_2_3,
                 MEMORY_MIGRATION_3_4,
                 MEMORY_MIGRATION_4_5,
-                MEMORY_MIGRATION_5_6
+                MEMORY_MIGRATION_5_6,
+                MEMORY_MIGRATION_6_7
             )
             .build()
     }

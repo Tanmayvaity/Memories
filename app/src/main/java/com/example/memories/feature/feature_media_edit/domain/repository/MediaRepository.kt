@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import com.airbnb.lottie.L
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 
@@ -48,7 +49,7 @@ interface MediaRepository {
     suspend fun saveToCacheStorage(
         uri : Uri,
         bitmap: Bitmap,
-    ) : Result<Uri>
+    ) : Result<UriType>
 
     suspend fun saveToCacheStorageWithUri(
         uri : Uri

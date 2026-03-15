@@ -44,15 +44,17 @@ sealed class MemoryEvents {
     data object Reset : MemoryEvents()
 
 
-    data class AddMediaUri(val uri : String,val position : Int) : MemoryEvents()
+    data class AddMediaUri(val uriType : UriType,val position : Int) : MemoryEvents()
     data class RemoveMediaUri(val position : Int) : MemoryEvents()
 
 
-    object OpenDeviceCamera : MemoryEvents()
+    data class OpenDeviceCamera(val mediaType: MediaType) : MemoryEvents()
 
 
     data class UpdateCurrentPosition(val position : Int) : MemoryEvents()
 
 
     data class UpdateMediaActionType(val type : MediaActionType) : MemoryEvents()
+
+    data class UpdateMediaType(val mediaType : MediaType) : MemoryEvents()
 }
