@@ -159,6 +159,14 @@ fun Context.startChooser(uri : Uri?){
     this.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
 }
 
+fun Context.startMediaChooser(uri : Uri?){
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "video/*")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    this.startActivity(Intent.createChooser(intent, null))
+}
+
 
 val Any.TAG : String
     get() = this::class.java.simpleName

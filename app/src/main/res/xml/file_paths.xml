@@ -8,10 +8,10 @@
         name="temp_videos"
         path="videos/"
         />
-    <external-path
+    <external-files-path
         name="permanent_images"
         path="images/"/>
-    <external-path
+    <external-files-path
         name="permanent_videos"
         path="videos"/>
 </paths>

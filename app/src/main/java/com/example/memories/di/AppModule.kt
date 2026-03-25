@@ -2,6 +2,7 @@ package com.example.memories.di
 
 import android.content.Context
 import android.util.Log
+import androidx.media3.exoplayer.offline.Download
 import androidx.room.Room
 import androidx.room.TypeConverter
 import androidx.work.WorkManager
@@ -55,7 +56,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SaveSearchIdUseCase
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
-import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadVideoUseCase
+import com.example.memories.core.domain.usecase.DownloadVideoUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
@@ -98,7 +99,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
-import com.example.memories.feature.feature_memory.domain.usecase.GenerateSharableUriUseCase
+import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
@@ -374,7 +375,9 @@ object AppModule {
             fetchMemoryByTagUseCase = FetchMemoryByTagUseCase(repository),
             fetchOnThisDataUseCase = FetchOnThisDayUseCase(repository),
             downloadWithBitmapUseCase = DownloadWithBitmapUseCase(mediaRepository),
-            saveToCacheStorageWithUriUseCase = SaveToCacheStorageWithUriUseCase(mediaRepository)
+            saveToCacheStorageWithUriUseCase = SaveToCacheStorageWithUriUseCase(mediaRepository),
+            getShareableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
+            downloadVideoUseCase = DownloadVideoUseCase(mediaRepository)
         )
 
     }

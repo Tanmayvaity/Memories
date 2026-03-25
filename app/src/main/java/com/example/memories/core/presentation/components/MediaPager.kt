@@ -1,5 +1,6 @@
 package com.example.memories.core.presentation.components
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -40,7 +42,8 @@ fun MediaPager(
     ),
     emptyPageContent: @Composable () -> Unit = {},
     pageOverlay: @Composable BoxScope.(page: Int) -> Unit = {},
-    playVideoCapability: Boolean = false
+    playVideoCapability: Boolean = false,
+    onPlayIconClick: (Uri) -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -73,7 +76,10 @@ fun MediaPager(
                         )
                         if (type != null && type.isVideoFile()) {
                             PlayButton(
-                                modifier = Modifier.align(Alignment.Center)
+                                modifier = Modifier.align(Alignment.Center),
+                                onClick = {
+                                    onPlayIconClick(uri.toUri())
+                                }
                             )
                         }
                     } else {

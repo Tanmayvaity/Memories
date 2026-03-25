@@ -37,6 +37,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.lang.UnsupportedOperationException
 import com.example.memories.core.util.TAG
+import java.net.URI
 
 class MediaManager(
     val context: Context
@@ -688,7 +689,14 @@ class MediaManager(
     }
 
 
-    fun generateSharableUri(isImage: Boolean = true): Uri? {
+    fun generateShareableUri(isImage: Boolean? = true,uri : Uri? = null): Uri? {
+
+        if(uri != null){
+            return generateSharableUri(uri)
+        }
+
+        if(isImage == null) return null
+
         val dirName = if (isImage) "images" else "videos"
         val prefix = if (isImage) "IMG_" else "VID_"
         val extension = if (isImage) "jpg" else "mp4"
@@ -710,6 +718,16 @@ class MediaManager(
             file
         )
     }
+
+    private fun generateSharableUri(uri : Uri) : Uri?{
+        val path = uri.path ?: return null
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            File(path)
+        )
+    }
+
 
     fun createMediaFile(
         isImage: Boolean = true,

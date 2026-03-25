@@ -5,14 +5,16 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.util.CoilUtils.result
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
+import com.example.memories.core.domain.model.Type
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
+import com.example.memories.feature.feature_feed.presentation.feed_detail.UiEvent.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -70,36 +72,38 @@ class MemoryDetailViewModel @Inject constructor(
 
             is MemoryDetailEvents.Action -> {
                 viewModelScope.launch {
-                    when(event.action){
+                    when (event.action) {
                         is MemoryAction.Delete -> {
-                            if(state.value.memory?.memory == null) return@launch
+                            if (state.value.memory?.memory == null) return@launch
                             _isDeleting.update { true }
-                                val result = memoryActionHandler.delete(
-                                    memory = _state.value.memory!!.memory,
-                                    uriList = _state.value.memory!!.mediaList.map { it.uri }
-                                )
-                                _isDeleting.update { false }
-                                when (result) {
-                                    is Result.Error -> {
-                                        Log.e(TAG, "onEvent: error while deleting")
-                                        _eventChannel.send(
-                                            UiEvent.Error(
-                                                message = "Cannot Delete Memory",
-                                            )
+                            val result = memoryActionHandler.delete(
+                                memory = _state.value.memory!!.memory,
+                                uriList = _state.value.memory!!.mediaList.map { it.uri }
+                            )
+                            _isDeleting.update { false }
+                            when (result) {
+                                is Result.Error -> {
+                                    Log.e(TAG, "onEvent: error while deleting")
+                                    _eventChannel.send(
+                                        Error(
+                                            message = "Cannot Delete Memory",
                                         )
-                                    }
-                                    is Result.Success<String> -> {
-                                        Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
-                                        _eventChannel.send(
-                                            UiEvent.ShowToast(
-                                                message = "Memory deleted",
-                                                type = UiEvent.ToastType.DELETE
-                                            )
+                                    )
+                                }
+
+                                is Result.Success<String> -> {
+                                    Log.i(TAG, "MemoryDetailEvents.Delete : Memory deleted")
+                                    _eventChannel.send(
+                                        ShowToast(
+                                            message = "Memory deleted",
+                                            type = UiEvent.ToastType.DELETE
                                         )
-                                    }
+                                    )
+                                }
 
                             }
                         }
+
                         is MemoryAction.ToggleFavourite -> {
                             _state.update {
                                 it.copy(
@@ -121,7 +125,7 @@ class MemoryDetailViewModel @Inject constructor(
                             }
                             memoryActionHandler.handle(event.action)
                             _eventChannel.send(
-                                UiEvent.ShowToast(
+                                ShowToast(
                                     message = if (_state.value.memory!!.memory.hidden) "Memory hidden" else "Memory Shown",
                                     type = UiEvent.ToastType.HIDDEN
                                 )
@@ -130,31 +134,50 @@ class MemoryDetailViewModel @Inject constructor(
                     }
 
 
-
                 }
 
             }
-            is MemoryDetailEvents.DownloadImage -> {
+
+            is MemoryDetailEvents.DownloadMedia -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isDownloading = true) }
-                    val result = feedUseCases.downloadWithBitmapUseCase(
-                        uri = event.uri,
-                        shaderCode = null
-                    )
 
-                    when(result){
+                    if(event.type.isUnknownType()){
+                        _eventChannel.send(
+                            Error(
+                                message = "Cannot Download this media type",
+                            )
+                        )
+                        Log.e(TAG, "unknown type : ${event.type}")
+                        _state.update { it.copy(isDownloading = false) }
+                    }
+
+
+
+                    val result = if (event.type.isImageFile()) {
+                        feedUseCases.downloadWithBitmapUseCase(
+                            uri = event.uri,
+                            shaderCode = null
+                        )
+                    } else {
+                        feedUseCases.downloadVideoUseCase(event.uri)
+                    }
+
+
+                    when (result) {
                         is Result.Error -> {
                             _eventChannel.send(
-                                UiEvent.Error(
-                                    message = "Cannot Download Image",
+                                Error(
+                                    message = "Cannot Download Media",
                                 )
                             )
-                            Log.e(TAG, "onEvent: ${result.error.message}", )
+                            Log.e(TAG, "onEvent: ${result.error.message}")
                             _state.update { it.copy(isDownloading = false) }
                         }
+
                         is Result.Success -> {
                             _eventChannel.send(
-                                UiEvent.ShowToast(
+                                ShowToast(
                                     message = "Download Complete",
                                     type = UiEvent.ToastType.DOWNLOAD
                                 )
@@ -166,24 +189,33 @@ class MemoryDetailViewModel @Inject constructor(
                 }
             }
 
-            is MemoryDetailEvents.ShareImage -> {
+            is MemoryDetailEvents.ShareMedia -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isSharing = true) }
-                    val result = feedUseCases.saveToCacheStorageWithUriUseCase(event.uri)
-                    when(result){
+                    val result = feedUseCases.getShareableUriUseCase(null, event.uri)
+                    when (result) {
                         is Result.Error -> {
                             _eventChannel.send(
-                                UiEvent.Error(
+                                Error(
                                     message = "Cannot Share Image",
                                 )
                             )
                             _state.update { it.copy(isSharing = false) }
-                            Log.e(TAG, "onEvent: ${result.error.message}", )
+                            Log.e(TAG, "onEvent: ${result.error.message}")
                         }
 
-                        is Result.Success<Uri> -> {
+                        is Result.Success<Uri?> -> {
                             _state.update { it.copy(isSharing = false) }
-                            _eventChannel.send(UiEvent.ShowShareChooser(result.data))
+                            if (result.data != null) {
+                                _eventChannel.send(ShowShareChooser(result.data))
+                            } else {
+                                _eventChannel.send(
+                                    Error(
+                                        message = "Cannot Share Image please try again",
+                                    )
+                                )
+                            }
+
                         }
 
                     }
@@ -191,6 +223,20 @@ class MemoryDetailViewModel @Inject constructor(
                 }
             }
 
+            is MemoryDetailEvents.PlayVideo -> {
+                viewModelScope.launch {
+                    val result = feedUseCases.getShareableUriUseCase(null, event.uri)
+                    if (result is Result.Success && result.data != null) {
+                        _eventChannel.send(ShowMediaChooser(result.data))
+                    } else {
+                        _eventChannel.send(
+                            Error(
+                                message = "Cannot Play Video please try again",
+                            )
+                        )
+                    }
+                }
+            }
         }
 
 
@@ -206,5 +252,5 @@ class MemoryDetailViewModel @Inject constructor(
 data class MemoryDetailState(
     val memory: MemoryWithMediaModel? = null,
     val isDownloading: Boolean = false,
-    val isSharing : Boolean = false
+    val isSharing: Boolean = false
 )

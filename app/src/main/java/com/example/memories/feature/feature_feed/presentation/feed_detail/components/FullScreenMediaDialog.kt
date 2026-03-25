@@ -1,20 +1,13 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail.components
 
-import android.R.attr.navigationIcon
 import android.annotation.SuppressLint
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,12 +17,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -38,30 +28,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import com.example.memories.R
-import coil3.compose.AsyncImage
 import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIconItem
-import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
-import okhttp3.internal.format
-import java.time.LocalTime
+import kotlin.to
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FullScreenImageDialog(
+fun FullScreenMediaDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     uriList: List<UriType> = emptyList(),
@@ -69,11 +54,12 @@ fun FullScreenImageDialog(
     memoryTitle: String = "Summer Beach Trip",
     memoryTime: Long = System.currentTimeMillis(),
     onFavourite: () -> Unit = {},
-    onDownload: (Uri) -> Unit = {},
+    onDownload: (Uri, Type) -> Unit = {_,_ ->},
     onShare: (Uri) -> Unit = {},
     isDownloading: Boolean = false,
     isSharing: Boolean = false,
-    contentScale: ContentScale = ContentScale.Fit
+    contentScale: ContentScale = ContentScale.Fit,
+    onPlayIconClick : (Uri) -> Unit = {}
 ) {
 
     val pagerState = rememberPagerState { uriList.size }
@@ -82,11 +68,17 @@ fun FullScreenImageDialog(
     val scrollState = rememberScrollState()
 
 
-    fun onActionsClickCallback(block: (Uri) -> Unit) {
-        val currentUri = uriList[pagerState.currentPage].uri
-        currentUri?.let { uri ->
-            block(uri.toUri())
+    fun onActionsClickCallback(block: (Uri, Type) -> Unit) {
+        val currentUriPair : Pair<String?, Type?> = uriList[pagerState.currentPage].uri to uriList[pagerState.currentPage].type
+
+        currentUriPair.let { (uri,type) ->
+            if(uri == null || type == null) return@let
+            block(uri!!.toUri(),type!!)
         }
+
+//        currentUriPair?.let { uri,type ->
+//            block(uri.toUri(),type)
+//        }
     }
 
 
@@ -139,7 +131,8 @@ fun FullScreenImageDialog(
                     modifier = Modifier.fillMaxWidth(),
                     uris = uriList,
                     imageContentScale = contentScale,
-                    pagerState = pagerState
+                    pagerState = pagerState,
+                    onPlayIconClick = onPlayIconClick
                 )
 
 
@@ -174,8 +167,8 @@ fun FullScreenImageDialog(
                     LoadingIconItem(
                         drawableRes = R.drawable.ic_download,
                         onClick = {
-                            onActionsClickCallback { uri ->
-                                onDownload(uri)
+                            onActionsClickCallback { uri,type ->
+                                onDownload(uri,type)
                             }
                         },
                         isLoading = isDownloading
@@ -183,7 +176,7 @@ fun FullScreenImageDialog(
                     LoadingIconItem(
                         drawableRes = R.drawable.ic_share,
                         onClick = {
-                            onActionsClickCallback { uri ->
+                            onActionsClickCallback { uri,_ ->
                                 onShare(uri)
                             }
 
@@ -200,11 +193,11 @@ fun FullScreenImageDialog(
 
 @PreviewLightDark
 @Composable
-private fun FullScreenImageDialogPreview() {
+private fun FullScreenMediaDialogPreview() {
     val data = List(5) { UriType("", Type.IMAGE_JPG) }
 
     MemoriesTheme {
-        FullScreenImageDialog(
+        FullScreenMediaDialog(
             onDismiss = {},
             onConfirm = {},
             uriList = data,

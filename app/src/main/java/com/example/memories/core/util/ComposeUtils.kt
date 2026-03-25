@@ -1,5 +1,6 @@
 package com.example.memories.core.util
 
+import android.R.attr.onClick
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -88,13 +89,14 @@ fun SheetState.hideWithCallback(
 }
 
 @Composable
-fun PlayButton(modifier: Modifier = Modifier) {
+fun PlayButton(modifier: Modifier = Modifier,onClick: () -> Unit = {}) {
     IconItem(
         imageVector = Icons.Default.PlayArrow,
         contentDescription = "Video media",
         modifier = modifier
             .padding(8.dp),
         alpha = 0.7f,
-        color = MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.primary,
+        onClick = onClick
     )
 }

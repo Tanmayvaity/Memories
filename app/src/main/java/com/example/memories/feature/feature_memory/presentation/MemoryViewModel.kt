@@ -340,12 +340,16 @@ class MemoryViewModel @Inject constructor(
                         }
                     }
                     isImage?.let { isImage ->
-                        val uri = memoryUseCase.generateSharableUriUseCase(isImage)
-                        _memoryState.update {
-                            it.copy(
-                                tempMediaUri = uri.toString()
-                            )
+                        val uriResult = memoryUseCase.generateSharableUriUseCase(isImage)
+
+                        if(uriResult is Result.Success && uriResult.data != null){
+                            _memoryState.update {
+                                it.copy(
+                                    tempMediaUri = uriResult.data.toString()
+                                )
+                            }
                         }
+
                     }
 
                 }

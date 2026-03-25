@@ -1,30 +1,18 @@
 package com.example.memories.feature.feature_feed.presentation.feed_detail
 
-import android.R.attr.onClick
+import android.R.attr.type
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -32,32 +20,21 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarExitDirection
-import androidx.compose.material3.FloatingToolbarHorizontalFabPosition
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -71,53 +48,35 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.toUri
 import com.example.memories.R
-import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
-import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.core.presentation.MenuItem
-import com.example.memories.core.presentation.components.AppTopBar
-import com.example.memories.core.presentation.components.GeneralAlertDialog
-import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.core.presentation.components.MediaPageIndicatorLine
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
 import com.example.memories.core.util.formatTime
 import com.example.memories.core.util.hideWithCallback
 import com.example.memories.core.util.startChooser
+import com.example.memories.core.util.startMediaChooser
 import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
-import com.example.memories.feature.feature_feed.presentation.feed.FeedEvents
-import com.example.memories.feature.feature_feed.presentation.feed_detail.components.FullScreenImageDialog
+import com.example.memories.feature.feature_feed.presentation.feed_detail.components.FullScreenMediaDialog
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
-import kotlinx.coroutines.launch
 
 @Composable
 fun MemoryDetailRoot(
@@ -159,6 +118,10 @@ fun MemoryDetailRoot(
 
                 is UiEvent.ShowShareChooser -> {
                     context.startChooser(event.value)
+                }
+
+                is UiEvent.ShowMediaChooser -> {
+                    context.startMediaChooser(event.uri)
                 }
 
 
@@ -295,12 +258,17 @@ fun MemoryDetailScreen(
 //                        }
 
                         MediaPager(
-                            uris = memory.mediaList.map { UriType(it.uri,it.type) },
+                            uris = memory.mediaList.map { UriType(it.uri, it.type) },
                             imageContentScale = ContentScale.FillWidth,
-                            imageModifier = Modifier.clickable{
+                            imageModifier = Modifier.clickable {
                                 showImageDetail = true
                             },
-                            playVideoCapability = false
+                            playVideoCapability = false,
+                            onPlayIconClick = { uri ->
+                                onEvent(
+                                    MemoryDetailEvents.PlayVideo(uri)
+                                )
+                            }
                         )
 
                     }
@@ -503,33 +471,40 @@ fun MemoryDetailScreen(
 
     if (showImageDetail && memory != null) {
 //        val itemUri = memory.mediaList[pagerState.currentPage].uri.toUri()
-        FullScreenImageDialog(
+        FullScreenMediaDialog(
             onDismiss = {
                 showImageDetail = false
             },
             onConfirm = {
                 showImageDetail = false
             },
-            uriList = memory?.mediaList?.map { UriType(it.uri,it.type) } ?: emptyList(),
+            uriList = memory?.mediaList?.map { UriType(it.uri, it.type) } ?: emptyList(),
             memoryTitle = memory.memory.title,
             memoryTime = memory.memory.memoryForTimeStamp!!,
             page = pagerState.currentPage,
             isDownloading = state.isDownloading,
             isSharing = state.isSharing,
-            onDownload = { uri ->
+            onDownload = { uri,type ->
                 onEvent(
-                    MemoryDetailEvents.DownloadImage(
-                        uri = uri
+                    MemoryDetailEvents.DownloadMedia(
+                        uri = uri,
+                        type = type
                     )
                 )
             },
             onShare = { uri ->
                 onEvent(
-                    MemoryDetailEvents.ShareImage(
+                    MemoryDetailEvents.ShareMedia(
                         uri = uri
                     )
                 )
+            },
+            onPlayIconClick = { uri ->
+                onEvent(
+                    MemoryDetailEvents.PlayVideo(uri)
+                )
             }
+
         )
     }
 

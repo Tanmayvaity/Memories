@@ -96,8 +96,8 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.saveToCacheStorageWithUri(uri)
     }
 
-    override fun generateSharableUri(isImage: Boolean): Uri? {
-        return mediaManager.generateSharableUri(isImage)
+    override fun generateShareableUri(isImage: Boolean?,uri: Uri?): Uri? {
+        return mediaManager.generateShareableUri(isImage,uri)
     }
 
 

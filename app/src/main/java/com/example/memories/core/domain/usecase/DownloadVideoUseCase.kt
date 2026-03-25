@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_media_edit.domain.usecase
+package com.example.memories.core.domain.usecase
 
 import android.net.Uri
 import com.example.memories.core.domain.model.Result

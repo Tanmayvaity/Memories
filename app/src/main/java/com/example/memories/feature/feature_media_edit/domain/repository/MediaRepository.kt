@@ -56,6 +56,7 @@ interface MediaRepository {
     ): Result<Uri>
 
 
-    fun generateSharableUri(isImage : Boolean = false) : Uri?
+    fun generateShareableUri(isImage : Boolean? = false,uri : Uri? = null) : Uri?
+
 
 }
