@@ -15,6 +15,7 @@ import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.google.common.collect.Multimaps.index
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,6 +107,14 @@ class MediaViewModel @Inject constructor(
                 _state.update { it.copy(isDownloading = true) }
                 viewModelScope.launch {
                     Log.d(TAG, "onEvent: DownloadImage called")
+
+                    if(event.uri == null){
+                        _downloadEvents.send(
+                            MediaEditOneTimeEvents.ShowSnackBar("No Media Selected")
+                        )
+                        _state.update { it.copy(isDownloading = false) }
+                        return@launch
+                    }
                     val result = mediaUseCases.downloadWithBitmap(
                         event.uri,
                         state.value.shaderList[event.page],
@@ -132,6 +141,15 @@ class MediaViewModel @Inject constructor(
             is MediaEvents.ShareImage -> {
                 _state.update { it.copy(isSharing = true) }
                 viewModelScope.launch {
+
+                    if(event.uri == null){
+                        _downloadEvents.send(
+                            MediaEditOneTimeEvents.ShowSnackBar("No Media Selected")
+                        )
+                        _state.update { it.copy(isSharing = false) }
+                        return@launch
+                    }
+
                     val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
                         listOf(event.uri),
                         listOf(state.value.shaderList[event.page]),
