@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -17,6 +18,8 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.memories.R
+import com.example.memories.core.util.PlayButton
+import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailEvents
 import com.example.memories.ui.theme.MemoriesTheme
 
 
@@ -24,6 +27,7 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun ImageContainer(
     modifier: Modifier = Modifier,
     uri: Uri? = null,
+    isImage : Boolean = true,
     size : Int = 125
 ) {
     Box(
@@ -43,6 +47,12 @@ fun ImageContainer(
                 .size(size.dp)
                 .clip(RoundedCornerShape(8.dp))
         )
+        if(!isImage){
+            PlayButton(
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+
 
 
     }

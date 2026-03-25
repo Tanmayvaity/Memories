@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +58,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
 import com.example.memories.feature.feature_feed.presentation.common.SectionState
@@ -210,7 +212,7 @@ private fun MemoryList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(memories) { item ->
-            MemoryCard(
+            HistoryMemoryCard(
                 item = item,
                 isPreviewMode = isPreviewMode,
                 onViewDetail = {
@@ -223,7 +225,7 @@ private fun MemoryList(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun MemoryCard(
+private fun HistoryMemoryCard(
     item: MemoryWithMediaModel,
     isPreviewMode: Boolean,
     onViewDetail: () -> Unit
@@ -277,14 +279,21 @@ private fun MemoryCard(
 
                 if (item.mediaList.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    AsyncImage(
+                    Box(
                         modifier = Modifier
                             .size(75.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        model = if (isPreviewMode) R.drawable.ic_launcher_background else item.mediaList[0].uri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        AsyncImage(
+                            modifier = Modifier.fillMaxSize(),
+                            model = if (isPreviewMode) R.drawable.ic_launcher_background else item.mediaList[0].uri,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop
+                        )
+                        if(item.mediaList.first().type.isVideoFile()){
+                            PlayButton(modifier = Modifier.align(Alignment.Center))
+                        }
+                    }
                 }
             }
 

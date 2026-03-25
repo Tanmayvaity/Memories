@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,6 +37,7 @@ import com.example.memories.R
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -44,13 +46,13 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun MemoryCard(
     memory: MemoryWithMediaModel,
     modifier: Modifier = Modifier,
-    onClick : () -> Unit = {}
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
-            .clickable{
-            onClick()
-        }
+            .clickable {
+                onClick()
+            }
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -60,16 +62,30 @@ fun MemoryCard(
         )
     ) {
         Column {
-            if(memory.mediaList.isNotEmpty() || LocalInspectionMode.current){
-                AsyncImage(
-                    model = if(LocalInspectionMode.current) R.drawable.ic_launcher_background else  memory.mediaList[0].uri, // Replace with your image loader
-                    contentDescription = "Memory Image ",
-                    contentScale = ContentScale.Crop,
+            if (memory.mediaList.isNotEmpty() || LocalInspectionMode.current) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                )
+                ) {
+
+                    AsyncImage(
+                        model = if (LocalInspectionMode.current) R.drawable.ic_launcher_background else memory.mediaList[0].uri, // Replace with your image loader
+                        contentDescription = "Memory Image ",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+
+                    if(memory.mediaList[0].type.isVideoFile()){
+                        PlayButton(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        )
+                    }
+
+                }
             }
 
             Column(

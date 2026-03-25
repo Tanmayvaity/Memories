@@ -176,6 +176,7 @@ fun MemorySearchBar(
                         onClick = {
                             onItemClick(item.memory.memoryId)
                         },
+                        type = item.mediaList.firstOrNull()?.type,
                         backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                         title = item.memory.title,
                         content = item.memory.content,

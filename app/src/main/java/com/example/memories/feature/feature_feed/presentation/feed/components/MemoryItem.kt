@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -58,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.toUri
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.domain.model.Type
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.presentation.components.ImageContainer
@@ -68,13 +71,14 @@ import com.example.memories.ui.theme.MemoriesTheme
 fun MemoryItem(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    elevation : Int = 0,
+    elevation: Int = 0,
     onClick: () -> Unit = {},
     onIconClick: () -> Unit = {},
-    imageUri : String? = null,
-    title : String,
-    content : String,
-    memoryForTimeStamp : Long = 0L
+    imageUri: String? = null,
+    type: Type? = Type.IMAGE_JPG,
+    title: String,
+    content: String,
+    memoryForTimeStamp: Long = 0L
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
@@ -85,10 +89,9 @@ fun MemoryItem(
     Card(
         modifier = modifier
             .height(100.dp)
-            .clickable{
+            .clickable {
                 onClick()
-            }
-        ,
+            },
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
@@ -97,70 +100,68 @@ fun MemoryItem(
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Box {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if(imageUri != null){
+                ImageContainer(
+                    modifier = Modifier.padding(5.dp),
+                    uri = imageUri?.toUri(),
+                    size = 75,
+                    isImage = type?.isImageFile() ?: false
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(
+                modifier = Modifier
+                    .weight(2f)
             ) {
-                Box {
-                    ImageContainer(
-                        modifier = Modifier.padding(5.dp),
-                        uri = imageUri?.toUri(),
-                        size = 75
-                    )
-                }
 
-
-                Column(
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .weight(2f)
-                        .padding(end = 10.dp)
-                ) {
-
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = content,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = memoryForTimeStamp.formatTime(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .wrapContentWidth()
-                        .padding(all = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconItem(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        alpha = 0f,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                        onClick = onIconClick
-                    )
-                }
-
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = content,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = memoryForTimeStamp.formatTime(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
             }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .wrapContentWidth()
+                    .padding(all = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                IconItem(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    alpha = 0f,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    onClick = onIconClick
+                )
+            }
+
+
         }
+
+
     }
 
 

@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.presentation.search.components
 
+import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -150,6 +151,7 @@ fun RecentSearchSection(
                         items(recentSearches) { item ->
                             MemoryItem(
                                 modifier = Modifier.animateItem(),
+                                type = item.mediaList.firstOrNull()?.type,
                                 title = item.memory.title,
                                 content = item.memory.content,
                                 imageUri = item.mediaList.firstOrNull()?.uri,
