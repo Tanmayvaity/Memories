@@ -260,8 +260,10 @@ fun MemoryDetailScreen(
                         MediaPager(
                             uris = memory.mediaList.map { UriType(it.uri, it.type) },
                             imageContentScale = ContentScale.FillWidth,
-                            imageModifier = Modifier.clickable {
-                                showImageDetail = true
+                            imageModifier = {
+                                Modifier.clickable {
+                                    showImageDetail = true
+                                }
                             },
                             playVideoCapability = false,
                             onPlayIconClick = { uri ->
@@ -484,7 +486,7 @@ fun MemoryDetailScreen(
             page = pagerState.currentPage,
             isDownloading = state.isDownloading,
             isSharing = state.isSharing,
-            onDownload = { uri,type ->
+            onDownload = { uri, type ->
                 onEvent(
                     MemoryDetailEvents.DownloadMedia(
                         uri = uri,

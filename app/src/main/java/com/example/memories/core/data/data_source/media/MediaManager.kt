@@ -26,6 +26,7 @@ import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.example.memories.core.data.data_source.graphics.ShaderPipeLine
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
@@ -40,7 +41,7 @@ import com.example.memories.core.util.TAG
 import java.net.URI
 
 class MediaManager(
-    val context: Context
+    val context: Context,
 ) {
 
 //    companion object {

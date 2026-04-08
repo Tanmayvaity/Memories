@@ -1,6 +1,5 @@
 package com.example.memories.feature.feature_media_edit.presentation.media_edit
 
-import android.R.attr.rotation
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.Log
@@ -91,13 +90,6 @@ fun MediaEditRoot(
                 }
 
                 is MediaEditOneTimeEvents.ShowShareChooser -> {
-//                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-//                        type = "image/*"
-//                        putExtra(Intent.EXTRA_STREAM, event.value)
-//                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//                    }
-//                    context.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
-
                     context.startChooser(event.value)
                 }
 
@@ -134,7 +126,7 @@ fun MediaEditScreen(
     val pagerState = rememberPagerState(initialPage = 0) { MAX_MEDIA_PAGES }
     val currentPage by remember { derivedStateOf { pagerState.currentPage } }
 //    var targetRotation by remember { mutableFloatStateOf(0f) }
-    val targetRotation = state.imageDegreeList[currentPage]
+    val targetRotation = state.adjustStateMap[currentPage]?.rotationDegrees ?: 0f
     val animatedRotation by animateFloatAsState(
         targetValue = targetRotation,
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
@@ -157,24 +149,50 @@ fun MediaEditScreen(
         }
     }
 
-    val runtimeShader = remember(state.shaderList[currentPage]) {
-        state.shaderList[currentPage]?.let { RuntimeShader(it) }
+//    val runtimeShader = remember(state.shaderList[currentPage]) {
+//        state.shaderList[currentPage]?.let { RuntimeShader(it) }
+//    }
+
+
+//    val runtimeShaders = (0 until MAX_MEDIA_PAGES).map { page ->
+//        val code = state.adjustStateMap[page]?.shaderStep?.shaderCode
+//        remember(code) { code?.let { RuntimeShader(it) } }
+//    }
+
+
+    val runtimeShader = remember(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode) {
+        state.adjustStateMap[currentPage]?.shaderStep?.shaderCode?.let { RuntimeShader(it) }
     }
 
+//    val renderEffects = remember {
+//        Array(MAX_MEDIA_PAGES) { mutableStateOf<androidx.compose.ui.graphics.RenderEffect?>(null) }
+//    }
+//
+//    for (page in 0 until MAX_MEDIA_PAGES) {
+//        val code = state.adjustStateMap[page]?.shaderStep?.shaderCode
+//        LaunchedEffect(code) {
+//            renderEffects[page].value = code?.let {
+//                android.graphics.RenderEffect
+//                    .createRuntimeShaderEffect(RuntimeShader(it), "inputShader")
+//                    .asComposeRenderEffect()
+//            }
+//        }
+//    }
+//
     val mediaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let { mediaUriList[currentPage] = it.toString() }
     }
 
-    val filterEffect = if (runtimeShader != null) {
-        android.graphics.RenderEffect.createRuntimeShaderEffect(
-            runtimeShader,
-            "inputShader"
-        )
-    } else {
-        null
-    }
+//    val filterEffect = if (runtimeShader != null) {
+//        android.graphics.RenderEffect.createRuntimeShaderEffect(
+//            runtimeShader,
+//            "inputShader"
+//        )
+//    } else {
+//        null
+//    }
 
 //    val adjustmentEffect = if(adjustmentShader != null){
 //       android.graphics.RenderEffect.createRuntimeShaderEffect(
@@ -196,12 +214,15 @@ fun MediaEditScreen(
 //    }
 
     // Scroll to current adjustment/filter when page or selection changes
-    LaunchedEffect(currentPage, state.currentAdjustTypeList[currentPage]) {
-        adjustListState.animateScrollToItem(state.currentAdjustTypeList[currentPage].ordinal)
+    LaunchedEffect(currentPage, state.adjustStateMap[currentPage]?.currentAdjustType) {
+        val item = state.adjustStateMap[currentPage]?.currentAdjustType?.ordinal ?: 0
+        adjustListState.animateScrollToItem(item)
     }
 
-    LaunchedEffect(currentPage, state.filterTypeList[currentPage]) {
-        filterListState.animateScrollToItem(state.filterTypeList[currentPage].ordinal)
+    LaunchedEffect(currentPage, state.adjustStateMap[currentPage]?.filterType) {
+        filterListState.animateScrollToItem(
+            state.adjustStateMap[currentPage]?.filterType?.ordinal ?: 0
+        )
     }
 
     LaunchedEffect(state.isDownloading) {
@@ -227,12 +248,12 @@ fun MediaEditScreen(
             MediaEditTopBar(
                 onBackPress = onBackPress,
                 onNextClick = {
-                    onEvent(
-                        MediaEvents.SaveMultipleImages(
-                            uriList = mediaUriList.map { it?.toUri() },
-                            page = currentPage
-                        )
-                    )
+//                    onEvent(
+//                        MediaEvents.SaveMultipleImages(
+//                            uriList = mediaUriList.map { it?.toUri() },
+//                            page = currentPage
+//                        )
+//                    )
                 },
                 enabled = mediaUriList.any { it != null },
                 isLoading = state.isDownloadingForNavigation
@@ -254,29 +275,6 @@ fun MediaEditScreen(
                 .consumeWindowInsets(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-//            MediaPager(
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .padding(vertical = 10.dp)
-//                    .clip(RoundedCornerShape(16.dp))
-//                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-//                bitmapList = null,
-//                mediaUris = mediaUriList,
-//                imageContentScale = ContentScale.Fit,
-//                type = MediaCreationType.NOT_BITMAP,
-//                pagerState = pagerState,
-//                onAddMediaClick = {
-//                    mediaLauncher.launch(
-//                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-//                    )
-//                },
-//                onRemoveMediaClick = { mediaUriList[currentPage] = null },
-//                runtimeShader = runtimeShader,
-//                adjustmentShader = null,
-//                rotation = animatedRotation
-//            )
-
-
             MediaPager(
                 modifier = Modifier
                     .weight(1f)
@@ -288,11 +286,25 @@ fun MediaEditScreen(
                         Type.fromUri(uri.toUri(), context)
                     })
                 },
-                imageContentScale = ContentScale.Fit,
+                imageContentScale = ContentScale.Crop,
                 pagerState = pagerState,
-                imageModifier = Modifier.graphicsLayer {
-                    renderEffect = filterEffect?.asComposeRenderEffect()
-                    rotationZ = animatedRotation
+                imageModifier = {
+                    Modifier.graphicsLayer {
+//                    renderEffect = filterEffect?.asComposeRenderEffect()
+//                    val shader = RuntimeShader(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode ?: return@graphicsLayer)
+
+
+                        if (runtimeShader != null) {
+                            val effect = android.graphics.RenderEffect.createRuntimeShaderEffect(
+                                runtimeShader,
+                                "inputShader"
+                            )
+                            renderEffect = effect.asComposeRenderEffect()
+                        }
+
+
+                        rotationZ = animatedRotation
+                    }
                 },
                 emptyPageContent = {
                     Box(
@@ -473,7 +485,7 @@ private fun AdjustmentPanel(
     onLeftClick: () -> Unit,
     onRightClick: () -> Unit
 ) {
-    val isAdjustMode = state.isFilterType
+    val isAdjustMode = state.isAdjustType
 
     AnimatedVisibility(
         visible = visible,
@@ -534,7 +546,10 @@ private fun AdjustmentHeader(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (isAdjust) {
                     Icon(
-                        painter = painterResource(state.activeAdjustType.iconRes),
+                        painter = painterResource(
+                            state.adjustStateMap[currentPage]?.currentAdjustType?.icon
+                                ?: R.drawable.ic_brightness_2
+                        ),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -542,12 +557,15 @@ private fun AdjustmentHeader(
                 }
 
                 val textValue = when {
-//                    state.isAdjustType -> {
-//                        state.currentAdjustTypeList[currentPage].displayName
-//                    }
+                    state.isAdjustType -> {
+                        state.adjustStateMap[currentPage]?.currentAdjustType?.name
+                            ?: AdjustType.BRIGHTNESS.adjustTypeName
+                    }
 
                     state.isFilterType -> {
-                        state.filterTypeList[currentPage].displayName
+                        state.adjustStateMap[currentPage]?.filterType?.displayName
+                            ?: FilterType.ORIGINAL.displayName
+
                     }
 
                     state.isRotateType -> {
@@ -564,19 +582,32 @@ private fun AdjustmentHeader(
 
                 if (isAdjust) {
                     ValueBadge(
-                        value = state.getAdjustmentValue(state.activeAdjustType, currentPage)
+                        value = state.getAdjustmentValue(
+                            state.adjustStateMap[currentPage]?.currentAdjustType
+                                ?: AdjustType.BRIGHTNESS, currentPage
+                        )
                             .toInt(),
-                        onClick = { onEvent(MediaEvents.OnAdjustTypeValueClick(currentPage)) }
+                        onClick = {
+                            onEvent(MediaEvents.OnAdjustTypeValueClick(currentPage))
+                        }
                     )
                 }
             }
             Spacer(Modifier.height(16.dp))
-            if (false) {
+            if (isAdjust) {
+
+                val currentAdjustType =
+                    state.adjustStateMap[currentPage]?.currentAdjustType ?: AdjustType.BRIGHTNESS
+                val minValue = currentAdjustType.min
+                val maxValue = currentAdjustType.max
+
                 AdjustmentSlider(
-                    value = state.getAdjustmentValue(state.activeAdjustType, currentPage),
-                    range = state.activeAdjustType.minValue..state.activeAdjustType.maxValue,
+                    value = state.getAdjustmentValue(currentAdjustType, currentPage),
+                    range = minValue..maxValue,
                     enabled = hasMedia,
-                    onValueChange = { onEvent(MediaEvents.AdjustTypeValueChange(it, currentPage)) }
+                    onValueChange = {
+                        onEvent(MediaEvents.AdjustTypeValueChange(it, currentPage))
+                    }
                 )
             }
         }
@@ -670,21 +701,23 @@ private fun ToolSelector(
                 )
             }
 
-//            EditTool.ADJUST -> {
-//                AdjustTypeSelector(
-//                    selectedType = state.currentAdjustTypeList[currentPage],
-//                    listState = adjustListState,
-//                    onSelect = { onEvent(MediaEvents.AdjustTypeStateChange(it, currentPage)) }
-//                )
-//            }
+            EditTool.ADJUST -> {
+                AdjustTypeSelector(
+                    selectedType = state.adjustStateMap[currentPage]?.currentAdjustType
+                        ?: AdjustType.BRIGHTNESS,
+                    listState = adjustListState,
+                    onSelect = { onEvent(MediaEvents.AdjustTypeStateChange(it, currentPage)) }
+                )
+            }
 
             EditTool.FILTER -> {
                 FilterTypeSelector(
-                    selectedType = state.filterTypeList[currentPage],
+                    selectedType = state.adjustStateMap[currentPage]?.filterType
+                        ?: FilterType.ORIGINAL,
                     listState = filterListState,
                     onSelect = { type ->
                         onEvent(MediaEvents.FilterTypeStateChange(type, currentPage))
-                        onEvent(MediaEvents.ApplyFilter(currentPage))
+                        onEvent(MediaEvents.ApplyFilter(currentPage, type))
                     }
                 )
             }
@@ -709,8 +742,8 @@ private fun AdjustTypeSelector(
         items(AdjustType.entries) { type ->
             SelectableChip(
                 selected = type == selectedType,
-                label = type.displayName,
-                leadingIcon = type.iconRes,
+                label = type.adjustTypeName,
+                leadingIcon = type.icon,
                 onClick = { onSelect(type) }
             )
         }
@@ -861,8 +894,9 @@ private fun MediaEditScreenPreview() {
     MemoriesTheme {
         MediaEditScreen(
             state = EditorState(
-                initialActiveTool = EditTool.FILTER
-            ),
+                initialActiveTool = EditTool.ADJUST,
+
+                ),
         )
     }
 }

@@ -53,6 +53,7 @@ fun IconItem(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor.copy(alpha = alpha))
+
     ) {
         Icon(
             painter = painterResource(drawableRes),

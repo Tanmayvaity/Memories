@@ -4,10 +4,17 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.memories.core.data.data_source.graphics.ShaderStep
 import com.example.memories.core.data.data_source.media.FilterShaders
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.feature.feature_media_edit.data.CoolFadeStep
+import com.example.memories.feature.feature_media_edit.data.GrayScaleStep
+import com.example.memories.feature.feature_media_edit.data.InvertStep
+import com.example.memories.feature.feature_media_edit.data.OriginalStep
+import com.example.memories.feature.feature_media_edit.data.SepiaStep
+import com.example.memories.feature.feature_media_edit.data.VintageStep
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
@@ -40,15 +47,14 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.deleteInternalMedia(uriList)
     }
 
-    override fun applyFilter(filterType: FilterType): String? {
+    override fun applyFilter(filterType: FilterType): ShaderStep{
         return when(filterType){
-            FilterType.ORIGINAL -> null
-            FilterType.GRAYSCALE -> FilterShaders.GRAYSCALE_SHADER
-            FilterType.SEPIA -> FilterShaders.SEPIA_SHADER
-            FilterType.INVERT -> FilterShaders.INVERT_SHADER
-            FilterType.VINTAGE -> FilterShaders.VINTAGE_SHADER
-            FilterType.COOL_FADE -> FilterShaders.COOL_FADE_SHADER
-//            FilterType.ADEN ->  FilterShaders.ADEN_SHADER
+            FilterType.ORIGINAL -> OriginalStep()
+            FilterType.GRAYSCALE -> GrayScaleStep()
+            FilterType.SEPIA -> SepiaStep()
+            FilterType.INVERT -> InvertStep()
+            FilterType.VINTAGE -> VintageStep()
+            FilterType.COOL_FADE -> CoolFadeStep()
         }
 
     }

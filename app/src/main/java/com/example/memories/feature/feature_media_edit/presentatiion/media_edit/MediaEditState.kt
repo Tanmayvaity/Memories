@@ -1,18 +1,10 @@
 package com.example.memories.feature.feature_media_edit.presentatiion.media_edit
 
-import android.graphics.Bitmap
 import android.net.Uri
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.memories.R
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import com.example.memories.core.data.data_source.media.FilterShaders
+import com.example.memories.core.data.data_source.graphics.ShaderStep
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.feature.feature_media_edit.data.OriginalStep
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 
@@ -21,8 +13,8 @@ import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 //)
 
 enum class EditTool(val label: String, val icon: Int) {
-    //    CROP("Crop", R.drawable.ic_crop),
-//    ADJUST("Adjust", R.drawable.ic_adjust),
+        CROP("Crop", R.drawable.ic_crop),
+    ADJUST("Adjust", R.drawable.ic_adjust),
     FILTER("Filters", R.drawable.ic_lux),
     ROTATE("Rotate", R.drawable.ic_rotate),
     MORE("More", R.drawable.ic_more_horizontal)
@@ -33,24 +25,38 @@ enum class RotationDirection {
     RIGHT
 }
 
+data class AdjustState(
+    val filterType : FilterType = FilterType.ORIGINAL,
+    val adjustTypeValues: Map<AdjustType, Float> = mapOf(
+        AdjustType.BRIGHTNESS to 0f,
+        AdjustType.BLUR to 0f,
+        AdjustType.CONTRAST to 0f,
+        AdjustType.SATURATION to 0f,
+        AdjustType.TEMPERATURE to 0f
+    ),
+    val currentAdjustType : AdjustType = AdjustType.BRIGHTNESS,
+    val rotationDegrees : Float = 0f,
+
+    val shaderStep : ShaderStep = OriginalStep()
+)
+
 data class EditorState(
     val initialActiveTool: EditTool = EditTool.FILTER,
     val initialPreviousTool: EditTool = EditTool.FILTER,
+    val adjustStateMap : Map<Int,AdjustState> = emptyMap(),
 
-    val originalBitmap: Bitmap? = null,
-    val filteredBitmap: Bitmap? = null,
-    val filterType: FilterType = FilterType.ORIGINAL,
-    val activeAdjustType: AdjustType = AdjustType.BRIGHTNESS,
-    val adjustValues: Map<AdjustType, Float> = emptyMap(),
-    val originalBitmapList: List<Bitmap?> = MutableList(size = 5) { null }.toList(),
-    val filteredBitmapList: List<Bitmap?> = emptyList(),
-
-    val shaderList: List<String?> = MutableList(5) { null }.toList(),
-    val adjustShaderList: List<String?> = MutableList(5) { null }.toList(),
-    val filterTypeList: List<FilterType> = MutableList(5) { FilterType.ORIGINAL }.toList(),
-    val adjustValuesList: List<Map<AdjustType, Float>> = MutableList(5) { emptyMap() },
-    val currentAdjustTypeList: List<AdjustType> = MutableList(AdjustType.entries.size) { AdjustType.BRIGHTNESS }.toList(),
-    val imageDegreeList: List<Float> = MutableList(5) { 0f }.toList(),
+//    val filterType: FilterType = FilterType.ORIGINAL,
+//    val activeAdjustType: AdjustType = AdjustType.BRIGHTNESS,
+//    val adjustValues: Map<AdjustType, Float> = emptyMap(),
+//    val originalBitmapList: List<Bitmap?> = MutableList(size = 5) { null }.toList(),
+//    val filteredBitmapList: List<Bitmap?> = emptyList(),
+//
+//    val shaderList: List<String?> = MutableList(5) { null }.toList(),
+//    val adjustShaderList: List<String?> = MutableList(5) { null }.toList(),
+//    val filterTypeList: List<FilterType> = MutableList(5) { FilterType.ORIGINAL }.toList(),
+//    val adjustValuesList: List<Map<AdjustType, Float>> = MutableList(5) { emptyMap() },
+//    val currentAdjustTypeList: List<AdjustType> = MutableList(AdjustType.entries.size) { AdjustType.BRIGHTNESS }.toList(),
+//    val imageDegreeList: List<Float> = MutableList(5) { 0f }.toList(),
 
     val isDownloading: Boolean = false,
     val isSharing: Boolean = false,
@@ -58,17 +64,17 @@ data class EditorState(
 ) {
     fun getAdjustmentValue(type: AdjustType, index: Int): Float {
 //        return adjustValues[type] ?: 0f
-        return adjustValuesList[index][type] ?: 0f
+        return adjustStateMap[index]?.adjustTypeValues[type] ?: 0f
     }
 
-    fun isFilterOrAdjustOrRotateType(tool: EditTool): Boolean =
-        tool == EditTool.FILTER || tool == EditTool.ROTATE
+    fun isFilterOrAdjustOrRotateType(tool: EditTool): Boolean = tool != EditTool.MORE
+//        tool == EditTool.FILTER || tool == EditTool.ROTATE || tool == EditTool.
 
 
     val isFilterType: Boolean = initialActiveTool == EditTool.FILTER
-//    val  isAdjustType: Boolean = initialActiveTool == EditTool.ADJUST
+    val  isAdjustType: Boolean = initialActiveTool == EditTool.ADJUST
 
-//    val isCropType : Boolean = initialActiveTool == EditTool.CROP
+    val isCropType : Boolean = initialActiveTool == EditTool.CROP
 
     val isRotateType: Boolean = initialActiveTool == EditTool.ROTATE
 

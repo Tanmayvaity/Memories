@@ -34,7 +34,7 @@ fun MediaPager(
     uris: List<UriType>,
     modifier: Modifier = Modifier,
     pagerHeight: Dp = 300.dp,
-    imageModifier: Modifier = Modifier,
+    imageModifier: (Int) -> Modifier = { Modifier },
     imageContentScale: ContentScale = ContentScale.FillWidth,
     pagerState: PagerState = rememberPagerState(
         initialPage = 0,
@@ -71,7 +71,7 @@ fun MediaPager(
                             contentDescription = "Media item $page",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .then(imageModifier),
+                                .then(imageModifier(page)),
                             contentScale = imageContentScale
                         )
                         if (type != null && type.isVideoFile()) {

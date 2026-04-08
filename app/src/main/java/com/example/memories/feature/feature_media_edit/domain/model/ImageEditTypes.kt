@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_media_edit.domain.model
 
+import android.R.attr.entries
 import com.example.memories.R
 
 enum class FilterType(val displayName: String) {
@@ -9,21 +10,20 @@ enum class FilterType(val displayName: String) {
     INVERT("Invert"),
     VINTAGE("Vintage"),
     COOL_FADE("Cool Fade"),
-//    ADEN("Aden")
 }
 
 enum class AdjustType(
-    val displayName: String,
-    val iconRes: Int,
+    val adjustTypeName: String,
+    val icon: Int,
     val defaultValue: Float,
-    val minValue: Float,
-    val maxValue: Float
+    val min: Float,
+    val max: Float
 ) {
     BRIGHTNESS("Brightness", R.drawable.ic_brightness_2, 0f, -100f, 100f),
     BLUR("Blur", R.drawable.ic_blur, 0f, 0f, 20f),
     CONTRAST("Contrast", R.drawable.ic_contrast, 0f, -100f, 100f),
     SATURATION("Saturation", R.drawable.ic_saturation, 0f, -100f, 100f),
-    TEMPERATURE("Temperature", R.drawable.ic_warmth, 0f, -100f, 100f),  // More subtle range
+    TEMPERATURE("Temperature", R.drawable.ic_warmth, 0f, -100f, 100f),
     FADE("Fade", R.drawable.ic_fade, 0f, 0f, 100f),
-    VIGNETTE("Vignette", R.drawable.ic_vignette, 0f, 0f, 100f),
+    VIGNETTE("Vignette", R.drawable.ic_vignette, 0f, 0f, 100f);
 }
