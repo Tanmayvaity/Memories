@@ -1,6 +1,11 @@
 package com.example.memories.feature.feature_feed.presentation.common
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -54,5 +59,27 @@ fun <T> SectionStateContainer(
         is SectionState.Success -> {
             successContent(state.data)
         }
+    }
+}
+
+@Composable
+fun <T> MemoriesStateContent(
+    memoryState: SectionState<List<T>>,
+    modifier: Modifier = Modifier,
+    emptyContent: @Composable () -> Unit,
+    successContent: @Composable (List<T>) -> Unit,
+) {
+    AnimatedContent(
+        targetState = memoryState,
+        modifier = modifier,
+        label = "memories_state"
+    ) { state ->
+        SectionStateContainer(
+            state = state,
+            loadingContent = { LoadingIndicator(showText = true) },
+            errorContent = { ErrorStateCard(onRetryClick = {}) },
+            emptyContent = emptyContent,
+            successContent = successContent
+        )
     }
 }

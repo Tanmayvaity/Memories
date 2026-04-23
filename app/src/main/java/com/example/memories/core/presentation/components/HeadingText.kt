@@ -1,7 +1,7 @@
 package com.example.memories.core.presentation.components
 
-import android.R.attr.fontWeight
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +29,20 @@ fun HeadingText(
         modifier = modifier
     )
 }
+
+@Composable
+fun LargeHeadingText(title : String,modifier: Modifier = Modifier) {
+    HeadingText(
+        title = title,
+        textStyle = MaterialTheme.typography.headlineLarge.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.ExtraBold
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
 
 @Preview
 @Composable

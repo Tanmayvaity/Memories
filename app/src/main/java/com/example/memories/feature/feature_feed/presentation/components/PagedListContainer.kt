@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.example.memories.core.presentation.components.LoadingIndicator
 
 @Composable
@@ -42,8 +44,8 @@ fun <T : Any> PagedListContainer(
             reasonText = "Unknown error occurred while fetching memories"
         ) { }
     },
-    itemKey: ((index: Int) -> Any)? = null,
-    itemContentType: ((index: Int) -> Any?)? = null,
+    itemKey: ((T) -> Any)? = null,
+    itemContentType: ((T) -> Any?)? = null,
     itemContent: @Composable LazyItemScope.(T) -> Unit
 ) {
     val refresh = items.loadState.refresh
@@ -68,7 +70,7 @@ fun <T : Any> PagedListContainer(
 
         else -> {
             LazyColumn(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 state = lazyListState,
                 contentPadding = contentPadding,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -76,8 +78,8 @@ fun <T : Any> PagedListContainer(
             ) {
                 items(
                     count = items.itemCount,
-                    key = itemKey,
-                    contentType = itemContentType ?: { null }
+                    key = itemKey?.let { items.itemKey(it) },
+                    contentType = itemContentType?.let { items.itemContentType(it) } ?: {null}
                 ) { index ->
                     items[index]?.let { item -> itemContent(item) }
                 }

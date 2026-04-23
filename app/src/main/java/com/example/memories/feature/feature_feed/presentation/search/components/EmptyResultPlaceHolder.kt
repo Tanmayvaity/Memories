@@ -21,8 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
 fun EmptyResultPlaceHolder(
@@ -32,7 +34,8 @@ fun EmptyResultPlaceHolder(
     height: Dp= 200.dp,
     onButtonClick: () -> Unit= {},
     buttonIcon : ImageVector = Icons.Default.Add,
-    showTextOnly : Boolean = false
+    showTextOnly : Boolean = false,
+    contentAlignment : Alignment = Alignment.Center
 ) {
     Box(
         modifier = modifier
@@ -40,7 +43,7 @@ fun EmptyResultPlaceHolder(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(16.dp),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
+        contentAlignment = contentAlignment
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -69,5 +72,18 @@ fun EmptyResultPlaceHolder(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun EmptyResultPlaceHolderPreview() {
+    MemoriesTheme {
+        EmptyResultPlaceHolder(
+            emptyText = "No memories found",
+            buttonText = "Create Memory",
+            onButtonClick = {},
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        )
     }
 }

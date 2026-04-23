@@ -100,6 +100,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.HistoryUseCaseWrapper
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetOnThisDayNotificationUseCase
@@ -351,14 +352,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesFeedRepository(
-        repository: MemoryRepository
-    ): FetchTodayMemoriesUseCase {
-        return FetchTodayMemoriesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
     fun providesFeedUseCases(
         repository: MemoryRepository,
         tagRepository: TagRepository,
@@ -380,6 +373,17 @@ object AppModule {
             downloadVideoUseCase = DownloadVideoUseCase(mediaRepository)
         )
 
+    }
+
+    @Provides
+    @Singleton
+    fun providesHistoryUseCaseWrapper(
+        repository: MemoryRepository
+    ): HistoryUseCaseWrapper {
+        return HistoryUseCaseWrapper(
+            fetchTodayMemoriesUseCase = FetchTodayMemoriesUseCase(repository),
+            fetchAllMemories = GetFeedUseCase(repository)
+        )
     }
 
     @Provides

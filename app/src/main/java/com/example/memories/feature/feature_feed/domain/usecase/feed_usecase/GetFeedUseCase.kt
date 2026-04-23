@@ -12,9 +12,9 @@ class GetFeedUseCase(
     private val repository: MemoryRepository
 ) {
     operator fun invoke(
-        type: FetchType,
-        sortType: SortType,
-        orderByType: SortOrder
+        type: FetchType = FetchType.ALL,
+        sortType: SortType = SortType.CreatedForDate,
+        orderByType: SortOrder = SortOrder.Descending
     ): Flow<PagingData<MemoryWithMediaModel>> {
         return repository.getMemories(type, sortType, orderByType)
     }

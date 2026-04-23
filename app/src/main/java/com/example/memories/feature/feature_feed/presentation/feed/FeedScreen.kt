@@ -254,7 +254,7 @@ fun FeedScreen(
             items = memories,
             modifier = Modifier.padding(innerPadding),
             lazyListState = lazyListState,
-            itemKey = { index -> memories[index]?.memory?.memoryId ?: index },
+            itemKey = { item -> item.memory.memoryId },
             itemContentType = { "memory_item" }
         ) { memory ->
             MemoryItemCard(

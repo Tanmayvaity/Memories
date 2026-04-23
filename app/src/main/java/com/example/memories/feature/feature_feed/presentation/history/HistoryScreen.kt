@@ -4,14 +4,20 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,56 +25,76 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.getSelectedDate
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.AppTopBar
+import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.IconItem
-import com.example.memories.core.presentation.components.LoadingIndicator
+import com.example.memories.core.presentation.components.LargeHeadingText
 import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
-import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
+import com.example.memories.feature.feature_feed.presentation.common.MemoriesStateContent
 import com.example.memories.feature.feature_feed.presentation.common.SectionState
-import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
+import com.example.memories.feature.feature_feed.presentation.components.PagedListContainer
 import com.example.memories.feature.feature_feed.presentation.search.components.EmptyResultPlaceHolder
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -79,15 +105,19 @@ fun HistoryRoot(
     onNavigate: (AppScreen) -> Unit = {}
 ) {
     val date by viewModel.date.collectAsStateWithLifecycle()
-    val memories by viewModel.memories.collectAsStateWithLifecycle()
-
+    val memoriesByDate by viewModel.memoriesByDate.collectAsStateWithLifecycle()
+    val memoriesByMonth = viewModel.memoriesByMonth.collectAsLazyPagingItems()
+    val timeLineDisplayMode by viewModel.currentTimeLineDisplayMode.collectAsStateWithLifecycle()
     HistoryScreen(
-        memoriesState = memories,
+        memoriesState = memoriesByDate,
+        memoriesByMonth = memoriesByMonth,
         date = date,
         onBack = onBack,
         onDateChange = viewModel::onDateChange,
         onNavigateToMemoryCreate = onNavigate,
-        onNavigateToMemoryDetail = onNavigate
+        onNavigateToMemoryDetail = onNavigate,
+        timeLineDisplayMode = timeLineDisplayMode,
+        onTabChange = viewModel::onTabChange,
     )
 }
 
@@ -97,18 +127,27 @@ fun HistoryRoot(
 fun HistoryScreen(
     modifier: Modifier = Modifier,
     memoriesState: SectionState<List<MemoryWithMediaModel>>,
+    memoriesByMonth: LazyPagingItems<MemoryListItem>,
     date: LocalDate? = null,
+    timeLineDisplayMode: TimeLineDisplayMode,
     onDateChange: (LocalDate) -> Unit = {},
+    onTabChange: (TimeLineDisplayMode) -> Unit = {},
     onBack: () -> Unit = {},
     onNavigateToMemoryDetail: (AppScreen) -> Unit = {},
-    onNavigateToMemoryCreate: (AppScreen) -> Unit = {}
+    onNavigateToMemoryCreate: (AppScreen) -> Unit = {},
 ) {
     val isPreviewMode = LocalInspectionMode.current
+    val pagerState = rememberPagerState(
+        pageCount = { TimeLineDisplayMode.entries.size },
+        initialPage = timeLineDisplayMode.ordinal
+    )
+    val scope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
 
     val todayMillis = remember {
         LocalDate.now()
-            .atStartOfDay()
-            .toInstant(ZoneOffset.UTC)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
             .toEpochMilli()
     }
 
@@ -118,10 +157,31 @@ fun HistoryScreen(
 
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
+    val currentMonth by remember(memoriesByMonth) {
+        derivedStateOf {
+            if (timeLineDisplayMode != TimeLineDisplayMode.List) return@derivedStateOf null
+            if (memoriesByMonth.itemCount == 0) return@derivedStateOf null
+
+            val index = lazyListState.firstVisibleItemIndex
+            if (index >= memoriesByMonth.itemCount) return@derivedStateOf null
+
+            when (val item = memoriesByMonth.peek(index)) {
+                is MemoryListItem.Entry -> if (isPreviewMode) YearMonth.now() else item.yearMonth()
+                is MemoryListItem.MonthHeader -> if (isPreviewMode) YearMonth.now() else item.yearMonth
+                null -> null
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         snapshotFlow { datePickerState.getSelectedDate() }
             .filterNotNull()
             .collect { selectedDate -> onDateChange(selectedDate) }
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .collect { page -> onTabChange(TimeLineDisplayMode.entries[page]) }
     }
 
     Scaffold(
@@ -129,10 +189,10 @@ fun HistoryScreen(
         topBar = {
             AppTopBar(
                 title = {
-                    Text(
-                        text = datePickerState.getSelectedDate()
-                            ?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy"))
-                            .toString()
+                    HistoryTopBarTitle(
+                        timeLineDisplayMode = timeLineDisplayMode,
+                        currentMonth = currentMonth,
+                        datePickerState = datePickerState,
                     )
                 },
                 showDivider = false,
@@ -140,62 +200,230 @@ fun HistoryScreen(
                 onNavigationIconClick = onBack,
                 showAction = true,
                 actionContent = {
-                    IconItem(
-                        drawableRes = R.drawable.ic_calender,
-                        contentDescription = "Calendar icon",
-                        onClick = { showDatePicker = !showDatePicker },
-                        alpha = 0f,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    AnimatedVisibility(
+                        visible = timeLineDisplayMode == TimeLineDisplayMode.Calendar,
+                    ) {
+                        IconItem(
+                            drawableRes = R.drawable.ic_calender,
+                            contentDescription = "Calendar icon",
+                            onClick = { showDatePicker = !showDatePicker },
+                            alpha = 0f,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             )
         },
         contentWindowInsets = WindowInsets(0.dp),
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .animateContentSize()
         ) {
-            AnimatedVisibility(showDatePicker) {
-                DatePicker(
-                    state = datePickerState,
-                    showModeToggle = true
-                )
-            }
-            AnimatedContent(
-                targetState = memoriesState,
-                modifier = Modifier.padding(16.dp),
-                label = "memories_state"
-            ) { state ->
-                SectionStateContainer(
-                    state = state,
-                    loadingContent = {
-                        LoadingIndicator(showText = true)
-                    },
-                    emptyContent = {
-                        EmptyResultPlaceHolder(
-                            emptyText = "No memories for this date",
-                            buttonText = "Create Memory",
-                            height = 200.dp,
-                            onButtonClick = {
-                                onNavigateToMemoryCreate(AppScreen.Memory())
-                            }
-                        )
-                    },
-                    errorContent = {
-                        ErrorStateCard(onRetryClick = {})
-                    },
-                    successContent = { memories ->
-                        MemoryList(
-                            memories = memories,
-                            isPreviewMode = isPreviewMode,
-                            onNavigateToMemoryDetail = onNavigateToMemoryDetail
+            HistoryTabRow(
+                pagerState = pagerState,
+                onTabClick = { index ->
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                }
+            )
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (TimeLineDisplayMode.entries[page]) {
+                    TimeLineDisplayMode.List -> {
+                        ListModeContent(
+                            memoriesByMonth = memoriesByMonth,
+                            lazyListState = lazyListState,
+                            onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+                            onNavigateToMemoryCreate = onNavigateToMemoryCreate,
+                            isPreviewMode = isPreviewMode
                         )
                     }
+
+                    TimeLineDisplayMode.Calendar -> {
+                        CalendarModeContent(
+                            memoriesState = memoriesState,
+                            datePickerState = datePickerState,
+                            showDatePicker = showDatePicker &&
+                                    timeLineDisplayMode == TimeLineDisplayMode.Calendar,
+                            isPreviewMode = isPreviewMode,
+                            onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+                            onNavigateToMemoryCreate = onNavigateToMemoryCreate,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun HistoryTopBarTitle(
+    timeLineDisplayMode: TimeLineDisplayMode,
+    currentMonth: YearMonth?,
+    datePickerState: DatePickerState,
+) {
+    AnimatedContent(targetState = timeLineDisplayMode) { mode ->
+        when (mode) {
+            TimeLineDisplayMode.List -> {
+                AnimatedContent(targetState = currentMonth) { month ->
+                    LargeHeadingText(
+                        title = month?.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+                            ?: "Memories",
+                    )
+                }
+            }
+
+            TimeLineDisplayMode.Calendar -> {
+                LargeHeadingText(
+                    title = datePickerState.getSelectedDate()
+                        ?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy"))
+                        .toString(),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun HistoryTabRow(
+    pagerState: PagerState,
+    onTabClick: (Int) -> Unit,
+) {
+    PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
+        TimeLineDisplayMode.entries.forEachIndexed { index, mode ->
+            Tab(
+                selected = pagerState.currentPage == index,
+                onClick = { onTabClick(index) },
+                text = { Text(text = mode.displayName) }
+            )
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun ListModeContent(
+    memoriesByMonth: LazyPagingItems<MemoryListItem>,
+    lazyListState: LazyListState,
+    onNavigateToMemoryDetail: (AppScreen) -> Unit,
+    onNavigateToMemoryCreate: (AppScreen) -> Unit,
+    isPreviewMode: Boolean,
+) {
+    PagedListContainer(
+        items = memoriesByMonth,
+        lazyListState = lazyListState,
+        itemContent = { memory ->
+            when (memory) {
+                is MemoryListItem.Entry -> {
+                    val memoryId = memory.memory.memory.memoryId
+                    HistoryMemoryCard(
+                        item = memory.memory,
+                        isPreviewMode = isPreviewMode,
+                        showDateHeader = true,
+                        onViewDetail = {
+                            onNavigateToMemoryDetail(AppScreen.MemoryDetail(memoryId))
+                        }
+                    )
+                }
+
+                is MemoryListItem.MonthHeader -> {
+                    HeadingText(
+                        title = memory.yearMonth.format(
+                            DateTimeFormatter.ofPattern("MMMM yyyy")
+                        ),
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Start,
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
+        itemKey = { item ->
+            when (item) {
+                is MemoryListItem.Entry -> "entry_${item.memory.memory.memoryId}"
+                is MemoryListItem.MonthHeader -> "header_${item.anchorId}"
+            }
+        },
+        itemContentType = { item -> item::class.simpleName },
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        emptyContent = {
+            EmptyResultPlaceHolder(
+                emptyText = "No memories have been created",
+                buttonText = "Create Memory",
+                height = 200.dp,
+                onButtonClick = { onNavigateToMemoryCreate(AppScreen.Memory()) },
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp)
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun CalendarModeContent(
+    memoriesState: SectionState<List<MemoryWithMediaModel>>,
+    datePickerState: DatePickerState,
+    showDatePicker: Boolean,
+    isPreviewMode: Boolean,
+    onNavigateToMemoryDetail: (AppScreen) -> Unit,
+    onNavigateToMemoryCreate: (AppScreen) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = showDatePicker,
+            enter = expandVertically(
+                animationSpec = tween(durationMillis = 300),
+                expandFrom = Alignment.Top
+            ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+            exit = shrinkVertically(
+                animationSpec = tween(durationMillis = 300),
+                shrinkTowards = Alignment.Top
+            ) + fadeOut(animationSpec = tween(durationMillis = 300))
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = true
+            )
+        }
+        AnimatedContent(
+            targetState = memoriesState,
+            modifier = Modifier.padding(16.dp),
+            label = "memories_state"
+        ) { state ->
+            MemoriesStateContent(
+                memoryState = state,
+                emptyContent = {
+                    EmptyResultPlaceHolder(
+                        emptyText = "No memories for this date",
+                        buttonText = "Create Memory",
+                        height = 200.dp,
+                        onButtonClick = { onNavigateToMemoryCreate(AppScreen.Memory()) },
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                successContent = { memories ->
+                    MemoryList(
+                        memories = memories,
+                        isPreviewMode = isPreviewMode,
+                        onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+                    )
+                }
+            )
         }
     }
 }
@@ -228,86 +456,119 @@ private fun MemoryList(
 private fun HistoryMemoryCard(
     item: MemoryWithMediaModel,
     isPreviewMode: Boolean,
+    showDateHeader: Boolean = false,
     onViewDetail: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    if (item.memory.memoryForTimeStamp == null && !isPreviewMode) return
+
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .height(IntrinsicSize.Min)
+            .padding(8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_timer),
-                            contentDescription = "Time Icon",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
+        if (showDateHeader) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = item.memory.memoryForTimeStamp!!.formatTime("dd"),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = item.memory.memoryForTimeStamp.formatTime("EEE"),
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                VerticalDivider(
+                    modifier = Modifier.fillMaxHeight(),
+                    thickness = 1.dp,
+                    color = Color.Gray.copy(alpha = 0.4f),
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_timer),
+                                contentDescription = "Time Icon",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = item.memory.timeStamp.formatTime(format = "hh : mm a"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(5.dp))
                         Text(
-                            text = item.memory.timeStamp.formatTime(format = "hh : mm a"),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
+                            text = item.memory.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Start,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = item.memory.content,
+                            style = MaterialTheme.typography.titleSmall,
+                            textAlign = TextAlign.Start,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    Spacer(modifier = Modifier.height(5.dp))
-                    Text(
-                        text = item.memory.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Start,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = item.memory.content,
-                        style = MaterialTheme.typography.titleSmall,
-                        textAlign = TextAlign.Start,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
 
-                if (item.mediaList.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(75.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    ) {
-                        AsyncImage(
-                            modifier = Modifier.fillMaxSize(),
-                            model = if (isPreviewMode) R.drawable.ic_launcher_background else item.mediaList[0].uri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop
-                        )
-                        if(item.mediaList.first().type.isVideoFile()){
-                            PlayButton(modifier = Modifier.align(Alignment.Center))
+                    if (item.mediaList.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(75.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        ) {
+                            AsyncImage(
+                                modifier = Modifier.fillMaxSize(),
+                                model = if (isPreviewMode) R.drawable.ic_launcher_background else item.mediaList[0].uri,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop
+                            )
+                            if (item.mediaList.first().type.isVideoFile()) {
+                                PlayButton(modifier = Modifier.align(Alignment.Center))
+                            }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedButton(
-                onClick = onViewDetail,
-                modifier = Modifier.align(Alignment.End),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
-            ) {
-                Text(
-                    text = "View Detail",
-                    color = MaterialTheme.colorScheme.primary
-                )
+                OutlinedButton(
+                    onClick = onViewDetail,
+                    modifier = Modifier.align(Alignment.End),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text(
+                        text = "View Detail",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -317,8 +578,28 @@ private fun HistoryMemoryCard(
 @PreviewLightDark
 @Composable
 private fun HistoryScreenPreview() {
-    val previewMemories = List(10) { MemoryWithMediaModel() }
+    val now = System.currentTimeMillis()
+    val previewMemories = List(10) { i ->
+        MemoryWithMediaModel().let { m ->
+            m.copy(
+                memory = m.memory.copy(
+                    memoryId = i.toString(),
+                    title = "Memory $i",
+                    content = "Preview content $i",
+                    timeStamp = now,
+                    memoryForTimeStamp = now,
+                )
+            )
+        }
+    }
+    val previewPagingData = PagingData.from<MemoryListItem>(
+        previewMemories.map { MemoryListItem.Entry(it) }
+    )
     MemoriesTheme {
-        HistoryScreen(memoriesState = SectionState.Success(previewMemories))
+        HistoryScreen(
+            memoriesState = SectionState.Success(previewMemories),
+            timeLineDisplayMode = TimeLineDisplayMode.List,
+            memoriesByMonth = flowOf(previewPagingData).collectAsLazyPagingItems()
+        )
     }
 }
