@@ -1,6 +1,8 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import androidx.compose.ui.focus.FocusState
+import com.example.memories.core.domain.model.MediaActionType
+import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot

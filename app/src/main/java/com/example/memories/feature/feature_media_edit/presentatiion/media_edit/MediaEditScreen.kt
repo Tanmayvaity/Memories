@@ -1,11 +1,9 @@
 package com.example.memories.feature.feature_media_edit.presentation.media_edit
 
+import android.R.attr.type
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -45,11 +43,14 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memories.R
+import com.example.memories.core.domain.model.MediaActionType
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MenuItem
+import com.example.memories.core.presentation.components.ActionSelectorBottomSheet
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.MediaCaptureHost
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.startChooser
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
@@ -60,13 +61,10 @@ import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaEvents
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaViewModel
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.RotationDirection
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.ActionSelectorBottomSheet
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 
 private const val MAX_MEDIA_PAGES = 5
-
-typealias MediaUri = String?
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -75,6 +73,8 @@ fun MediaEditRoot(
     viewModel: MediaViewModel = hiltViewModel(),
     onBackPress: () -> Unit = {},
     onNextClick: (AppScreen.Memory) -> Unit = {},
+    onNavigateToCamera: (AppScreen.Camera) -> Unit = {},
+    takenUri: String? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -99,11 +99,28 @@ fun MediaEditRoot(
             }
         }
     }
+
+    LaunchedEffect(takenUri) {
+        if (takenUri != null &&
+            state.currentPosition != null &&
+            state.mediaActionType == MediaActionType.CUSTOM_APP_CAMERA_FEATURE
+        ) {
+            viewModel.onEvent(
+                MediaEvents.AddMediaUri(
+                    UriType(takenUri, Type.fromUri(takenUri.toUri(), context)),
+                    state.currentPosition!!
+                )
+            )
+            viewModel.onEvent(MediaEvents.UpdateMediaActionType(MediaActionType.NONE))
+        }
+    }
+
     MediaEditScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onBackPress = onBackPress,
         onNextClick = onNextClick,
+        onNavigateToCamera = onNavigateToCamera,
         snackBarHostState = snackBarHostState
     )
 }
@@ -116,12 +133,15 @@ fun MediaEditScreen(
     onEvent: (MediaEvents) -> Unit = {},
     onBackPress: () -> Unit = {},
     onNextClick: (AppScreen.Memory) -> Unit = {},
+    onNavigateToCamera: (AppScreen.Camera) -> Unit = {},
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
     var showEditBottomSheet by remember { mutableStateOf(false) }
+    var showMediaPickerSheet by remember { mutableStateOf(false) }
+    var showMediaTypeSheet by remember { mutableStateOf(false) }
     var loadingItemIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     val pagerState = rememberPagerState(initialPage = 0) { MAX_MEDIA_PAGES }
     val currentPage by remember { derivedStateOf { pagerState.currentPage } }
@@ -143,47 +163,15 @@ fun MediaEditScreen(
     val adjustListState = rememberLazyListState()
     val filterListState = rememberLazyListState()
 
-    val mediaUriList = rememberSaveable {
-        mutableStateListOf<MediaUri>().apply {
-            repeat(MAX_MEDIA_PAGES) { add(null) }
+    val isImagePage = state.isImageAt(currentPage)
+    val hasMediaOnPage = state.hasMediaAt(currentPage)
+    val pageUri = state.uriMap[currentPage]?.uri
+
+    val runtimeShader =
+        remember(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode, isImagePage) {
+            if (!isImagePage) null
+            else state.adjustStateMap[currentPage]?.shaderStep?.shaderCode?.let { RuntimeShader(it) }
         }
-    }
-
-//    val runtimeShader = remember(state.shaderList[currentPage]) {
-//        state.shaderList[currentPage]?.let { RuntimeShader(it) }
-//    }
-
-
-//    val runtimeShaders = (0 until MAX_MEDIA_PAGES).map { page ->
-//        val code = state.adjustStateMap[page]?.shaderStep?.shaderCode
-//        remember(code) { code?.let { RuntimeShader(it) } }
-//    }
-
-
-    val runtimeShader = remember(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode) {
-        state.adjustStateMap[currentPage]?.shaderStep?.shaderCode?.let { RuntimeShader(it) }
-    }
-
-//    val renderEffects = remember {
-//        Array(MAX_MEDIA_PAGES) { mutableStateOf<androidx.compose.ui.graphics.RenderEffect?>(null) }
-//    }
-//
-//    for (page in 0 until MAX_MEDIA_PAGES) {
-//        val code = state.adjustStateMap[page]?.shaderStep?.shaderCode
-//        LaunchedEffect(code) {
-//            renderEffects[page].value = code?.let {
-//                android.graphics.RenderEffect
-//                    .createRuntimeShaderEffect(RuntimeShader(it), "inputShader")
-//                    .asComposeRenderEffect()
-//            }
-//        }
-//    }
-//
-    val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let { mediaUriList[currentPage] = it.toString() }
-    }
 
 //    val filterEffect = if (runtimeShader != null) {
 //        android.graphics.RenderEffect.createRuntimeShaderEffect(
@@ -250,18 +238,19 @@ fun MediaEditScreen(
                 onNextClick = {
 //                    onEvent(
 //                        MediaEvents.SaveMultipleImages(
-//                            uriList = mediaUriList.map { it?.toUri() },
+//                            uriList = state.uriMap.values.map { it.uri?.toUri() },
 //                            page = currentPage
 //                        )
 //                    )
                 },
-                enabled = mediaUriList.any { it != null },
+                enabled = state.uriMap.isNotEmpty(),
                 isLoading = state.isDownloadingForNavigation
             )
         },
         bottomBar = {
             MediaEditBottomBar(
                 activeTool = state.initialActiveTool,
+                isEnabled = isImagePage && hasMediaOnPage,
                 onToolSelected = { tool ->
                     onEvent(MediaEvents.EditToolStateChange(tool))
                     if (tool == EditTool.MORE) showEditBottomSheet = true
@@ -281,19 +270,11 @@ fun MediaEditScreen(
                     .padding(vertical = 10.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                uris = mediaUriList.toList().map { it ->
-                    UriType(it, it?.let { uri ->
-                        Type.fromUri(uri.toUri(), context)
-                    })
-                },
+                uris = (0 until MAX_MEDIA_PAGES).map { state.uriMap[it] ?: UriType(null, null) },
                 imageContentScale = ContentScale.Crop,
                 pagerState = pagerState,
                 imageModifier = {
                     Modifier.graphicsLayer {
-//                    renderEffect = filterEffect?.asComposeRenderEffect()
-//                    val shader = RuntimeShader(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode ?: return@graphicsLayer)
-
-
                         if (runtimeShader != null) {
                             val effect = android.graphics.RenderEffect.createRuntimeShaderEffect(
                                 runtimeShader,
@@ -301,7 +282,6 @@ fun MediaEditScreen(
                             )
                             renderEffect = effect.asComposeRenderEffect()
                         }
-
 
                         rotationZ = animatedRotation
                     }
@@ -317,9 +297,8 @@ fun MediaEditScreen(
                             alpha = 0.3f,
                             color = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                mediaLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
+                                onEvent(MediaEvents.UpdateCurrentPosition(currentPage))
+                                showMediaPickerSheet = true
                             }
                         )
                     }
@@ -334,7 +313,7 @@ fun MediaEditScreen(
                         alpha = 0.3f,
                         color = MaterialTheme.colorScheme.onSurface,
                         onClick = {
-                            mediaUriList[page] = null
+                            onEvent(MediaEvents.RemoveMediaUri(page))
                         }
                     )
                 }
@@ -344,7 +323,8 @@ fun MediaEditScreen(
                 visible = state.isFilterOrAdjustOrRotateType(state.initialActiveTool),
                 state = state,
                 currentPage = currentPage,
-                hasMedia = mediaUriList[currentPage] != null,
+                hasMedia = hasMediaOnPage,
+                isImagePage = isImagePage,
                 adjustListState = adjustListState,
                 filterListState = filterListState,
                 onEvent = onEvent,
@@ -380,8 +360,8 @@ fun MediaEditScreen(
             onDownloadImage = { index ->
                 loadingItemIndex = index
                 onEvent(
-                    MediaEvents.DownloadImage(
-                        uri = mediaUriList[currentPage]?.toUri(),
+                    MediaEvents.DownloadMedia(
+                        uri = pageUri?.toUri(),
                         page = currentPage,
                         degrees = targetRotation
                     )
@@ -390,16 +370,37 @@ fun MediaEditScreen(
             },
             onSharingImage = { index ->
                 loadingItemIndex = index
-                onEvent(
-                    MediaEvents.ShareImage(
-                        uri = mediaUriList[currentPage]?.toUri(),
-                        page = currentPage,
-                        degrees = targetRotation
+                if (state.isImageAt(currentPage)) {
+                    onEvent(
+                        MediaEvents.ShareImage(
+                            uri = pageUri?.toUri(),
+                            page = currentPage,
+                            degrees = targetRotation
+                        )
                     )
-                )
+                }
+
             }
         )
     }
+
+    MediaCaptureHost(
+        tempMediaUri = state.tempMediaUri,
+        mediaActionType = state.mediaActionType,
+        mediaType = state.mediaType,
+        currentPosition = state.currentPosition,
+        showPickerSheet = showMediaPickerSheet,
+        showTypeSheet = showMediaTypeSheet,
+        onPickerSheetDismiss = { showMediaPickerSheet = false },
+        onTypeSheetDismiss = { showMediaTypeSheet = false },
+        onShowTypeSheet = { showMediaTypeSheet = true },
+        onRequestDeviceCameraUri = { type -> onEvent(MediaEvents.OpenDeviceCamera(type)) },
+        onUpdateMediaActionType = { type -> onEvent(MediaEvents.UpdateMediaActionType(type)) },
+        onMediaSelected = { uriType, position ->
+            onEvent(MediaEvents.AddMediaUri(uriType, position))
+        },
+        onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -451,12 +452,18 @@ private fun MediaEditTopBar(
 @Composable
 private fun MediaEditBottomBar(
     activeTool: EditTool,
+    isEnabled: Boolean,
     onToolSelected: (EditTool) -> Unit,
 ) {
     NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
         EditTool.entries.forEach { tool ->
+            val enabled = when (tool) {
+                EditTool.ADJUST, EditTool.FILTER, EditTool.ROTATE, EditTool.CROP -> isEnabled
+                else -> true
+            }
             NavigationBarItem(
                 selected = activeTool == tool,
+                enabled = enabled,
                 onClick = { onToolSelected(tool) },
                 icon = {
                     Icon(
@@ -479,6 +486,7 @@ private fun AdjustmentPanel(
     state: EditorState,
     currentPage: Int,
     hasMedia: Boolean,
+    isImagePage: Boolean,
     adjustListState: LazyListState,
     filterListState: LazyListState,
     onEvent: (MediaEvents) -> Unit,
@@ -521,7 +529,8 @@ private fun AdjustmentPanel(
                     onEvent = onEvent,
                     onLeftClick = onLeftClick,
                     onRightClick = onRightClick,
-                    hasMedia = hasMedia
+                    hasMedia = hasMedia,
+                    isImagePage = isImagePage,
                 )
             }
         }
@@ -684,6 +693,7 @@ private fun ToolSelector(
     onLeftClick: () -> Unit,
     onRightClick: () -> Unit,
     hasMedia: Boolean,
+    isImagePage: Boolean,
 ) {
     Crossfade(
         targetState = activeTool,
@@ -702,30 +712,54 @@ private fun ToolSelector(
             }
 
             EditTool.ADJUST -> {
-                AdjustTypeSelector(
-                    selectedType = state.adjustStateMap[currentPage]?.currentAdjustType
-                        ?: AdjustType.BRIGHTNESS,
-                    listState = adjustListState,
-                    onSelect = { onEvent(MediaEvents.AdjustTypeStateChange(it, currentPage)) }
-                )
+                if (!isImagePage) {
+                    VideoUnsupportedNotice()
+                } else {
+                    AdjustTypeSelector(
+                        selectedType = state.adjustStateMap[currentPage]?.currentAdjustType
+                            ?: AdjustType.BRIGHTNESS,
+                        listState = adjustListState,
+                        onSelect = { onEvent(MediaEvents.AdjustTypeStateChange(it, currentPage)) }
+                    )
+                }
             }
 
             EditTool.FILTER -> {
-                FilterTypeSelector(
-                    selectedType = state.adjustStateMap[currentPage]?.filterType
-                        ?: FilterType.ORIGINAL,
-                    listState = filterListState,
-                    onSelect = { type ->
-                        onEvent(MediaEvents.FilterTypeStateChange(type, currentPage))
-                        onEvent(MediaEvents.ApplyFilter(currentPage, type))
-                    }
-                )
+                if (!isImagePage) {
+                    VideoUnsupportedNotice()
+                } else {
+                    FilterTypeSelector(
+                        selectedType = state.adjustStateMap[currentPage]?.filterType
+                            ?: FilterType.ORIGINAL,
+                        listState = filterListState,
+                        onSelect = { type ->
+                            onEvent(MediaEvents.FilterTypeStateChange(type, currentPage))
+                            onEvent(MediaEvents.ApplyFilter(currentPage, type))
+                        }
+                    )
+                }
             }
 
             else -> {
                 Spacer(modifier = Modifier.height(48.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun VideoUnsupportedNotice() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Filters and adjustments aren't available for videos",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

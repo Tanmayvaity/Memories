@@ -3,6 +3,8 @@ package com.example.memories.feature.feature_media_edit.presentatiion.media_edit
 import android.net.Uri
 import com.example.memories.R
 import com.example.memories.core.data.data_source.graphics.ShaderStep
+import com.example.memories.core.domain.model.MediaActionType
+import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.data.OriginalStep
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
@@ -60,7 +62,13 @@ data class EditorState(
 
     val isDownloading: Boolean = false,
     val isSharing: Boolean = false,
-    val isDownloadingForNavigation: Boolean = false
+    val isDownloadingForNavigation: Boolean = false,
+
+    val uriMap: Map<Int, UriType> = emptyMap(),
+    val tempMediaUri: String? = null,
+    val currentPosition: Int? = null,
+    val mediaActionType: MediaActionType? = null,
+    val mediaType: MediaType = MediaType.NONE
 ) {
     fun getAdjustmentValue(type: AdjustType, index: Int): Float {
 //        return adjustValues[type] ?: 0f
@@ -78,7 +86,9 @@ data class EditorState(
 
     val isRotateType: Boolean = initialActiveTool == EditTool.ROTATE
 
-
+    fun hasMediaAt(page: Int): Boolean = uriMap[page]?.uri != null
+    fun isImageAt(page: Int): Boolean = uriMap[page]?.type?.isImageFile() == true
+    fun isVideoAt(page: Int): Boolean = uriMap[page]?.type?.isVideoFile() == true
 }
 
 

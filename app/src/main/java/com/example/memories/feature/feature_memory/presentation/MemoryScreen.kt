@@ -2,9 +2,6 @@ package com.example.memories.feature.feature_memory.presentation
 
 import android.os.Build
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -81,16 +78,17 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.video.videoFramePercent
 import com.example.memories.R
+import com.example.memories.core.domain.model.MediaActionType
+import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MediaResult
-import com.example.memories.core.presentation.MenuItem
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.MediaCaptureHost
 import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
-import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components.ActionSelectorBottomSheet
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
@@ -208,61 +206,6 @@ fun MemoryScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Camera / media launchers
-    val onCaptureSuccess: (Boolean) -> Unit = { successful ->
-        if (successful && state.tempMediaUri != null && state.currentPosition != null && state.type == MediaActionType.DEVICE_CAMERA) {
-            onEvent(
-                MemoryEvents.AddMediaUri(
-                    UriType(state.tempMediaUri, Type.fromUri(state.tempMediaUri.toUri(), context)),
-                    state.currentPosition
-                )
-            )
-            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.NONE))
-        }
-    }
-
-    val openDeviceCameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = onCaptureSuccess
-    )
-
-    val openDeviceVideoLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CaptureVideo(),
-        onResult = onCaptureSuccess
-    )
-
-    val mediaLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null && state.currentPosition != null && state.type == MediaActionType.PHOTO_PICKER) {
-            onEvent(
-                MemoryEvents.AddMediaUri(
-                    UriType(uri.toString(), Type.fromUri(uri, context)),
-                    position = state.currentPosition
-                )
-            )
-            onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.NONE))
-        }
-    }
-
-    LaunchedEffect(state.tempMediaUri) {
-        val uri = state.tempMediaUri ?: return@LaunchedEffect
-        if (state.type != MediaActionType.DEVICE_CAMERA) return@LaunchedEffect
-
-        when (state.mediaType) {
-            MediaType.IMAGE -> openDeviceCameraLauncher.launch(uri.toUri())
-            MediaType.VIDEO -> openDeviceVideoLauncher.launch(uri.toUri())
-            else -> {}
-        }
-    }
-
-    fun captureMedia(type: MediaType) {
-        onEvent(MemoryEvents.UpdateMediaType(type))
-        onEvent(MemoryEvents.OpenDeviceCamera(type))
-        showMediaPickerSelectorSheet = false
-        showMediaTypeSelectorSheet = false
-    }
-
     // Main content
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -344,35 +287,26 @@ fun MemoryScreen(
         }
 
         // Bottom sheets & dialogs
-        if (showMediaPickerSelectorSheet) {
-            MediaPickerSheet(
-                onDismiss = { showMediaPickerSelectorSheet = false },
-                onDeviceCamera = {
-                    onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.DEVICE_CAMERA))
-                    showMediaPickerSelectorSheet = false
-                    showMediaTypeSelectorSheet = true
-                },
-                onCustomCamera = {
-                    onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.CUSTOM_APP_CAMERA_FEATURE))
-                    onNavigateToCamera(AppScreen.Camera)
-                    showMediaPickerSelectorSheet = false
-                },
-                onGallery = {
-                    onEvent(MemoryEvents.UpdateMediaActionType(MediaActionType.PHOTO_PICKER))
-                    mediaLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                    )
-                    showMediaPickerSelectorSheet = false
-                }
-            )
-        }
-
-        if (showMediaTypeSelectorSheet) {
-            MediaTypeSelectorSheet(
-                onDismiss = { showMediaTypeSelectorSheet = false },
-                onSelectType = ::captureMedia
-            )
-        }
+        MediaCaptureHost(
+            tempMediaUri = state.tempMediaUri,
+            mediaActionType = state.type,
+            mediaType = state.mediaType,
+            currentPosition = state.currentPosition,
+            showPickerSheet = showMediaPickerSelectorSheet,
+            showTypeSheet = showMediaTypeSelectorSheet,
+            onPickerSheetDismiss = { showMediaPickerSelectorSheet = false },
+            onTypeSheetDismiss = { showMediaTypeSelectorSheet = false },
+            onShowTypeSheet = { showMediaTypeSelectorSheet = true },
+            onRequestDeviceCameraUri = { type ->
+                onEvent(MemoryEvents.UpdateMediaType(type))
+                onEvent(MemoryEvents.OpenDeviceCamera(type))
+            },
+            onUpdateMediaActionType = { type -> onEvent(MemoryEvents.UpdateMediaActionType(type)) },
+            onMediaSelected = { uriType, position ->
+                onEvent(MemoryEvents.AddMediaUri(uriType, position))
+            },
+            onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
+        )
 
         if (showDatePicker) {
             ReminderDatePickerDialog(
@@ -638,72 +572,6 @@ private fun DateField(
                 )
             }
         }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MediaPickerSheet(
-    onDismiss: () -> Unit,
-    onDeviceCamera: () -> Unit,
-    onCustomCamera: () -> Unit,
-    onGallery: () -> Unit,
-) {
-    ActionSelectorBottomSheet(
-        onDismiss = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        sheetTitle = "Media Picker",
-        showLoading = false,
-        loadingItemIndex = null,
-        items = listOf(
-            MenuItem(
-                title = "Use Device Camera",
-                icon = R.drawable.ic_camera,
-                content = "Open system default camera app",
-                onClick = onDeviceCamera
-            ),
-            MenuItem(
-                title = "Use Memories Camera",
-                icon = R.drawable.ic_aperture,
-                content = "Capture with Memories' custom camera",
-                onClick = onCustomCamera
-            ),
-            MenuItem(
-                title = "Choose from Gallery",
-                icon = R.drawable.ic_feed,
-                content = "Select from your device photos",
-                onClick = onGallery
-            ),
-        )
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MediaTypeSelectorSheet(
-    onDismiss: () -> Unit,
-    onSelectType: (MediaType) -> Unit,
-) {
-    ActionSelectorBottomSheet(
-        onDismiss = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        sheetTitle = "What would you like to capture?",
-        showLoading = false,
-        loadingItemIndex = null,
-        items = listOf(
-            MenuItem(
-                title = "Take a Photo",
-                icon = R.drawable.ic_camera,
-                content = "Snap a quick picture",
-                onClick = { onSelectType(MediaType.IMAGE) }
-            ),
-            MenuItem(
-                title = "Record a Video",
-                icon = R.drawable.ic_video,
-                content = "Capture a moving moment",
-                onClick = { onSelectType(MediaType.VIDEO) }
-            )
-        )
     )
 }
 

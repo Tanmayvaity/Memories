@@ -1,10 +1,7 @@
 package com.example.memories.feature.feature_media_edit.presentatiion.media_edit.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.navigation.NavDeepLink
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -33,6 +30,9 @@ fun NavGraphBuilder.createMediaEditGraph(
         )
     ) {
         val args = it.toRoute<AppScreen.MediaEdit>()
+        val mediaUri by it.savedStateHandle
+            .getStateFlow<String?>("media_uri", null)
+            .collectAsStateWithLifecycle()
         onBottomBarVisibilityChange(false)
         MediaEditRoot(
             onBackPress = {
@@ -40,8 +40,11 @@ fun NavGraphBuilder.createMediaEditGraph(
             },
             onNextClick = { route ->
                 navController.navigate(route)
-            }
-
+            },
+            onNavigateToCamera = { route ->
+                navController.navigate(route)
+            },
+            takenUri = mediaUri,
         )
     }
 }

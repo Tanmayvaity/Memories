@@ -1,8 +1,8 @@
 package com.example.memories.feature.feature_memory.presentation
 
-import android.net.Uri
-import android.os.health.TimerStat
+import com.example.memories.core.domain.model.MediaActionType
 import com.example.memories.core.domain.model.MediaModel
+import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.UriType
@@ -34,17 +34,4 @@ data class MemoryState(
 enum class CreationState {
     CREATE,
     UPDATE
-}
-
-enum class MediaType{
-    IMAGE,
-    VIDEO,
-    NONE
-}
-
-enum class MediaActionType{
-    DEVICE_CAMERA,
-    CUSTOM_APP_CAMERA_FEATURE,
-    PHOTO_PICKER,
-    NONE
 }

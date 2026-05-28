@@ -196,7 +196,8 @@ object AppModule {
             downloadVideoUseCase = DownloadVideoUseCase(repository),
             applyFilterUseCase = ApplyFilterUseCase(repository),
             applyAdjustFilterUseCase = ApplyAdjustFilterUseCase(repository),
-            saveToCacheStorageWithBitmapUseCase = SaveToCacheStorageWithBitmapUseCase(repository)
+            saveToCacheStorageWithBitmapUseCase = SaveToCacheStorageWithBitmapUseCase(repository),
+            generateSharableUriUseCase = GenerateSharableUriUseCase(repository)
         )
     }
 

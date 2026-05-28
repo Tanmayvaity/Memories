@@ -1,13 +1,15 @@
 package com.example.memories.feature.feature_media_edit.presentatiion.media_edit
 
-import android.graphics.Bitmap
 import android.net.Uri
+import com.example.memories.core.domain.model.MediaActionType
+import com.example.memories.core.domain.model.MediaType
+import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 
 
 sealed class MediaEvents {
-    data class DownloadImage(val uri: Uri?, val page : Int,val degrees : Float = 0f) : MediaEvents()
+    data class DownloadMedia(val uri: Uri?, val page : Int, val degrees : Float = 0f) : MediaEvents()
 //
     data class ShareImage(val uri : Uri?, val page : Int,val degrees: Float = 0f) : MediaEvents()
 //
@@ -38,6 +40,11 @@ sealed class MediaEvents {
     data class ApplyFilter(val page : Int,val filterType : FilterType) : MediaEvents()
 
 
-
+    data class AddMediaUri(val uriType: UriType, val position: Int) : MediaEvents()
+    data class RemoveMediaUri(val position: Int) : MediaEvents()
+    data class OpenDeviceCamera(val mediaType: MediaType) : MediaEvents()
+    data class UpdateCurrentPosition(val position: Int) : MediaEvents()
+    data class UpdateMediaActionType(val type: MediaActionType) : MediaEvents()
+    data class UpdateMediaType(val mediaType: MediaType) : MediaEvents()
 }
 

@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.Result
-import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -134,7 +134,7 @@ class MediaViewModel @Inject constructor(
 
             }
 
-            is MediaEvents.DownloadImage -> {
+            is MediaEvents.DownloadMedia -> {
                 _state.update { it.copy(isDownloading = true) }
                 viewModelScope.launch {
                     Log.d(TAG, "onEvent: DownloadImage called")
@@ -146,12 +146,26 @@ class MediaViewModel @Inject constructor(
                         _state.update { it.copy(isDownloading = false) }
                         return@launch
                     }
-                    val result = mediaUseCases.downloadWithBitmap(
-                        event.uri,
+
+
+                    if (state.value.uriMap[event.page] == null) {
+                        _downloadEvents.send(
+                            MediaEditOneTimeEvents.ShowSnackBar("Media Null,Please try again")
+                        )
+                        _state.update { it.copy(isDownloading = false) }
+                        return@launch
+                    }
+
+                    val result = if (state.value.uriMap[event.page]?.type?.isImageFile() == true) {
+                        mediaUseCases.downloadWithBitmap(
+                            event.uri,
 //                        state.value.shaderList[event.page],
-                        state.value.adjustStateMap[event.page]?.shaderStep?.shaderCode ?: null,
-                        event.degrees
-                    )
+                            state.value.adjustStateMap[event.page]?.shaderStep?.shaderCode ?: null,
+                            event.degrees
+                        )
+                    } else {
+                        mediaUseCases.downloadVideoUseCase(event.uri)
+                    }
                     when (result) {
                         is Result.Error -> {
                             _downloadEvents.send(
@@ -182,11 +196,19 @@ class MediaViewModel @Inject constructor(
                         return@launch
                     }
 
+                    if (state.value.uriMap[event.page] == null) {
+                        _downloadEvents.send(
+                            MediaEditOneTimeEvents.ShowSnackBar("Media Null,Please try again")
+                        )
+                        _state.update { it.copy(isDownloading = false) }
+                        return@launch
+                    }
+
                     val shader = state.value.adjustStateMap[event.page]?.shaderStep?.shaderCode
 
                     val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
                         listOf(event.uri),
-                      listOf(shader),
+                        listOf(shader),
                         listOf(event.degrees)
                     )
                     if (result.getOrNull() == null) {
@@ -249,7 +271,53 @@ class MediaViewModel @Inject constructor(
                 }
             }
 
+            is MediaEvents.AddMediaUri -> {
+                _state.update {
+                    it.copy(
+                        uriMap = it.uriMap + (event.position to event.uriType)
+                    )
+                }
+            }
 
+            is MediaEvents.RemoveMediaUri -> {
+                _state.update {
+                    it.copy(
+                        uriMap = it.uriMap - event.position,
+                        adjustStateMap = it.adjustStateMap - event.position
+                    )
+                }
+            }
+
+            is MediaEvents.OpenDeviceCamera -> {
+                viewModelScope.launch {
+                    val isImage = when (event.mediaType) {
+                        MediaType.IMAGE -> true
+                        MediaType.VIDEO -> false
+                        else -> null
+                    }
+                    isImage?.let { imageFlag ->
+                        _state.update { it.copy(mediaType = event.mediaType) }
+                        val uriResult = mediaUseCases.generateSharableUriUseCase(imageFlag)
+                        if (uriResult is Result.Success && uriResult.data != null) {
+                            _state.update {
+                                it.copy(tempMediaUri = uriResult.data.toString())
+                            }
+                        }
+                    }
+                }
+            }
+
+            is MediaEvents.UpdateCurrentPosition -> {
+                _state.update { it.copy(currentPosition = event.position) }
+            }
+
+            is MediaEvents.UpdateMediaActionType -> {
+                _state.update { it.copy(mediaActionType = event.type) }
+            }
+
+            is MediaEvents.UpdateMediaType -> {
+                _state.update { it.copy(mediaType = event.mediaType) }
+            }
         }
 //            is MediaEvents.UriToBitmap -> {
 //

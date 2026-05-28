@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_media_edit.presentatiion.media_edit.components
+package com.example.memories.core.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.memories.R
 import com.example.memories.core.presentation.MenuItem
-import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.ui.theme.MemoriesTheme
 
 
@@ -40,14 +39,14 @@ fun ActionSelectorBottomSheet(
     sheetState: SheetState = rememberModalBottomSheetState(),
     sheetTitle: String = "More Options",
     items: List<MenuItem> = emptyList(),
-    showLoading : Boolean = false,
-    loadingItemIndex : Int? = null
+    showLoading: Boolean = false,
+    loadingItemIndex: Int? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
-           onDismiss()
+            onDismiss()
         },
     ) {
         Column(
@@ -101,7 +100,7 @@ fun ActionSelectorBottomSheet(
                             )
                         }
                     }
-                    if(showLoading && loadingItemIndex == index){
+                    if (showLoading && loadingItemIndex == index) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(16.dp)
@@ -119,7 +118,7 @@ fun ActionSelectorBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun EditModalBottomSheetPreview() {
+private fun ActionSelectorBottomSheetPreview() {
     MemoriesTheme {
         ActionSelectorBottomSheet(
             showLoading = true,
