@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import com.example.memories.core.presentation.components.IconItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -92,4 +93,32 @@ fun PlayButton(modifier: Modifier = Modifier,onClick: () -> Unit = {}) {
         color = MaterialTheme.colorScheme.primary,
         onClick = onClick
     )
+}
+
+@Composable
+fun WindowSizeClass.AdaptiveContent(
+    compact : @Composable () -> Unit = {},
+    medium : @Composable () -> Unit = {},
+    expanded : () -> Unit = {},
+    large : () -> Unit = {},
+    xLarge : () -> Unit = {}
+){
+    when{
+        this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) -> {
+            xLarge()
+        }
+        this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND) -> {
+            large()
+        }
+        this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> {
+            expanded()
+        }
+        this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> {
+            medium()
+        }
+        else -> {
+            compact()
+        }
+    }
+
 }

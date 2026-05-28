@@ -36,6 +36,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +62,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.window.core.layout.WindowSizeClass
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
@@ -85,6 +87,7 @@ fun MemoryDetailRoot(
     onBack: () -> Unit = {},
     onNavigateToMemory: (AppScreen) -> Unit = {},
     onTagClick: (AppScreen.TagWithMemories) -> Unit,
+    memoryId : String
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
     val isLoading by viewmodel.isLoading.collectAsStateWithLifecycle()
@@ -92,7 +95,12 @@ fun MemoryDetailRoot(
     val context = LocalContext.current
     val snackBarState = remember { SnackbarHostState() }
 
+    LaunchedEffect(memoryId) {
+        memoryId?.let { id ->
+            viewmodel.onEvent(MemoryDetailEvents.Fetch(id))
+        }
 
+    }
 
 
     LaunchedEffect(Unit) {

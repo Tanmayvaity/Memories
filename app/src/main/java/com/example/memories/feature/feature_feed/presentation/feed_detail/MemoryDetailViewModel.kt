@@ -42,10 +42,10 @@ class MemoryDetailViewModel @Inject constructor(
 
     init {
         Log.d(TAG, "inside init")
-        savedStateHandle.get<String>("memoryId")?.let { itemId ->
-            Log.d(TAG, "MemoryDetailViewModel-saveStateHandle : ${itemId}")
-            onEvent(MemoryDetailEvents.Fetch(itemId))
-        }
+//        savedStateHandle.get<String>("memoryId")?.let { itemId ->
+//            Log.d(TAG, "MemoryDetailViewModel-saveStateHandle : ${itemId}")
+//            onEvent(MemoryDetailEvents.Fetch(itemId))
+//        }
     }
 
 

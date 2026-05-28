@@ -67,7 +67,8 @@ fun NavGraphBuilder.createFeedGraph(
             },
             onTagClick = {route ->
                 navController.navigate(route)
-            }
+            },
+            memoryId = args.memoryId
         )
     }
 
