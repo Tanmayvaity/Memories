@@ -96,6 +96,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteAllSearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.DeleteSearchByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByIdsUseCase
+import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchMemoriesPagedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentMemoriesUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
@@ -108,7 +109,13 @@ import com.example.memories.feature.feature_notifications.domain.usecase.SetRemi
 import com.example.memories.feature.feature_notifications.domain.usecase.SetReminderTimeUseCase
 import com.example.memories.feature.feature_other.data.remote.GithubService
 import com.example.memories.feature.feature_other.data.repository.GithubServiceImpl
+import com.example.memories.feature.feature_other.data.repository.SystemRepositoryImpl
+import com.example.memories.feature.feature_other.data.repository.data_source.SystemManager
 import com.example.memories.feature.feature_other.domain.repository.RemoteUserService
+import com.example.memories.feature.feature_other.domain.repository.SystemRepository
+import com.example.memories.feature.feature_other.domain.usecase.DeleteCacheUseCase
+import com.example.memories.feature.feature_other.domain.usecase.GetStorageStatsUseCase
+import com.example.memories.feature.feature_other.domain.usecase.SystemUseCaseWrapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -508,7 +515,8 @@ object AppModule {
             fetchRecentMemoriesUseCase = FetchRecentMemoriesUseCase(memoryRepository),
             deleteSearchByIdUseCase = DeleteSearchByIdUseCase(recentSearchRepository),
             deleteAllSearchUseCase = DeleteAllSearchUseCase(recentSearchRepository),
-            fetchMemoryByIdsUseCase = FetchMemoryByIdsUseCase(memoryRepository)
+            fetchMemoryByIdsUseCase = FetchMemoryByIdsUseCase(memoryRepository),
+            searchMemoriesPagedUseCase = SearchMemoriesPagedUseCase(memoryRepository)
         )
     }
 
@@ -568,6 +576,31 @@ object AppModule {
             ToggleFavouriteUseCase(memoryRepository),
             ToggleHiddenUseCase(memoryRepository),
             DeleteUseCase(memoryRepository,mediaRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSystemRepositoryImpl(
+        systemManager: SystemManager
+    ) : SystemRepository {
+        return SystemRepositoryImpl(systemManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSystemManager(
+        @ApplicationContext context : Context
+    ) : SystemManager = SystemManager(context)
+
+    @Provides
+    @Singleton
+    fun provideSystemUseCaseWrapper(
+        repository: SystemRepository
+    ): SystemUseCaseWrapper {
+        return SystemUseCaseWrapper(
+            getStorageStatsUseCase = GetStorageStatsUseCase(repository),
+            deleteCacheUseCase = DeleteCacheUseCase(repository)
         )
     }
 

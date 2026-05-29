@@ -57,6 +57,8 @@ interface MemoryRepository {
 
     suspend fun getMemoryByTitle(query: String): Flow<List<MemoryWithMediaModel>>
 
+    fun searchMemories(query: String): Flow<PagingData<MemoryWithMediaModel>>
+
 
     fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>>
 

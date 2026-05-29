@@ -15,5 +15,6 @@ data class SearchUseCase(
     val fetchRecentMemoriesUseCase: FetchRecentMemoriesUseCase,
     val deleteSearchByIdUseCase: DeleteSearchByIdUseCase,
     val deleteAllSearchUseCase: DeleteAllSearchUseCase,
-    val fetchMemoryByIdsUseCase: FetchMemoryByIdsUseCase
+    val fetchMemoryByIdsUseCase: FetchMemoryByIdsUseCase,
+    val searchMemoriesPagedUseCase: SearchMemoriesPagedUseCase
 )

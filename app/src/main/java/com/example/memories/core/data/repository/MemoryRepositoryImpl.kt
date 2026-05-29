@@ -210,6 +210,21 @@ class MemoryRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun searchMemories(query: String): Flow<PagingData<MemoryWithMediaModel>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 5,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                memoryDao.getAllMemoriesWithMediaBySearchPaged(query)
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
+    }
+
 //    @OptIn(ExperimentalCoroutinesApi::class)
 //    override suspend fun getMemoryByTag(id: String): Flow<List<MemoryWithMediaModel>> {
 //        return tagDao.getMemoryByTag(id).flatMapLatest { tagWithMemories ->
