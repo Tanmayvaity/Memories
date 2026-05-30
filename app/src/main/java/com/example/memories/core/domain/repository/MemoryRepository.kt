@@ -59,6 +59,10 @@ interface MemoryRepository {
 
     fun searchMemories(query: String): Flow<PagingData<MemoryWithMediaModel>>
 
+    fun getAllMediaPaged(): Flow<PagingData<MediaModel>>
+
+    suspend fun updateMediaFavouriteState(mediaId: String, isFavourite: Boolean)
+
 
     fun getMemoryByTag(id: String): Flow<PagingData<MemoryWithMediaModel>>
 

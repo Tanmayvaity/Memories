@@ -68,6 +68,7 @@ import kotlin.math.roundToInt
 fun StorageRoot(
     onBack: () -> Unit,
     onNavigateToMemoryDetail: (String) -> Unit = {},
+    onNavigateToManageMedia: () -> Unit = {},
     viewModel: StorageViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -83,6 +84,7 @@ fun StorageRoot(
         onEvent = viewModel::onEvent,
         isDeletingCache = isDeletingCache,
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+        onNavigateToManageMedia = onNavigateToManageMedia,
         memoryQuery = memoryQuery,
         tagQuery = tagQuery,
         tags = tags,
@@ -99,6 +101,7 @@ fun StorageScreen(
     onBack: () -> Unit = {},
     isDeletingCache : Boolean = false,
     onNavigateToMemoryDetail: (String) -> Unit = {},
+    onNavigateToManageMedia: () -> Unit = {},
     memoryQuery: String = "",
     tagQuery: String = "",
     tags: SectionState<List<TagWithMemoryCountModel>> = SectionState.Loading,
@@ -152,11 +155,12 @@ fun StorageScreen(
         ManageDataChoiceSheet(
             onDismiss = { showChoiceSheet = false },
             onManageMedia = {
-                // Media management implementation handled separately.
+                onNavigateToManageMedia()
+                showChoiceSheet = false
             },
             onManageUserData = {
-                showChoiceSheet = false
                 showUserDataSheet = true
+                showChoiceSheet = false
             }
         )
     }

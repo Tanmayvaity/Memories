@@ -88,5 +88,8 @@ sealed class AppScreen(val route: String) {
     @Serializable
     data object Storage : AppScreen("Storage")
 
+    @Serializable
+    data object ManageMedia : AppScreen("ManageMedia")
+
 }
 

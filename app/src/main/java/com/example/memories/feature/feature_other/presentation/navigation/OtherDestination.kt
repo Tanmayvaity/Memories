@@ -9,6 +9,7 @@ import com.example.memories.feature.feature_other.presentation.screens.delete_al
 import com.example.memories.feature.feature_other.presentation.screens.developer_info.DeveloperInfoRoot
 import com.example.memories.feature.feature_other.presentation.screens.OtherRoot
 import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.HiddenMemorySettingRoot
+import com.example.memories.feature.feature_other.presentation.screens.manage_media.ManageMediaRoot
 import com.example.memories.feature.feature_other.presentation.screens.storage.StorageRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
@@ -101,6 +102,21 @@ fun NavGraphBuilder.createOtherGraph(
     composable<AppScreen.Storage> {
         onBottomBarVisibilityChange(false)
         StorageRoot(
+            onBack = {
+                navController.popBackStack()
+            },
+            onNavigateToMemoryDetail = { memoryId ->
+                navController.navigate(AppScreen.MemoryDetail(memoryId))
+            },
+            onNavigateToManageMedia = {
+                navController.navigate(AppScreen.ManageMedia)
+            }
+        )
+    }
+
+    composable<AppScreen.ManageMedia> {
+        onBottomBarVisibilityChange(false)
+        ManageMediaRoot(
             onBack = {
                 navController.popBackStack()
             },

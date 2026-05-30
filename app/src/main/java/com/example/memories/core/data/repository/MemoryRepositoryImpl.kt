@@ -10,6 +10,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
+import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.mapper.toDomain
@@ -35,6 +36,7 @@ class MemoryRepositoryImpl @Inject constructor(
     val mediaManager: MediaManager,
     val memoryDao: MemoryDao,
     val tagDao: TagDao,
+    val mediaDao: MediaDao,
 ) : MemoryRepository {
     companion object {
         private const val TAG = "MemoryRepositoryImpl"
@@ -223,6 +225,25 @@ class MemoryRepositoryImpl @Inject constructor(
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
+    }
+
+    override fun getAllMediaPaged(): Flow<PagingData<MediaModel>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 10,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                mediaDao.getAllMediaPaged()
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun updateMediaFavouriteState(mediaId: String, isFavourite: Boolean) {
+        mediaDao.updateMediaFavourite(mediaId, isFavourite)
     }
 
 //    @OptIn(ExperimentalCoroutinesApi::class)

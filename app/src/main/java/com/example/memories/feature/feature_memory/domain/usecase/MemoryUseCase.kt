@@ -5,7 +5,7 @@ import com.example.memories.core.domain.usecase.DeleteTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetMemoryByIdUseCase
+import com.example.memories.core.domain.usecase.GetMemoryByIdUseCase
 
 data class MemoryUseCase(
     val createMemoryUseCase : MemoryCreateUseCase,

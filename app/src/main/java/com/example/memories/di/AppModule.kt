@@ -48,7 +48,7 @@ import com.example.memories.feature.feature_feed.domain.repository.RecentSearchR
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetFeedUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.DeleteUseCase
-import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.GetMemoryByIdUseCase
+import com.example.memories.core.domain.usecase.GetMemoryByIdUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SearchByTitleUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleFavouriteUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
@@ -57,7 +57,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.S
 import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
 import com.example.memories.core.domain.usecase.DownloadVideoUseCase
-import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmapUseCase
+import com.example.memories.core.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToInternalStorageUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
@@ -114,8 +114,11 @@ import com.example.memories.feature.feature_other.data.repository.data_source.Sy
 import com.example.memories.feature.feature_other.domain.repository.RemoteUserService
 import com.example.memories.feature.feature_other.domain.repository.SystemRepository
 import com.example.memories.feature.feature_other.domain.usecase.DeleteCacheUseCase
+import com.example.memories.feature.feature_other.domain.usecase.GetAllMediaPagedUseCase
 import com.example.memories.feature.feature_other.domain.usecase.GetStorageStatsUseCase
+import com.example.memories.feature.feature_other.domain.usecase.MediaManagementUseCaseWrapper
 import com.example.memories.feature.feature_other.domain.usecase.SystemUseCaseWrapper
+import com.example.memories.core.domain.usecase.ToggleMediaFavouriteUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -322,11 +325,13 @@ object AppModule {
         mediaManager: MediaManager,
         memoryDao: MemoryDao,
         tagDao: TagDao,
+        mediaDao: MediaDao,
     ): MemoryRepository {
         return MemoryRepositoryImpl(
             mediaManager = mediaManager,
             memoryDao = memoryDao,
             tagDao = tagDao,
+            mediaDao = mediaDao,
         )
     }
 
@@ -601,6 +606,22 @@ object AppModule {
         return SystemUseCaseWrapper(
             getStorageStatsUseCase = GetStorageStatsUseCase(repository),
             deleteCacheUseCase = DeleteCacheUseCase(repository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaManagementUseCaseWrapper(
+        memoryRepository: MemoryRepository,
+        mediaRepository: MediaRepository
+    ): MediaManagementUseCaseWrapper {
+        return MediaManagementUseCaseWrapper(
+            getAllMediaPagedUseCase = GetAllMediaPagedUseCase(memoryRepository),
+            toggleMediaFavouriteUseCase = ToggleMediaFavouriteUseCase(memoryRepository),
+            downloadWithBitmapUseCase = DownloadWithBitmapUseCase(mediaRepository),
+            downloadVideoUseCase = DownloadVideoUseCase(mediaRepository),
+            generateShareableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
+            getMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository)
         )
     }
 

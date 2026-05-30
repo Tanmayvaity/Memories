@@ -16,6 +16,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.memories.core.domain.model.Type
+import com.example.memories.feature.feature_other.presentation.viewmodels.ManageMediaViewModel
 import java.io.File
 import java.net.URLConnection
 import java.text.SimpleDateFormat
@@ -27,7 +28,7 @@ import kotlin.text.startsWith
 
 const val TAG = "CoreUtil"
 fun isPermissionGranted(
-    context : Context,
+    context: Context,
     permission: String
 ): Boolean {
     val isGranted = ContextCompat.checkSelfPermission(
@@ -38,8 +39,8 @@ fun isPermissionGranted(
     return isGranted
 }
 
-fun Context.getVersionName() : String?{
-    return  try {
+fun Context.getVersionName(): String? {
+    return try {
         val pInfo: PackageInfo =
             this.packageManager.getPackageInfo(this.packageName, 0)
         pInfo.versionName
@@ -53,9 +54,9 @@ fun Context.getVersionName() : String?{
 
 fun createTempFile(
     context: Context,
-    directory : String = "images",
-    parent : File = context.cacheDir,
-    prefix : String = "temp_",
+    directory: String = "images",
+    parent: File = context.cacheDir,
+    prefix: String = "temp_",
 ): File? {
     return try {
         val imageDirPath = File(parent, directory).apply {
@@ -74,11 +75,11 @@ fun createTempFile(
 
 fun createVideoFile(
     context: Context,
-    directory : String = "videos",
-    parent : File = context.cacheDir,
-    prefix : String = "temp_",
+    directory: String = "videos",
+    parent: File = context.cacheDir,
+    prefix: String = "temp_",
 
-): File {
+    ): File {
     val imageDirPath = File(parent, directory).apply {
         if (!exists()) {
             mkdir()
@@ -89,8 +90,8 @@ fun createVideoFile(
 }
 
 fun createSettingsIntent(
-    context : Context
-){
+    context: Context
+) {
     val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
     settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     val uri = Uri.fromParts("package", context.packageName, null)
@@ -99,36 +100,35 @@ fun createSettingsIntent(
 }
 
 fun isSdkSmallerOrEqualToX(
-    sdkVersion : Int
-): Boolean{
+    sdkVersion: Int
+): Boolean {
     return Build.VERSION.SDK_INT <= sdkVersion
 }
 
 
-
-fun Long.formatTime():String{
+fun Long.formatTime(): String {
     val date = Date(this)
     val format = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     return format.format(date)
 }
 
-fun Long.formatTime(format : String = "dd/MMM/yyyy"):String{
+fun Long.formatTime(format: String = "dd/MMM/yyyy"): String {
     val date = Date(this)
     val format = SimpleDateFormat(format, Locale.getDefault())
     return format.format(date)
 }
 
-fun formatTime(hour : Int, minute : Int, format : String = "hh:mm a"):String{
+fun formatTime(hour: Int, minute: Int, format: String = "hh:mm a"): String {
     val time = LocalTime.of(hour, minute)
     return time.format(DateTimeFormatter.ofPattern(format, Locale.getDefault()))
 }
 
 
 fun getExoPlayer(
-    context : Context,
-    uri : String,
-    playWhenReady : Boolean = false
-) : ExoPlayer{
+    context: Context,
+    uri: String,
+    playWhenReady: Boolean = false
+): ExoPlayer {
     return ExoPlayer.Builder(context).build().apply {
         val mediaItem = MediaItem.fromUri(uri.toUri())
         setMediaItem(mediaItem)
@@ -150,7 +150,7 @@ fun Context.hasPostNotificationPermission(): Boolean {
 }
 
 
-fun Context.startChooser(uri : Uri?){
+fun Context.startChooser(uri: Uri?) {
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = "image/*"
         putExtra(Intent.EXTRA_STREAM, uri)
@@ -159,7 +159,17 @@ fun Context.startChooser(uri : Uri?){
     this.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
 }
 
-fun Context.startMediaChooser(uri : Uri?){
+fun Context.startMultiShareChooser(uris: List<Uri>) {
+    if (uris.isEmpty()) return
+    val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+        type = "*/*"
+        putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    this.startActivity(Intent.createChooser(shareIntent, "Share Chooser"))
+}
+
+fun Context.startMediaChooser(uri: Uri?) {
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(uri, "video/*")
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -167,6 +177,14 @@ fun Context.startMediaChooser(uri : Uri?){
     this.startActivity(Intent.createChooser(intent, null))
 }
 
+fun String.toUriOrNull(): Uri? =
+    try {
+        this.toUri()
+    } catch (e: Exception) {
+        Log.e(TAG, "toUriOrNull: ${e.message}")
+        null
+    }
 
-val Any.TAG : String
+
+val Any.TAG: String
     get() = this::class.java.simpleName

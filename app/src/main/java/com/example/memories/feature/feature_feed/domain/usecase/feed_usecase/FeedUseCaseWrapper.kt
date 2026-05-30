@@ -5,7 +5,8 @@ import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchMemoryByTagUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchOnThisDayUseCase
-import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadWithBitmapUseCase
+import com.example.memories.core.domain.usecase.DownloadWithBitmapUseCase
+import com.example.memories.core.domain.usecase.GetMemoryByIdUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCacheStorageWithBitmapUseCase
 
 data class FeedUseCaseWrapper(
