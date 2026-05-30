@@ -33,6 +33,9 @@ fun NavGraphBuilder.createMediaEditGraph(
         val mediaUri by it.savedStateHandle
             .getStateFlow<String?>("media_uri", null)
             .collectAsStateWithLifecycle()
+        val preloadUri by it.savedStateHandle
+            .getStateFlow<String?>("preload_media_uri", null)
+            .collectAsStateWithLifecycle()
         onBottomBarVisibilityChange(false)
         MediaEditRoot(
             onBackPress = {
@@ -45,6 +48,7 @@ fun NavGraphBuilder.createMediaEditGraph(
                 navController.navigate(route)
             },
             takenUri = mediaUri,
+            preloadUri = preloadUri,
         )
     }
 }

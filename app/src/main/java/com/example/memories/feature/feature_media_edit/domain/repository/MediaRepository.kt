@@ -3,7 +3,7 @@ package com.example.memories.feature.feature_media_edit.domain.repository
 import android.graphics.Bitmap
 import android.net.Uri
 import com.airbnb.lottie.L
-import com.example.memories.core.data.data_source.graphics.ShaderStep
+import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
@@ -31,14 +31,11 @@ interface MediaRepository {
         uriList : List<Uri>
     ) : Result<String>
 
-    fun applyFilter( filterType: FilterType) : ShaderStep
-
-    fun applyAdjustFilter(adjustType: AdjustType,value : Float ) : String?
-
-
-    fun fetchAllAdjustShader(): List<String>
-
-    fun fetchAllFilterShader() : List<String>
+    /** Builds a single shader step combining a filter with a map of adjustment values. */
+    fun composeShader(
+        filterType: FilterType,
+        adjustValues: Map<AdjustType, Float>
+    ): ShaderStep
 
 
     suspend fun applyFilterToUri(

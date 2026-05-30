@@ -75,10 +75,25 @@ fun MediaEditRoot(
     onNextClick: (AppScreen.Memory) -> Unit = {},
     onNavigateToCamera: (AppScreen.Camera) -> Unit = {},
     takenUri: String? = null,
+    preloadUri: String? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    // Media opened from the "Manage Media" screen lands directly on the Adjust tool.
+    LaunchedEffect(preloadUri) {
+        if (preloadUri != null) {
+            viewModel.onEvent(
+                MediaEvents.AddMediaUri(
+                    UriType(preloadUri, Type.fromUri(preloadUri.toUri(), context)),
+                    0
+                )
+            )
+            viewModel.onEvent(MediaEvents.UpdateCurrentPosition(0))
+            viewModel.onEvent(MediaEvents.EditToolStateChange(EditTool.ADJUST))
+        }
+    }
     LaunchedEffect(Unit) {
         viewModel.downloadEvents.collect { event ->
             when (event) {
@@ -167,11 +182,15 @@ fun MediaEditScreen(
     val hasMediaOnPage = state.hasMediaAt(currentPage)
     val pageUri = state.uriMap[currentPage]?.uri
 
+    val shaderCode = state.adjustStateMap[currentPage]?.shaderStep?.shaderCode
     val runtimeShader =
-        remember(state.adjustStateMap[currentPage]?.shaderStep?.shaderCode, isImagePage) {
+        remember(shaderCode, isImagePage) {
             if (!isImagePage) null
-            else state.adjustStateMap[currentPage]?.shaderStep?.shaderCode?.let { RuntimeShader(it) }
+            else shaderCode?.let { RuntimeShader(it) }
         }
+    val shaderNeedsResolution = remember(shaderCode) {
+        shaderCode?.contains("resolution") == true
+    }
 
 //    val filterEffect = if (runtimeShader != null) {
 //        android.graphics.RenderEffect.createRuntimeShaderEffect(
@@ -276,6 +295,15 @@ fun MediaEditScreen(
                 imageModifier = {
                     Modifier.graphicsLayer {
                         if (runtimeShader != null) {
+                            // `resolution` must always be set (else the RuntimeShader throws),
+                            // so fall back to 1px while the layer is still being measured.
+                            if (shaderNeedsResolution) {
+                                runtimeShader.setFloatUniform(
+                                    "resolution",
+                                    maxOf(size.width, 1f),
+                                    maxOf(size.height, 1f)
+                                )
+                            }
                             val effect = android.graphics.RenderEffect.createRuntimeShaderEffect(
                                 runtimeShader,
                                 "inputShader"

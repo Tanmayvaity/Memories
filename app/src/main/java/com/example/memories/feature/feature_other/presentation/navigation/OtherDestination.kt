@@ -120,6 +120,11 @@ fun NavGraphBuilder.createOtherGraph(
             onBack = {
                 navController.popBackStack()
             },
+            onNavigateToMediaEdit = { uri ->
+                navController.navigate(AppScreen.MediaEdit)
+                navController.getBackStackEntry(AppScreen.MediaEdit)
+                    .savedStateHandle["preload_media_uri"] = uri
+            },
             onNavigateToMemoryDetail = { memoryId ->
                 navController.navigate(AppScreen.MemoryDetail(memoryId))
             }

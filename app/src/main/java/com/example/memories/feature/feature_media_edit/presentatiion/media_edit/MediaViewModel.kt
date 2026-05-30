@@ -96,18 +96,20 @@ class MediaViewModel @Inject constructor(
             }
 
             is MediaEvents.AdjustTypeValueChange -> {
-                val currentPageState = _state.value.adjustStateMap[event.page] ?: AdjustState()
-
-                currentPageState.let { adjustState ->
-                    val currentAdjustType = adjustState.currentAdjustType
-                    _state.update {
-                        it.copy(
-                            adjustStateMap = it.adjustStateMap +
-                                    (event.page to adjustState.copy(
-                                        adjustTypeValues = adjustState.adjustTypeValues + (currentAdjustType to event.value)
-                                    ))
-                        )
-                    }
+                _state.update { st ->
+                    val adjustState = st.adjustStateMap[event.page] ?: AdjustState()
+                    val newValues = adjustState.adjustTypeValues +
+                            (adjustState.currentAdjustType to event.value)
+                    val step = mediaUseCases.composeShaderUseCase(
+                        adjustState.filterType,
+                        newValues
+                    )
+                    st.copy(
+                        adjustStateMap = st.adjustStateMap + (event.page to adjustState.copy(
+                            adjustTypeValues = newValues,
+                            shaderStep = step
+                        ))
+                    )
                 }
             }
 
@@ -243,30 +245,37 @@ class MediaViewModel @Inject constructor(
             }
 
             is MediaEvents.OnAdjustTypeValueClick -> {
-                val currentAdjustState = _state.value.adjustStateMap[event.page] ?: AdjustState()
-                _state.update {
-                    it.copy(
-                        adjustStateMap = it.adjustStateMap + (event.page to currentAdjustState.copy(
-                            adjustTypeValues = currentAdjustState.adjustTypeValues + (currentAdjustState.currentAdjustType to 0f)
-
+                _state.update { st ->
+                    val adjustState = st.adjustStateMap[event.page] ?: AdjustState()
+                    val newValues = adjustState.adjustTypeValues +
+                            (adjustState.currentAdjustType to 0f)
+                    val step = mediaUseCases.composeShaderUseCase(
+                        adjustState.filterType,
+                        newValues
+                    )
+                    st.copy(
+                        adjustStateMap = st.adjustStateMap + (event.page to adjustState.copy(
+                            adjustTypeValues = newValues,
+                            shaderStep = step
                         ))
                     )
-
                 }
             }
 
             is MediaEvents.ApplyFilter -> {
-                val page = event.page
-                val filterType = event.filterType
-
-                val currentAdjustState = _state.value.adjustStateMap[page] ?: AdjustState()
-
-                _state.update {
-                    it.copy(
-                        adjustStateMap = it.adjustStateMap +
-                                (event.page to currentAdjustState.copy(
-                                    shaderStep = mediaUseCases.applyFilterUseCase(filterType)
-                                ))
+                _state.update { st ->
+                    val adjustState = st.adjustStateMap[event.page] ?: AdjustState()
+                    // Compose the chosen filter with whatever adjustments are already applied so
+                    // the two stack instead of overwriting one another.
+                    val step = mediaUseCases.composeShaderUseCase(
+                        event.filterType,
+                        adjustState.adjustTypeValues
+                    )
+                    st.copy(
+                        adjustStateMap = st.adjustStateMap + (event.page to adjustState.copy(
+                            filterType = event.filterType,
+                            shaderStep = step
+                        ))
                     )
                 }
             }

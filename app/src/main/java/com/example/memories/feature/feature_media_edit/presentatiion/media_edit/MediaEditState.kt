@@ -2,7 +2,7 @@ package com.example.memories.feature.feature_media_edit.presentatiion.media_edit
 
 import android.net.Uri
 import com.example.memories.R
-import com.example.memories.core.data.data_source.graphics.ShaderStep
+import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
 import com.example.memories.core.domain.model.MediaActionType
 import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.UriType

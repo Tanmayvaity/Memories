@@ -62,6 +62,7 @@ import com.example.memories.feature.feature_other.presentation.viewmodels.Manage
 fun ManageMediaRoot(
     onBack: () -> Unit,
     onNavigateToMemoryDetail: (String) -> Unit = {},
+    onNavigateToMediaEdit: (String) -> Unit = {},
     viewModel: ManageMediaViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -93,7 +94,8 @@ fun ManageMediaRoot(
         associatedMemory = state.associatedMemory,
         onBack = onBack,
         onEvent = viewModel::onEvent,
-        onNavigateToMemoryDetail = onNavigateToMemoryDetail
+        onNavigateToMemoryDetail = onNavigateToMemoryDetail,
+        onNavigateToMediaEdit = onNavigateToMediaEdit
     )
 }
 
@@ -106,7 +108,8 @@ fun ManageMediaScreen(
     associatedMemory: com.example.memories.core.domain.model.MemoryWithMediaModel? = null,
     onBack: () -> Unit = {},
     onEvent: (ManageMediaEvents) -> Unit = {},
-    onNavigateToMemoryDetail: (String) -> Unit = {}
+    onNavigateToMemoryDetail: (String) -> Unit = {},
+    onNavigateToMediaEdit: (String) -> Unit = {}
 ) {
     val selected = remember { mutableStateMapOf<String, MediaModel>() }
     val selectionMode = selected.isNotEmpty()
@@ -213,6 +216,11 @@ fun ManageMediaScreen(
                 viewedMedia = null
                 onEvent(ManageMediaEvents.ClearAssociatedMemory)
                 onNavigateToMemoryDetail(memoryId)
+            },
+            onEdit = { uri ->
+                viewedMedia = null
+                onEvent(ManageMediaEvents.ClearAssociatedMemory)
+                onNavigateToMediaEdit(uri)
             }
         )
     }

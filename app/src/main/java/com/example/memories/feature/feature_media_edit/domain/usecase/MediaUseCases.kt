@@ -9,8 +9,7 @@ data class MediaUseCases(
     val downloadWithBitmap: DownloadWithBitmapUseCase,
     val saveBitmapToInternalStorageUseCase: SaveBitmapToInternalStorageUseCase,
     val downloadVideoUseCase: DownloadVideoUseCase,
-    val applyFilterUseCase: ApplyFilterUseCase,
-    val applyAdjustFilterUseCase: ApplyAdjustFilterUseCase,
+    val composeShaderUseCase: ComposeShaderUseCase,
     val saveToCacheStorageWithBitmapUseCase: SaveToCacheStorageWithBitmapUseCase,
     val generateSharableUriUseCase: GenerateSharableUriUseCase,
 )

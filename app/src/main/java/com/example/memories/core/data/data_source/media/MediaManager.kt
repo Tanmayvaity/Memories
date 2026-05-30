@@ -26,7 +26,6 @@ import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import com.example.memories.core.data.data_source.graphics.ShaderPipeLine
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
@@ -635,6 +634,14 @@ class MediaManager(
                 runtimeShader.setInputShader(
                     "inputShader",
                     BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+                )
+            }
+            // Adjustment shaders (e.g. vignette) declare a `resolution` uniform that must be set.
+            if (shaderCode.contains("resolution")) {
+                runtimeShader.setFloatUniform(
+                    "resolution",
+                    source.width.toFloat(),
+                    source.height.toFloat()
                 )
             }
 

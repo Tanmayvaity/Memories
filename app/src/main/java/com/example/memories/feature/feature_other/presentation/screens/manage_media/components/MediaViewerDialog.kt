@@ -64,7 +64,8 @@ fun MediaViewerDialog(
     onDownload: (uri: android.net.Uri, type: Type) -> Unit = { _, _ -> },
     onShare: (uri: android.net.Uri, type: Type) -> Unit = { _, _ -> },
     onPlayVideo: (uri: android.net.Uri) -> Unit = {},
-    onOpenMemory: (memoryId: String) -> Unit = {}
+    onOpenMemory: (memoryId: String) -> Unit = {},
+    onEdit: (uri: String) -> Unit = {}
 ) {
     val pagerState = rememberPagerState { 1 }
     val scrollState = rememberScrollState()
@@ -150,6 +151,12 @@ fun MediaViewerDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (media.type.isImageFile()) {
+                        LoadingIconItem(
+                            drawableRes = R.drawable.ic_adjust,
+                            onClick = { onEdit(media.uri) }
+                        )
+                    }
                     LoadingIconItem(
                         drawableRes = if (isFavourite) R.drawable.ic_favourite_filled
                         else R.drawable.ic_favourite,

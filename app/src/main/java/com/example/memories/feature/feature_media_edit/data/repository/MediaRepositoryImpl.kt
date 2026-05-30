@@ -4,21 +4,15 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.example.memories.core.data.data_source.graphics.ShaderStep
-import com.example.memories.core.data.data_source.media.FilterShaders
+import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
 import com.example.memories.core.data.data_source.media.MediaManager
+import com.example.memories.feature.feature_media_edit.data.ShaderComposer
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.feature.feature_media_edit.data.CoolFadeStep
-import com.example.memories.feature.feature_media_edit.data.GrayScaleStep
-import com.example.memories.feature.feature_media_edit.data.InvertStep
-import com.example.memories.feature.feature_media_edit.data.OriginalStep
-import com.example.memories.feature.feature_media_edit.data.SepiaStep
-import com.example.memories.feature.feature_media_edit.data.VintageStep
+import com.example.memories.feature.feature_media_edit.data.ComposedStep
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
 import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
-import java.util.logging.Filter
 import javax.inject.Inject
 
 class MediaRepositoryImpl @Inject constructor(
@@ -47,46 +41,11 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.deleteInternalMedia(uriList)
     }
 
-    override fun applyFilter(filterType: FilterType): ShaderStep{
-        return when(filterType){
-            FilterType.ORIGINAL -> OriginalStep()
-            FilterType.GRAYSCALE -> GrayScaleStep()
-            FilterType.SEPIA -> SepiaStep()
-            FilterType.INVERT -> InvertStep()
-            FilterType.VINTAGE -> VintageStep()
-            FilterType.COOL_FADE -> CoolFadeStep()
-        }
-
-    }
-    override fun applyAdjustFilter(adjustType: AdjustType, value : Float): String? {
-        return when(adjustType){
-
-            AdjustType.BRIGHTNESS -> {
-                FilterShaders.BRIGHTNESS_SHADER
-            }
-            AdjustType.BLUR -> {
-                FilterShaders.BLUR_SHADER
-            }
-            else -> null
-
-//            AdjustType.CONTRAST -> TODO()
-//            AdjustType.SATURATION -> TODO()
-//            AdjustType.TEMPERATURE -> TODO()
-//            AdjustType.FADE -> TODO()
-//            AdjustType.VIGNETTE -> TODO()
-        }
-
-    }
-
-    override fun fetchAllAdjustShader(): List<String> {
-        return buildList {
-            add(FilterShaders.BRIGHTNESS_SHADER)
-        }
-    }
-
-    override fun fetchAllFilterShader(): List<String> {
-        return buildList {
-        }
+    override fun composeShader(
+        filterType: FilterType,
+        adjustValues: Map<AdjustType, Float>
+    ): ShaderStep {
+        return ComposedStep(ShaderComposer.compose(filterType, adjustValues))
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
