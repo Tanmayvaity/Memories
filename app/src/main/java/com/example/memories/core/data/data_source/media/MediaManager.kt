@@ -263,9 +263,6 @@ class MediaManager(
             val type = Type.fromUri(uri,context)
             if (type == Type.UNKNOWN_TYPE) throw IllegalArgumentException("Unknown type")
 
-            if (type == Type.VIDEO_MP4) throw UnsupportedOperationException("Video saving not implemented")
-
-
             Log.i(
                 TAG,
                 "saveToCacheStorage: mimeType -> $mimeType extension -> $extension type -> $type"

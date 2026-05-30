@@ -198,7 +198,8 @@ class MediaViewModel @Inject constructor(
                         return@launch
                     }
 
-                    if (state.value.uriMap[event.page] == null) {
+                    val media = state.value.uriMap[event.page]
+                    if (media == null) {
                         _downloadEvents.send(
                             MediaEditOneTimeEvents.ShowSnackBar("Media Null,Please try again")
                         )
@@ -209,7 +210,7 @@ class MediaViewModel @Inject constructor(
                     val shader = state.value.adjustStateMap[event.page]?.shaderStep?.shaderCode
 
                     val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
-                        listOf(event.uri),
+                        listOf(media),
                         listOf(shader),
                         listOf(event.degrees)
                     )
@@ -327,6 +328,59 @@ class MediaViewModel @Inject constructor(
             is MediaEvents.UpdateMediaType -> {
                 _state.update { it.copy(mediaType = event.mediaType) }
             }
+            is MediaEvents.SaveMultipleImages -> {
+                _state.update { it.copy(isDownloadingForNavigation = true) }
+                viewModelScope.launch {
+                    val current = state.value
+                    // Process media in page order; each carries its type (image vs video).
+                    val ordered = current.uriMap.entries.sortedBy { it.key }
+                    val mediaList = ordered.map { it.value }
+                    val shaderList = ordered.map { (page, _) ->
+                        current.adjustStateMap[page]?.shaderStep?.shaderCode
+                    }
+                    val degreesList = ordered.map { (page, _) ->
+                        current.adjustStateMap[page]?.rotationDegrees ?: 0f
+                    }
+
+                    if (mediaList.isEmpty()) {
+                        _downloadEvents.send(
+                            MediaEditOneTimeEvents.ShowSnackBar("No Media Selected")
+                        )
+                        _state.update { it.copy(isDownloadingForNavigation = false) }
+                        return@launch
+                    }
+
+                    val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
+                        mediaList,
+                        shaderList,
+                        degreesList
+                    )
+
+                    when (result) {
+                        is Result.Error -> {
+                            _downloadEvents.send(
+                                MediaEditOneTimeEvents.ShowSnackBar(result.error.message.toString())
+                            )
+                            _state.update { it.copy(isDownloadingForNavigation = false) }
+                        }
+
+                        is Result.Success -> {
+                            val data = result.data
+                            if (data.isNullOrEmpty()) {
+                                _downloadEvents.send(
+                                    MediaEditOneTimeEvents.ShowSnackBar("Failed to save media")
+                                )
+                                _state.update { it.copy(isDownloadingForNavigation = false) }
+                                return@launch
+                            }
+                            _downloadEvents.send(
+                                MediaEditOneTimeEvents.NavigateToMemory(value = data)
+                            )
+                            _state.update { it.copy(isDownloadingForNavigation = false) }
+                        }
+                    }
+                }
+            }
         }
 //            is MediaEvents.UriToBitmap -> {
 //
@@ -402,41 +456,7 @@ class MediaViewModel @Inject constructor(
 //
 
 //
-//            is MediaEvents.SaveMultipleImages -> {
-//                _state.update { it.copy(isDownloadingForNavigation = true) }
-//                viewModelScope.launch {
-//                    val result = mediaUseCases.saveToCacheStorageWithBitmapUseCase(
-//                        event.uriList,
-//                        state.value.shaderList,
-//                        state.value.imageDegreeList
-//                    )
-//
-//                    if (result.getOrNull() == null) {
-//                        _downloadEvents.send(
-//                            MediaEditOneTimeEvents.ShowSnackBar("Returned Uri is null")
-//                        )
-//                        return@launch
-//                    }
-//                    when (result) {
-//                        is Result.Error -> {
-//                            _downloadEvents.send(
-//                                MediaEditOneTimeEvents.ShowSnackBar(result.error.message.toString())
-//                            )
-//                            _state.update { it.copy(isDownloadingForNavigation = false) }
-//                        }
-//
-//                        is Result.Success -> {
-//                            _downloadEvents.send(
-//                                MediaEditOneTimeEvents.NavigateToMemory(
-//                                    value = result.data!!
-//                                )
-//                            )
-//                            _state.update { it.copy(isDownloadingForNavigation = false) }
-//                        }
-//
-//                    }
-//                }
-//            }
+
 //
 //            is MediaEvents.ChangeRotation -> {
 //                val targetRotation = when (event.direction) {

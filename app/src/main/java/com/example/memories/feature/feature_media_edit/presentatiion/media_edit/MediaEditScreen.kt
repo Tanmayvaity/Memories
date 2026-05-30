@@ -255,12 +255,7 @@ fun MediaEditScreen(
             MediaEditTopBar(
                 onBackPress = onBackPress,
                 onNextClick = {
-//                    onEvent(
-//                        MediaEvents.SaveMultipleImages(
-//                            uriList = state.uriMap.values.map { it.uri?.toUri() },
-//                            page = currentPage
-//                        )
-//                    )
+                    onEvent(MediaEvents.SaveMultipleImages)
                 },
                 enabled = state.uriMap.isNotEmpty(),
                 isLoading = state.isDownloadingForNavigation

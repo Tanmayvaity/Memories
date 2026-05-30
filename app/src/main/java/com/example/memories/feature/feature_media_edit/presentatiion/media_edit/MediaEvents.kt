@@ -13,9 +13,7 @@ sealed class MediaEvents {
 //
     data class ShareImage(val uri : Uri?, val page : Int,val degrees: Float = 0f) : MediaEvents()
 //
-//    data class SaveMultipleImages(val uriList : List<Uri?>,val page : Int) : MediaEvents()
-//
-//
+
     data class ChangeRotation(val value : Float, val direction : RotationDirection,val page : Int) : MediaEvents()
 //    data class DownloadVideo(val uri : Uri) : MediaEvents()
 //    data class UriToBitmap(
@@ -39,6 +37,13 @@ sealed class MediaEvents {
 //
     data class ApplyFilter(val page : Int,val filterType : FilterType) : MediaEvents()
 
+
+    /**
+     * Saves every media on screen into cache (images get their composed shader + rotation baked in,
+     * videos are copied as-is) and then navigates to the Memory screen with the resulting cache
+     * URIs. Operates on all pages of [EditorState.uriMap], so it takes no arguments.
+     */
+    object SaveMultipleImages : MediaEvents()
 
     data class AddMediaUri(val uriType: UriType, val position: Int) : MediaEvents()
     data class RemoveMediaUri(val position: Int) : MediaEvents()
