@@ -301,6 +301,30 @@ class MediaManager(
         )
     }
 
+    /**
+     * Writes an in-memory [bitmap] to the cache `images/` dir and returns a shareable
+     * [FileProvider] content URI. Unlike [saveToCacheStorage] it needs no source URI — used for
+     * bitmaps rendered in-app (e.g. a "share memory as image" card).
+     */
+    suspend fun saveBitmapToCacheStorage(
+        bitmap: Bitmap
+    ): Result<Uri> = withContext(Dispatchers.IO) {
+        runCatching {
+            val file = createMediaFile(isImage = true)
+            file.outputStream().use { output ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, output)
+            }
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { Result.Error(it) }
+        )
+    }
+
     private fun getMimeType(
         uri: Uri
     ): String {

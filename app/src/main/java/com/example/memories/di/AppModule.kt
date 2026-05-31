@@ -2,9 +2,7 @@ package com.example.memories.di
 
 import android.content.Context
 import android.util.Log
-import androidx.media3.exoplayer.offline.Download
 import androidx.room.Room
-import androidx.room.TypeConverter
 import androidx.work.WorkManager
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
@@ -75,13 +73,14 @@ import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetT
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.GetTagsWithMemoryCountUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
 import com.example.memories.feature.feature_media_edit.domain.usecase.ComposeShaderUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadBitmapToSharedUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToCacheUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCacheStorageWithBitmapUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
-import com.example.memories.core.data.data_source.room.converters.MediaTypeConverter
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_6_7
 import com.example.memories.core.data.repository.AppSettingRepositoryImpl
@@ -381,7 +380,9 @@ object AppModule {
             downloadWithBitmapUseCase = DownloadWithBitmapUseCase(mediaRepository),
             saveToCacheStorageWithUriUseCase = SaveToCacheStorageWithUriUseCase(mediaRepository),
             getShareableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
-            downloadVideoUseCase = DownloadVideoUseCase(mediaRepository)
+            downloadVideoUseCase = DownloadVideoUseCase(mediaRepository),
+            saveBitmapToCacheUseCase = SaveBitmapToCacheUseCase(mediaRepository),
+            downloadBitmapToSharedUseCase = DownloadBitmapToSharedUseCase(mediaRepository)
         )
 
     }

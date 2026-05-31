@@ -27,6 +27,11 @@ interface MediaRepository {
         bitmap: Bitmap?
     ): Result<Uri>
 
+    /** Saves an in-memory bitmap to cache and returns a shareable FileProvider URI. */
+    suspend fun saveBitmapToCache(
+        bitmap: Bitmap
+    ): Result<Uri>
+
     suspend fun deleteMedia(
         uriList : List<Uri>
     ) : Result<String>

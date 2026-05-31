@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -76,6 +77,7 @@ import com.example.memories.core.util.startChooser
 import com.example.memories.core.util.startMediaChooser
 import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 import com.example.memories.feature.feature_feed.presentation.feed_detail.components.FullScreenMediaDialog
+import com.example.memories.feature.feature_feed.presentation.feed_detail.components.ShareMemoryCardDialog
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
@@ -87,7 +89,7 @@ fun MemoryDetailRoot(
     onBack: () -> Unit = {},
     onNavigateToMemory: (AppScreen) -> Unit = {},
     onTagClick: (AppScreen.TagWithMemories) -> Unit,
-    memoryId : String
+    memoryId: String
 ) {
     val state by viewmodel.state.collectAsStateWithLifecycle()
     val isLoading by viewmodel.isLoading.collectAsStateWithLifecycle()
@@ -180,8 +182,9 @@ fun MemoryDetailScreen(
     )
     var showImageDetail by rememberSaveable { mutableStateOf(false) }
     var expandToolBar by remember { mutableStateOf(false) }
+    var showShareCard by remember { mutableStateOf(false) }
     val memory = state.memory
-
+    var isShareMode by rememberSaveable { mutableStateOf(true) }
     val isScrollingDown by remember {
         var previousScrollOffset = 0
         derivedStateOf {
@@ -189,6 +192,15 @@ fun MemoryDetailScreen(
             val scrollingDown = currentOffset > previousScrollOffset
             previousScrollOffset = currentOffset
             scrollingDown
+        }
+    }
+
+    LaunchedEffect(state.isSharing,state.isDownloading) {
+        if(!state.isSharing){
+            showShareCard = false
+        }
+        if(!state.isDownloading){
+            showShareCard = false
         }
     }
     Scaffold(
@@ -219,6 +231,33 @@ fun MemoryDetailScreen(
                         )
                     }
 
+                },
+                actions = {
+                    if (memory != null && !isLoading) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = {
+                                showShareCard = true
+                                isShareMode = false
+                            }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_download),
+                                    contentDescription = "Share memory as image"
+                                )
+                            }
+                            IconButton(onClick = {
+                                showShareCard = true
+                                isShareMode = true
+                            }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_share),
+                                    contentDescription = "Share memory as image"
+                                )
+                            }
+                        }
+
+                    }
                 }
             )
         },
@@ -515,6 +554,23 @@ fun MemoryDetailScreen(
                 )
             }
 
+        )
+    }
+
+    if (showShareCard && memory != null) {
+        ShareMemoryCardDialog(
+            memory = memory,
+            isSharing = state.isSharing,
+            isDownloading = state.isDownloading,
+            onShare = { bitmap ->
+                onEvent(MemoryDetailEvents.ShareAsImage(bitmap))
+//                showShareCard = false
+            },
+            onDownload = { bitmap ->
+                onEvent(MemoryDetailEvents.DownloadAsImage(bitmap))
+            },
+            onDismiss = { showShareCard = false },
+            isShareMode = isShareMode
         )
     }
 

@@ -5,10 +5,8 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil3.util.CoilUtils.result
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.Result
-import com.example.memories.core.domain.model.Type
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.FeedUseCaseWrapper
 import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
@@ -26,7 +24,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MemoryDetailViewModel @Inject constructor(
     val feedUseCases: FeedUseCaseWrapper,
-    savedStateHandle: SavedStateHandle,
     val memoryActionHandler: MemoryActionHandler
 ) : ViewModel() {
 
@@ -220,6 +217,51 @@ class MemoryDetailViewModel @Inject constructor(
 
                     }
 
+                }
+            }
+
+            is MemoryDetailEvents.ShareAsImage -> {
+                viewModelScope.launch {
+                    _state.update { it.copy(isSharing = true) }
+                    val result = feedUseCases.saveBitmapToCacheUseCase(event.bitmap)
+                    _state.update { it.copy(isSharing = false) }
+                    when (result) {
+                        is Result.Error -> {
+                            Log.e(TAG, "ShareAsImage: ${result.error.message}")
+                            _eventChannel.send(Error(message = "Cannot share memory"))
+                        }
+
+                        is Result.Success<Uri> -> {
+                            if (result.data != null) {
+                                _eventChannel.send(ShowShareChooser(result.data))
+                            } else {
+                                _eventChannel.send(Error(message = "Cannot share memory please try again"))
+                            }
+                        }
+                    }
+                }
+            }
+
+            is MemoryDetailEvents.DownloadAsImage -> {
+                viewModelScope.launch {
+                    _state.update { it.copy(isDownloading = true) }
+                    val result = feedUseCases.downloadBitmapToSharedUseCase(event.bitmap)
+                    _state.update { it.copy(isDownloading = false) }
+                    when (result) {
+                        is Result.Error -> {
+                            Log.e(TAG, "DownloadAsImage: ${result.error.message}")
+                            _eventChannel.send(Error(message = "Cannot download memory"))
+                        }
+
+                        is Result.Success -> {
+                            _eventChannel.send(
+                                ShowToast(
+                                    message = "Download Complete",
+                                    type = UiEvent.ToastType.DOWNLOAD
+                                )
+                            )
+                        }
+                    }
                 }
             }
 

@@ -7,7 +7,8 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchOnThisDayUseCase
 import com.example.memories.core.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.core.domain.usecase.GetMemoryByIdUseCase
-import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCacheStorageWithBitmapUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.DownloadBitmapToSharedUseCase
+import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmapToCacheUseCase
 
 data class FeedUseCaseWrapper(
     val getFeedUseCase: GetFeedUseCase,
@@ -22,5 +23,7 @@ data class FeedUseCaseWrapper(
     val downloadWithBitmapUseCase : DownloadWithBitmapUseCase,
     val saveToCacheStorageWithUriUseCase: SaveToCacheStorageWithUriUseCase,
     val getShareableUriUseCase : GenerateSharableUriUseCase,
-    val downloadVideoUseCase: DownloadVideoUseCase
+    val downloadVideoUseCase: DownloadVideoUseCase,
+    val saveBitmapToCacheUseCase: SaveBitmapToCacheUseCase,
+    val downloadBitmapToSharedUseCase: DownloadBitmapToSharedUseCase
 )
