@@ -32,6 +32,8 @@ sealed class MemoryEvents {
 
     data class AddTag(val tag : String) : MemoryEvents()
 
+    data class AcceptRecommendedTag(val label : String) : MemoryEvents()
+
     data class UpdateTagsInTextField(val tag : TagModel) : MemoryEvents()
     data class RemoveTagsFromTextField(val tag : TagModel) : MemoryEvents()
 

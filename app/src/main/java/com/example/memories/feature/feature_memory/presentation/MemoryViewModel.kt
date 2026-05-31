@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_memory.presentation
 
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -229,12 +230,32 @@ class MemoryViewModel @Inject constructor(
                 }
             }
 
+            is AcceptRecommendedTag -> {
+                viewModelScope.launch {
+                    val result = memoryUseCase.addTagUseCase(event.label)
+                    if (result is Result.Success && result.data != null) {
+                        // Adds to selected tags and strips the matching suggestion (see below).
+                        onEvent(UpdateTagsInTextField(result.data))
+                    } else {
+                        _memoryState.update {
+                            it.copy(
+                                recommendedTags = it.recommendedTags
+                                    .filterNot { l -> l.equals(event.label, ignoreCase = true) }
+                            )
+                        }
+                    }
+                }
+            }
+
             is UpdateTagsInTextField -> {
                 if (_memoryState.value.tagsSelectedForThisMemory.contains(event.tag)) return
 
                 _memoryState.update {
                     it.copy(
-                        tagsSelectedForThisMemory = it.tagsSelectedForThisMemory + event.tag
+                        tagsSelectedForThisMemory = it.tagsSelectedForThisMemory + event.tag,
+                        // an accepted/selected tag should no longer appear as a suggestion
+                        recommendedTags = it.recommendedTags
+                            .filterNot { l -> l.equals(event.tag.label, ignoreCase = true) }
                     )
                 }
             }
@@ -262,7 +283,7 @@ class MemoryViewModel @Inject constructor(
                         }.toMap()
                     )
                 }
-
+                suggestTagsForUris(event.list)
             }
 
             is FetchMemory -> {
@@ -293,6 +314,8 @@ class MemoryViewModel @Inject constructor(
                             )
                         }
 
+                        // UPDATE first pass: suggest tags from all existing images, once.
+                        suggestTagsForUris(item.mediaList.map { UriType(it.uri, it.type) })
                     }
                 }
             }
@@ -315,12 +338,17 @@ class MemoryViewModel @Inject constructor(
                     )
 
                 }
+                suggestTagsForUris(listOf(event.uriType))
             }
 
             is RemoveMediaUri -> {
                 _memoryState.update {
+                    val newUriMap = it.uriMap - event.position
+                    val hasImagesLeft = newUriMap.values.any { u -> u.type?.isImageFile() == true }
                     it.copy(
-                        uriMap = it.uriMap - event.position
+                        uriMap = newUriMap,
+                        // No images left → drop all auto-generated suggestions (selected tags stay).
+                        recommendedTags = if (hasImagesLeft) it.recommendedTags else emptyList()
                     )
                 }
             }
@@ -343,7 +371,7 @@ class MemoryViewModel @Inject constructor(
                     isImage?.let { isImage ->
                         val uriResult = memoryUseCase.generateSharableUriUseCase(isImage)
 
-                        if(uriResult is Result.Success && uriResult.data != null){
+                        if (uriResult is Result.Success && uriResult.data != null) {
                             _memoryState.update {
                                 it.copy(
                                     tempMediaUri = uriResult.data.toString()
@@ -381,5 +409,42 @@ class MemoryViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** Runs ML Kit labeling on each image uri and merges the results into [MemoryState.recommendedTags]. */
+    private fun suggestTagsForUris(uris: List<UriType>) {
+        if (uris.isEmpty()) return
+        val imageUris = uris.filter { it.type?.isImageFile() == true && it.uri != null }
+        if (imageUris.isEmpty()) return
+        viewModelScope.launch {
+            _memoryState.update { it.copy(isSuggestingTags = true) }
+            try {
+                imageUris.forEach { uriType ->
+                    val labels = memoryUseCase.suggestTagsUseCase(uriType.uri!!.toUri())
+                    if (labels.isNotEmpty()) {
+                        _memoryState.update { state ->
+                            state.copy(recommendedTags = mergeRecommendations(state, labels))
+                        }
+                    }
+                }
+            } finally {
+                _memoryState.update { it.copy(isSuggestingTags = false) }
+            }
+        }
+    }
+
+    /** Appends [newLabels] to existing recommendations, skipping duplicates and already-selected tags. */
+    private fun mergeRecommendations(state: MemoryState, newLabels: List<String>): List<String> {
+        val selected = state.tagsSelectedForThisMemory.map { it.label.lowercase() }.toSet()
+        val merged = state.recommendedTags.toMutableList()
+        val seen = merged.map { it.lowercase() }.toMutableSet()
+        newLabels.forEach { label ->
+            val lower = label.lowercase()
+            if (lower !in selected && lower !in seen) {
+                merged.add(label)
+                seen.add(lower)
+            }
+        }
+        return merged
     }
 }

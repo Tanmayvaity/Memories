@@ -25,6 +25,9 @@ interface TagDao {
     @Query("SELECT * FROM TagEntity WHERE label LIKE '%' || :label || '%'")
     fun getAllTagsByLabel(label : String): Flow<List<TagEntity>>
 
+    @Query("SELECT * FROM TagEntity WHERE label = :label COLLATE NOCASE LIMIT 1")
+    suspend fun getTagByLabel(label : String): TagEntity?
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTags(tags: List<TagEntity>)
 

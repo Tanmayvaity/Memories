@@ -150,4 +150,8 @@ dependencies {
     implementation(libs.androidx.material3.adaptive.layout)
     implementation(libs.androidx.material3.adaptive.navigation)
     implementation(libs.androidx.window)
+
+
+    // mlkit
+    implementation(libs.mlkit.image.labeling)
 }

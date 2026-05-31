@@ -91,6 +91,7 @@ import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
+import com.example.memories.feature.feature_memory.presentation.components.RecommendedTagsRow
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
 import com.example.memories.feature.feature_memory.presentation.components.SelectTagBottomSheet
 import com.example.memories.feature.feature_memory.presentation.components.TagRow
@@ -255,6 +256,17 @@ fun MemoryScreen(
                         onTagClick(AppScreen.TagWithMemories(id = id, tagLabel = label))
                     }
                 )
+
+                if (state.recommendedTags.isNotEmpty() || state.isSuggestingTags) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RecommendedTagsRow(
+                        tags = state.recommendedTags,
+                        isLoading = state.isSuggestingTags,
+                        onAccept = { label ->
+                            onEvent(MemoryEvents.AcceptRecommendedTag(label))
+                        }
+                    )
+                }
 
                 CustomTextField(
                     modifier = Modifier

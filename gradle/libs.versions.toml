@@ -28,6 +28,7 @@ biometric = "1.1.0"
 adaptive = "1.2.0"
 adaptive-navigation = "1.4.0"
 window = "1.5.1"
+mlkit = "17.0.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -90,7 +91,7 @@ androidx-material3-adaptive-layout = {module = "androidx.compose.material3.adapt
 androidx-material3-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
 androidx-window = { module = "androidx.window:window", version.ref = "window" }
 
-
+mlkit-image-labeling = {module = "com.google.mlkit:image-labeling",version.ref = "mlkit"}
 
 
 

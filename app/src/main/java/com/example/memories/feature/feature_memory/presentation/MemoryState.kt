@@ -17,6 +17,8 @@ data class MemoryState(
     val isContentHintVisible: Boolean = true,
     val totalNumberOfTags: List<TagModel> = emptyList(),
     val tagsSelectedForThisMemory: List<TagModel> = emptyList(),
+    val recommendedTags: List<String> = emptyList(),
+    val isSuggestingTags: Boolean = false,
     val tagTextFieldValue: String = "",
     val uriMap: Map<Int, UriType> = emptyMap(),
     val memoryForTimeStamp: Long? = null,

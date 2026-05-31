@@ -27,6 +27,10 @@ class TagRepositoryImpl @Inject constructor(
         return tagDao.getAllTagsByLabel(label).map { tags -> tags.map { tag -> tag.toDomain() } }
     }
 
+    override suspend fun getTagByLabel(label: String): TagModel? {
+        return tagDao.getTagByLabel(label)?.toDomain()
+    }
+
     override suspend fun deleteTag(id: String) {
         tagDao.deleteTag(id)
     }

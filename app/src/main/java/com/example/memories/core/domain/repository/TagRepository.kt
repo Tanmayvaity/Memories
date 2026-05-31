@@ -12,6 +12,8 @@ interface TagRepository {
 
     suspend fun fetchTagsByLabel(label: String): Flow<List<TagModel>>
 
+    suspend fun getTagByLabel(label: String): TagModel?
+
     suspend fun deleteTag(id: String)
 
     fun getTagsWithMemoryCount(

@@ -78,7 +78,11 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmap
 import com.example.memories.feature.feature_media_edit.domain.usecase.SaveToCacheStorageWithBitmapUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryCreateUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUpdateUseCase
+import com.example.memories.feature.feature_memory.data.data_source.ImageTagSuggester
+import com.example.memories.feature.feature_memory.data.repository.TagSuggestionRepositoryImpl
+import com.example.memories.feature.feature_memory.domain.repository.TagSuggestionRepository
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
+import com.example.memories.feature.feature_memory.domain.usecase.SuggestTagsUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
@@ -346,7 +350,8 @@ object AppModule {
     fun providesMemoryUseCase(
         memoryRepository: MemoryRepository,
         tagRepository: TagRepository,
-        mediaRepository: MediaRepository
+        mediaRepository: MediaRepository,
+        tagSuggestionRepository: TagSuggestionRepository
     ): MemoryUseCase {
         return MemoryUseCase(
             createMemoryUseCase = MemoryCreateUseCase(memoryRepository),
@@ -356,8 +361,25 @@ object AppModule {
             fetchMemoryByIdUseCase = GetMemoryByIdUseCase(memoryRepository),
             updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository),
             tagDeleteTagUseCase = DeleteTagUseCase(tagRepository),
-            generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository)
+            generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
+            suggestTagsUseCase = SuggestTagsUseCase(tagSuggestionRepository)
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagSuggestionRepository(
+        imageTagSuggester: ImageTagSuggester
+    ): TagSuggestionRepository {
+        return TagSuggestionRepositoryImpl(imageTagSuggester)
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageTagSuggester(
+        @ApplicationContext context : Context
+    ) : ImageTagSuggester {
+        return ImageTagSuggester(context)
     }
 
     @Provides
