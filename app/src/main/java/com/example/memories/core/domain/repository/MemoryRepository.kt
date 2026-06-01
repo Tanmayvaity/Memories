@@ -2,6 +2,8 @@ package com.example.memories.core.domain.repository
 
 import android.net.Uri
 import androidx.paging.PagingData
+import com.example.memories.core.domain.model.DailyStat
+import com.example.memories.core.domain.model.MediaBreakdown
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryTagCrossRefModel
@@ -80,4 +82,9 @@ interface MemoryRepository {
     suspend fun unHideAllHiddenMemories()
 
     fun getMemoriesByIds(ids: List<String>): Flow<List<MemoryWithMediaModel>>
+
+    // Analytics aggregates
+    fun getDailyStats(): Flow<List<DailyStat>>
+    fun getMediaBreakdown(): Flow<MediaBreakdown>
+    fun getTotalMemoryCount(): Flow<Int>
 }

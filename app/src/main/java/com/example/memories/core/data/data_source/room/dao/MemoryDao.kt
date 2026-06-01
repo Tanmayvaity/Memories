@@ -13,6 +13,8 @@ import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.Entity.MemoryTagCrossRef
 import com.example.memories.core.data.data_source.room.Entity.MemoryWithMedia
 import com.example.memories.core.data.data_source.room.Entity.TagEntity
+import com.example.memories.core.domain.model.DailyStat
+import com.example.memories.core.domain.model.MediaBreakdown
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import kotlinx.coroutines.flow.Flow
 
@@ -258,4 +260,41 @@ interface MemoryDao {
 
     @Query("SELECT * FROM MemoryEntity WHERE hidden = 0 and memory_id IN (:ids)")
     fun getMemoriesByIds(ids: List<String>): Flow<List<MemoryWithMedia>>
+
+    // ==================== ANALYTICS AGGREGATES ====================
+
+    /** One row per active local day: memory count + approximate (space-based) word count. */
+    @Query(
+        """
+        SELECT strftime('%Y-%m-%d', memory_for_time_stamp / 1000, 'unixepoch', 'localtime') AS day,
+               COUNT(*) AS count,
+               SUM(
+                 CASE WHEN TRIM(content) = '' THEN 0
+                      ELSE LENGTH(TRIM(content)) - LENGTH(REPLACE(TRIM(content), ' ', '')) + 1 END
+               ) AS words
+        FROM MemoryEntity
+        WHERE hidden = 0
+        GROUP BY day
+        ORDER BY day
+        """
+    )
+    fun getDailyStats(): Flow<List<DailyStat>>
+
+    /** Mutually-exclusive media classification (video > photo > text-only). */
+    @Query(
+        """
+        SELECT
+          (SELECT COUNT(*) FROM MemoryEntity m WHERE m.hidden = 0
+             AND NOT EXISTS (SELECT 1 FROM MediaEntity md WHERE md.memory_id = m.memory_id)) AS textOnly,
+          (SELECT COUNT(DISTINCT m.memory_id) FROM MemoryEntity m WHERE m.hidden = 0
+             AND EXISTS (SELECT 1 FROM MediaEntity md WHERE md.memory_id = m.memory_id AND md.type LIKE 'image/%')
+             AND NOT EXISTS (SELECT 1 FROM MediaEntity md2 WHERE md2.memory_id = m.memory_id AND md2.type LIKE 'video/%')) AS photo,
+          (SELECT COUNT(DISTINCT m.memory_id) FROM MemoryEntity m WHERE m.hidden = 0
+             AND EXISTS (SELECT 1 FROM MediaEntity md WHERE md.memory_id = m.memory_id AND md.type LIKE 'video/%')) AS video
+        """
+    )
+    fun getMediaBreakdown(): Flow<MediaBreakdown>
+
+    @Query("SELECT COUNT(*) FROM MemoryEntity WHERE hidden = 0")
+    fun getTotalMemoryCount(): Flow<Int>
 }

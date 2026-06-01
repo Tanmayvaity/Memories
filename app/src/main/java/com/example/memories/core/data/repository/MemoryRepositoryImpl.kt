@@ -15,6 +15,8 @@ import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.mapper.toDomain
 import com.example.memories.core.data.data_source.room.mapper.toEntity
+import com.example.memories.core.domain.model.DailyStat
+import com.example.memories.core.domain.model.MediaBreakdown
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryTagCrossRefModel
@@ -311,5 +313,10 @@ class MemoryRepositoryImpl @Inject constructor(
         return memoryDao.getMemoriesByIds(ids).map {memories -> memories.map {   it.toDomain() }}
     }
 
+    override fun getDailyStats(): Flow<List<DailyStat>> = memoryDao.getDailyStats()
+
+    override fun getMediaBreakdown(): Flow<MediaBreakdown> = memoryDao.getMediaBreakdown()
+
+    override fun getTotalMemoryCount(): Flow<Int> = memoryDao.getTotalMemoryCount()
 
 }

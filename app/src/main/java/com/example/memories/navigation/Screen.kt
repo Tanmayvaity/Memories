@@ -91,5 +91,8 @@ sealed class AppScreen(val route: String) {
     @Serializable
     data object ManageMedia : AppScreen("ManageMedia")
 
+    @Serializable
+    data object Analytics : AppScreen("Analytics")
+
 }
 

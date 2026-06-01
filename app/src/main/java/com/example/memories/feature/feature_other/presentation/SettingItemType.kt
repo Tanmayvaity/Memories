@@ -28,6 +28,10 @@ enum class GeneralSettingType(
         "Storage", "View app's storage information", R.drawable.ic_storage,
         SettingClickEvent.STORAGE_ITEM_CLICK
     ),
+    ANALYTICS(
+        "Insights", "Charts, streaks and journaling stats", R.drawable.ic_analytics,
+        SettingClickEvent.ANALYTICS_ITEM_CLICK
+    ),
     DATABASE_BACKUP(
         "Database backup", "Take database backup", R.drawable.ic_database_backup,
         SettingClickEvent.DATABASE_BACKUP_ITEM_CLICK
@@ -90,6 +94,7 @@ enum class AppInfoSettingType(
 enum class SettingClickEvent {
     NOTIFICATION_ITEM_CLICK,
     STORAGE_ITEM_CLICK,
+    ANALYTICS_ITEM_CLICK,
     DATABASE_BACKUP_ITEM_CLICK,
     THEME_ITEM_CLICK,
     TAG_ITEM_CLICK,

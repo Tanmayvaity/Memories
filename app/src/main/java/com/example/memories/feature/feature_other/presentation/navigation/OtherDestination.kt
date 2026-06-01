@@ -10,6 +10,7 @@ import com.example.memories.feature.feature_other.presentation.screens.developer
 import com.example.memories.feature.feature_other.presentation.screens.OtherRoot
 import com.example.memories.feature.feature_other.presentation.screens.hidden_memory_settings.HiddenMemorySettingRoot
 import com.example.memories.feature.feature_other.presentation.screens.manage_media.ManageMediaRoot
+import com.example.memories.feature.feature_other.presentation.screens.analytics.AnalyticsRoot
 import com.example.memories.feature.feature_other.presentation.screens.storage.StorageRoot
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
@@ -49,6 +50,9 @@ fun NavGraphBuilder.createOtherGraph(
                 navController.navigate(route)
             },
             onNavigateToStorage = { route ->
+                navController.navigate(route)
+            },
+            onNavigateToAnalytics = { route ->
                 navController.navigate(route)
             }
         )
@@ -96,6 +100,13 @@ fun NavGraphBuilder.createOtherGraph(
             onBack = {
                 navController.popBackStack()
             }
+        )
+    }
+
+    composable<AppScreen.Analytics> {
+        onBottomBarVisibilityChange(false)
+        AnalyticsRoot(
+            onBack = { navController.popBackStack() }
         )
     }
 

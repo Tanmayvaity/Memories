@@ -67,6 +67,7 @@ fun OtherRoot(
     onNavigateToHiddenMemorySettingScreen: (AppScreen.HiddenMemorySetting) -> Unit,
     onNavigateToHiddenMemory: (AppScreen.HiddenMemory) -> Unit,
     onNavigateToStorage: (AppScreen.Storage) -> Unit,
+    onNavigateToAnalytics: (AppScreen.Analytics) -> Unit,
     themeViewModel: ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
     otherViewModel: OtherViewModel = hiltViewModel()
 ) {
@@ -123,6 +124,10 @@ fun OtherRoot(
 
                 SettingClickEvent.STORAGE_ITEM_CLICK -> {
                     onNavigateToStorage(AppScreen.Storage)
+                }
+
+                SettingClickEvent.ANALYTICS_ITEM_CLICK -> {
+                    onNavigateToAnalytics(AppScreen.Analytics)
                 }
 
                 SettingClickEvent.DATABASE_BACKUP_ITEM_CLICK -> {

@@ -83,6 +83,11 @@ import com.example.memories.feature.feature_memory.data.repository.TagSuggestion
 import com.example.memories.feature.feature_memory.domain.repository.TagSuggestionRepository
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.feature.feature_memory.domain.usecase.SuggestTagsUseCase
+import com.example.memories.feature.feature_other.domain.usecase.AnalyticsUseCases
+import com.example.memories.feature.feature_other.domain.usecase.GetDailyStatsUseCase
+import com.example.memories.feature.feature_other.domain.usecase.GetMediaBreakdownUseCase
+import com.example.memories.feature.feature_other.domain.usecase.GetTopTagsUseCase
+import com.example.memories.feature.feature_other.domain.usecase.GetTotalMemoryCountUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
@@ -363,6 +368,20 @@ object AppModule {
             tagDeleteTagUseCase = DeleteTagUseCase(tagRepository),
             generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
             suggestTagsUseCase = SuggestTagsUseCase(tagSuggestionRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsUseCases(
+        memoryRepository: MemoryRepository,
+        tagRepository: TagRepository
+    ): AnalyticsUseCases {
+        return AnalyticsUseCases(
+            getDailyStats = GetDailyStatsUseCase(memoryRepository),
+            getMediaBreakdown = GetMediaBreakdownUseCase(memoryRepository),
+            getTotalMemoryCount = GetTotalMemoryCountUseCase(memoryRepository),
+            getTopTags = GetTopTagsUseCase(tagRepository)
         )
     }
 
