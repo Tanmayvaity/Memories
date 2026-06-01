@@ -435,7 +435,7 @@ private fun MemoryTopBar(
                         CreationState.CREATE -> {
                             onEvent(
                                 MemoryEvents.CreateMemory(
-                                    uriList = state.uriMap.map { it.value },
+                                    uriList = state.uriMap.entries.sortedBy { it.key }.map { it.value },
                                     title = state.title,
                                     content = state.content
                                 )
@@ -443,7 +443,7 @@ private fun MemoryTopBar(
                         }
 
                         CreationState.UPDATE -> {
-                            val slots = state.uriMap.map { it.value }.map { uriType ->
+                            val slots = state.uriMap.entries.sortedBy { it.key }.map { it.value }.map { uriType ->
                                 val existing = state.originalMediaList.find { it.uri == uriType.uri }
                                 if (existing != null) MediaSlot.Existing(existing)
                                 else MediaSlot.New(uriType)
