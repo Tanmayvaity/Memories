@@ -100,7 +100,9 @@ fun ManageUserDataSheet(
     latestMemories: LazyPagingItems<MemoryWithMediaModel>,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     pagerState: PagerState = rememberPagerState(pageCount = { 2 }),
+    showHidden: Boolean = false,
     onMediaQueryChange: (String) -> Unit = {},
+    onToggleShowHidden: () -> Unit = {},
     onDeleteMemories: (List<MemoryWithMediaModel>) -> Unit = {},
     onDeleteRecentSearch: (String) -> Unit = {},
     onClearAllRecentSearches: () -> Unit = {},
@@ -165,6 +167,8 @@ fun ManageUserDataSheet(
                     0 -> MemoriesTab(
                         query = memoryQuery,
                         memories = latestMemories,
+                        showHidden = showHidden,
+                        onToggleShowHidden = onToggleShowHidden,
 //                        onQueryChange = { onEvent(StorageEvents.MemoryQueryChange(it)) },
                         onQueryChange = { query ->
                             onMediaQueryChange(query)
@@ -216,6 +220,8 @@ fun ManageUserDataSheet(
 private fun MemoriesTab(
     query: String,
     memories: LazyPagingItems<MemoryWithMediaModel>,
+    showHidden: Boolean,
+    onToggleShowHidden: () -> Unit,
     onQueryChange: (String) -> Unit,
     onMemoryClick: (String) -> Unit,
     onDeleteMemories: (List<MemoryWithMediaModel>) -> Unit
@@ -245,12 +251,27 @@ private fun MemoriesTab(
 
         }
         Spacer(modifier = Modifier.height(8.dp))
-        SearchTextField(
-            value = query,
-            onValueChange = onQueryChange,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            placeholder = "Search memories"
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SearchTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier.weight(1f),
+                placeholder = "Search memories"
+            )
+            IconButton(onClick = onToggleShowHidden) {
+                Icon(
+                    painter = painterResource(
+                        if (showHidden) R.drawable.ic_hidden else R.drawable.ic_not_hidden
+                    ),
+                    contentDescription = if (showHidden) "Show visible memories"
+                    else "Show hidden memories"
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -262,7 +283,11 @@ private fun MemoriesTab(
             itemKey = { it.memory.memoryId },
             emptyContent = {
                 CenterMessage(
-                    if (query.isBlank()) "No memories yet" else "No memories found"
+                    when {
+                        showHidden && query.isBlank() -> "No hidden memories"
+                        query.isBlank() -> "No memories yet"
+                        else -> "No memories found"
+                    }
                 )
             }
         ) { item ->

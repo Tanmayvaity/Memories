@@ -214,7 +214,7 @@ class MemoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun searchMemories(query: String): Flow<PagingData<MemoryWithMediaModel>> {
+    override fun searchMemories(query: String, showHidden: Boolean): Flow<PagingData<MemoryWithMediaModel>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -222,14 +222,14 @@ class MemoryRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                memoryDao.getAllMemoriesWithMediaBySearchPaged(query)
+                memoryDao.getAllMemoriesWithMediaBySearchPaged(query, showHidden)
             }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }
         }
     }
 
-    override fun getAllMediaPaged(): Flow<PagingData<MediaModel>> {
+    override fun getAllMediaPaged(showHidden: Boolean): Flow<PagingData<MediaModel>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 30,
@@ -237,7 +237,7 @@ class MemoryRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                mediaDao.getAllMediaPaged()
+                mediaDao.getAllMediaPaged(showHidden)
             }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain() }

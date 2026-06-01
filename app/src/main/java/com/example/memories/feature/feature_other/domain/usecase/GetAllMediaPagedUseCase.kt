@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 class GetAllMediaPagedUseCase(
     private val repository: MemoryRepository
 ) {
-    operator fun invoke(): Flow<PagingData<MediaModel>> {
-        return repository.getAllMediaPaged()
+    operator fun invoke(showHidden: Boolean = false): Flow<PagingData<MediaModel>> {
+        return repository.getAllMediaPaged(showHidden)
     }
 }

@@ -78,6 +78,7 @@ fun StorageRoot(
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
     val latestMemories = viewModel.latestMemories.collectAsLazyPagingItems()
+    val showHidden by viewModel.showHidden.collectAsStateWithLifecycle()
     StorageScreen(
         state = state,
         onBack = onBack,
@@ -89,7 +90,8 @@ fun StorageRoot(
         tagQuery = tagQuery,
         tags = tags,
         recentSearches = recentSearches,
-        latestMemories = latestMemories
+        latestMemories = latestMemories,
+        showHidden = showHidden
     )
 }
 
@@ -108,6 +110,7 @@ fun StorageScreen(
     recentSearches: SectionState<List<MemoryWithMediaModel>> = SectionState.Loading,
     latestMemories: LazyPagingItems<MemoryWithMediaModel> =
         flowOf(PagingData.empty<MemoryWithMediaModel>()).collectAsLazyPagingItems(),
+    showHidden: Boolean = false,
 ) {
     var showChoiceSheet by remember { mutableStateOf(false) }
     var showUserDataSheet by remember { mutableStateOf(false) }
@@ -174,6 +177,10 @@ fun StorageScreen(
             tags = tags,
             recentSearches = recentSearches,
             latestMemories = latestMemories,
+            showHidden = showHidden,
+            onToggleShowHidden = {
+                onEvent(StorageEvents.ToggleShowHidden)
+            },
             onDeleteMemories = {
                 onEvent(StorageEvents.DeleteMemories(it))
             },

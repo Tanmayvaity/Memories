@@ -12,6 +12,7 @@ import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.Type
 import com.example.memories.feature.feature_other.domain.usecase.MediaManagementUseCaseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -26,13 +28,20 @@ import javax.inject.Inject
 import androidx.core.net.toUri
 import com.example.memories.core.util.toUriOrNull
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ManageMediaViewModel @Inject constructor(
     private val mediaUseCase: MediaManagementUseCaseWrapper
 ) : ViewModel() {
 
+
+    val showHidden: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
     val media: Flow<PagingData<MediaModel>> =
-        mediaUseCase.getAllMediaPagedUseCase().cachedIn(viewModelScope)
+        showHidden
+            .flatMapLatest { hidden -> mediaUseCase.getAllMediaPagedUseCase(hidden) }
+            .cachedIn(viewModelScope)
 
     private val _state = MutableStateFlow(ManageMediaState())
     val state: StateFlow<ManageMediaState> = _state.asStateFlow()
@@ -44,6 +53,8 @@ class ManageMediaViewModel @Inject constructor(
 
     fun onEvent(event: ManageMediaEvents) {
         when (event) {
+            is ManageMediaEvents.ToggleShowHidden -> showHidden.update { !it }
+
             is ManageMediaEvents.LoadAssociatedMemory -> {
                 associatedMemoryJob?.cancel()
                 _state.update { it.copy(associatedMemory = null) }
@@ -168,10 +179,11 @@ class ManageMediaViewModel @Inject constructor(
 data class ManageMediaState(
     val isDownloading: Boolean = false,
     val isSharing: Boolean = false,
-    val associatedMemory: MemoryWithMediaModel? = null
+    val associatedMemory: MemoryWithMediaModel? = null,
 )
 
 sealed interface ManageMediaEvents {
+    object ToggleShowHidden : ManageMediaEvents
     data class LoadAssociatedMemory(val memoryId: String) : ManageMediaEvents
     object ClearAssociatedMemory : ManageMediaEvents
     data class ToggleFavourite(

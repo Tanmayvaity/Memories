@@ -8,7 +8,10 @@ import kotlinx.coroutines.flow.Flow
 class SearchMemoriesPagedUseCase(
     private val repository: MemoryRepository
 ) {
-    operator fun invoke(query: String): Flow<PagingData<MemoryWithMediaModel>> {
-        return repository.searchMemories(query)
+    operator fun invoke(
+        query: String,
+        showHidden: Boolean = false
+    ): Flow<PagingData<MemoryWithMediaModel>> {
+        return repository.searchMemories(query, showHidden)
     }
 }

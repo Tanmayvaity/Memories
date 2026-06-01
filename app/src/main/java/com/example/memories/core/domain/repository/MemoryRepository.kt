@@ -59,9 +59,9 @@ interface MemoryRepository {
 
     suspend fun getMemoryByTitle(query: String): Flow<List<MemoryWithMediaModel>>
 
-    fun searchMemories(query: String): Flow<PagingData<MemoryWithMediaModel>>
+    fun searchMemories(query: String, showHidden: Boolean): Flow<PagingData<MemoryWithMediaModel>>
 
-    fun getAllMediaPaged(): Flow<PagingData<MediaModel>>
+    fun getAllMediaPaged(showHidden: Boolean): Flow<PagingData<MediaModel>>
 
     suspend fun updateMediaFavouriteState(mediaId: String, isFavourite: Boolean)
 

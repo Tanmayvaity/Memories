@@ -67,6 +67,7 @@ fun ManageMediaRoot(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val mediaItems = viewModel.media.collectAsLazyPagingItems()
+    val showHidden by viewModel.showHidden.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -91,6 +92,7 @@ fun ManageMediaRoot(
         mediaItems = mediaItems,
         isDownloading = state.isDownloading,
         isSharing = state.isSharing,
+        showHidden = showHidden,
         associatedMemory = state.associatedMemory,
         onBack = onBack,
         onEvent = viewModel::onEvent,
@@ -105,6 +107,7 @@ fun ManageMediaScreen(
     mediaItems: LazyPagingItems<MediaModel>,
     isDownloading: Boolean = false,
     isSharing: Boolean = false,
+    showHidden: Boolean = false,
     associatedMemory: com.example.memories.core.domain.model.MemoryWithMediaModel? = null,
     onBack: () -> Unit = {},
     onEvent: (ManageMediaEvents) -> Unit = {},
@@ -148,6 +151,18 @@ fun ManageMediaScreen(
                     onNavigationIconClick = onBack,
                     title = {
                         Text(text = "Manage Media", fontWeight = FontWeight.SemiBold)
+                    },
+                    showAction = true,
+                    actionContent = {
+                        IconButton(onClick = { onEvent(ManageMediaEvents.ToggleShowHidden) }) {
+                            Icon(
+                                painter = painterResource(
+                                    if (showHidden) R.drawable.ic_hidden else R.drawable.ic_not_hidden
+                                ),
+                                contentDescription = if (showHidden) "Show visible media"
+                                else "Show hidden media"
+                            )
+                        }
                     }
                 )
             }

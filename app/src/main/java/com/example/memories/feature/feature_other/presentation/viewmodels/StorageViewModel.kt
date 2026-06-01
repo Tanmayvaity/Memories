@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -73,26 +74,16 @@ class StorageViewModel @Inject constructor(
     val tagQuery: StateFlow<String>
         field = MutableStateFlow("")
 
-    /**
-     * Single paged source of truth for the memories tab. When the search field is empty it
-     * yields all non-hidden memories (newest first); otherwise it yields the paged search
-     * results for the current query. Both paths filter `hidden = 0`.
-     */
+    val showHidden: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
     val latestMemories: Flow<PagingData<MemoryWithMediaModel>> =
-        memoryQuery
-            .debounce(300)
-            .distinctUntilChanged()
-            .flatMapLatest { query ->
-//                if (query.isBlank()) {
-//                    feedUseCase.getFeedUseCase(
-//                        type = FetchType.ALL,
-//                        sortType = SortType.DateAdded,
-//                        orderByType = SortOrder.Descending
-//                    )
-//                } else {
-//
-//                }
-                searchUseCase.searchMemoriesPagedUseCase(query)
+        combine(
+            memoryQuery.debounce(300).distinctUntilChanged(),
+            showHidden
+        ) { query, hidden -> query to hidden }
+            .flatMapLatest { (query, hidden) ->
+                searchUseCase.searchMemoriesPagedUseCase(query, hidden)
             }
             .cachedIn(viewModelScope)
 
@@ -138,6 +129,8 @@ class StorageViewModel @Inject constructor(
             }
 
             is StorageEvents.MemoryQueryChange -> memoryQuery.update { event.query }
+
+            is StorageEvents.ToggleShowHidden -> showHidden.update { !it }
 
             is StorageEvents.TagQueryChange -> tagQuery.update { event.query }
 
@@ -189,6 +182,7 @@ sealed interface StorageEvents{
     object DeleteCache : StorageEvents
 
     data class MemoryQueryChange(val query: String) : StorageEvents
+    object ToggleShowHidden : StorageEvents
     data class TagQueryChange(val query: String) : StorageEvents
     data class DeleteMemories(val memories: List<MemoryWithMediaModel>) : StorageEvents
     data class DeleteTags(val ids: List<String>) : StorageEvents

@@ -20,14 +20,13 @@ interface MediaDao {
     @Query("SELECT * FROM MediaEntity WHERE hidden = 1")
     suspend fun getAllHiddenMedia(): List<MediaEntity>
 
-//    @Query("SELECT * FROM MediaEntity WHERE hidden = 0 ORDER BY time_stamp DESC")
     @Query("""
         SELECT media.* FROM MediaEntity AS media
 INNER JOIN MemoryEntity AS memory ON media.memory_id = memory.memory_id
-WHERE memory.hidden = 0 AND media.hidden = 0
+WHERE memory.hidden = :showHidden or memory.hidden = 0
 ORDER BY media.time_stamp DESC
     """)
-    fun getAllMediaPaged(): PagingSource<Int, MediaEntity>
+    fun getAllMediaPaged(showHidden: Boolean): PagingSource<Int, MediaEntity>
 
     @Query("UPDATE MediaEntity SET favourite = :favourite WHERE media_id = :mediaId")
     suspend fun updateMediaFavourite(mediaId: String, favourite: Boolean)
