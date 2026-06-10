@@ -8,7 +8,6 @@ A modern Android diary app to capture and relive your precious moments through p
 - **📝 Rich Journaling** — Write about your day and attach media to create meaningful memories
 - **📅 On This Day** — Get nostalgic notifications reminding you of memories from past years (powered by WorkManager)
 - **🔔 Journaling Reminders** — Precise time-based reminders using AlarmManager to encourage consistent journaling
-- **☁️ Google Drive Backup** — Backup your database and media files to Google Drive with change tracking for incremental syncs
 - **♾️ Infinite Feed** — Smooth, paginated browsing through thousands of memories using Paging 3
 - **🏷️ Tags** — Organize memories with tags
 
@@ -27,5 +26,9 @@ A modern Android diary app to capture and relive your precious moments through p
 | **DI** | Dagger Hilt |
 | **Cloud** | Google Drive API |
 | **Async** | Kotlin Coroutines, Flows |
+| **REST API** | Retrofit |
 
-https://github.com/user-attachments/assets/666344d8-25d7-40d5-8802-1e92f4676ce1
+## Demo
+[Click to open demo](https://drive.google.com/file/d/10_m_9wYBRXA9N7V7j34v54nsEJ6Zm2Qd/view?usp=share_link)
+
+
