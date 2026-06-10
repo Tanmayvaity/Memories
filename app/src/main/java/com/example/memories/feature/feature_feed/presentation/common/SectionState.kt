@@ -3,9 +3,8 @@ package com.example.memories.feature.feature_feed.presentation.common
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
+import com.example.memories.core.presentation.components.ErrorStateCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map

@@ -5,11 +5,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.example.memories.core.domain.model.MediaType
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.presentation.MediaResult.*
+import com.example.memories.core.util.TAG
+import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.MediaViewModel
 import com.example.memories.feature.feature_memory.domain.usecase.MemoryUseCase
 import com.example.memories.feature.feature_memory.presentation.MemoryEvents.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -54,6 +58,17 @@ class MemoryViewModel @Inject constructor(
     val mediaResultChannel = _mediaResultChannel.receiveAsFlow()
 
     private val _memoryState = MutableStateFlow<MemoryState>(MemoryState())
+
+    val remoteImages = memoryUseCase.fetchRemoteImagesUseCase()
+        .catch { e ->
+            Log.e(TAG, "error : ${e}", )
+        }
+        .cachedIn(viewModelScope)
+    val remoteVideos = memoryUseCase.fetchRemoteVideosUseCase()
+        .catch { e ->
+            Log.e(TAG, "error : ${e}", )
+        }
+        .cachedIn(viewModelScope)
 
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)

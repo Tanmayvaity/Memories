@@ -2,6 +2,8 @@ package com.example.memories.feature.feature_memory.domain.usecase
 
 import com.example.memories.core.domain.usecase.AddTagUseCase
 import com.example.memories.core.domain.usecase.DeleteTagUseCase
+import com.example.memories.core.domain.usecase.FetchRemoteImagesUseCase
+import com.example.memories.core.domain.usecase.FetchRemoteVideosUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
@@ -16,5 +18,7 @@ data class MemoryUseCase(
     val updateMemoryUseCase : MemoryUpdateUseCase,
     val tagDeleteTagUseCase: DeleteTagUseCase,
     val generateSharableUriUseCase: GenerateSharableUriUseCase,
-    val suggestTagsUseCase: SuggestTagsUseCase
+    val suggestTagsUseCase: SuggestTagsUseCase,
+    val fetchRemoteImagesUseCase: FetchRemoteImagesUseCase,
+    val fetchRemoteVideosUseCase: FetchRemoteVideosUseCase
 )

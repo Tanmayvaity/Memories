@@ -1,13 +1,16 @@
-package com.example.memories.feature.feature_media_edit.domain.repository
+package com.example.memories.core.domain.repository
 
 import android.graphics.Bitmap
 import android.net.Uri
-import com.airbnb.lottie.L
-import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
+import androidx.paging.PagingData
+import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.domain.model.Video
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
+import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
+import kotlinx.coroutines.flow.Flow
 
 interface MediaRepository {
     suspend fun uriToBitmap(
@@ -61,5 +64,8 @@ interface MediaRepository {
 
     fun generateShareableUri(isImage : Boolean? = false,uri : Uri? = null) : Uri?
 
+    fun getRemoteImages() : Flow<PagingData<Photo>>
+
+    fun getRemoteVideos() : Flow<PagingData<Video>>
 
 }

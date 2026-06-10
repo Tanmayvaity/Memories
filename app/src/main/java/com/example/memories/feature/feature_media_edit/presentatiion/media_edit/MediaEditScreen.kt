@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_media_edit.presentation.media_edit
 import android.R.attr.type
 import android.graphics.RuntimeShader
 import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
@@ -42,11 +43,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.R
 import com.example.memories.core.domain.model.MediaActionType
+import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.domain.model.Video
 import com.example.memories.core.presentation.MenuItem
+import com.example.memories.core.presentation.UiState
 import com.example.memories.core.presentation.components.ActionSelectorBottomSheet
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
@@ -63,6 +70,7 @@ import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.RotationDirection
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.coroutines.flow.flowOf
 
 private const val MAX_MEDIA_PAGES = 5
 
@@ -78,6 +86,8 @@ fun MediaEditRoot(
     preloadUri: String? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val remoteImages =  viewModel.remoteImages.collectAsLazyPagingItems()
+    val remoteVideos = viewModel.remoteVideos.collectAsLazyPagingItems()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
@@ -132,6 +142,8 @@ fun MediaEditRoot(
 
     MediaEditScreen(
         state = state,
+        remoteImages = remoteImages,
+        remoteVideos = remoteVideos,
         onEvent = viewModel::onEvent,
         onBackPress = onBackPress,
         onNextClick = onNextClick,
@@ -145,6 +157,8 @@ fun MediaEditRoot(
 @Composable
 fun MediaEditScreen(
     state: EditorState = EditorState(),
+    remoteImages : LazyPagingItems<Photo>,
+    remoteVideos : LazyPagingItems<Video>,
     onEvent: (MediaEvents) -> Unit = {},
     onBackPress: () -> Unit = {},
     onNextClick: (AppScreen.Memory) -> Unit = {},
@@ -423,6 +437,9 @@ fun MediaEditScreen(
             onEvent(MediaEvents.AddMediaUri(uriType, position))
         },
         onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
+        remoteImages = remoteImages,
+        remoteVideos = remoteVideos
+
     )
 }
 
@@ -951,9 +968,9 @@ private fun MediaEditScreenPreview() {
     MemoriesTheme {
         MediaEditScreen(
             state = EditorState(
-                initialActiveTool = EditTool.ADJUST,
-
-                ),
+                initialActiveTool = EditTool.ADJUST,),
+            remoteImages = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
+            remoteVideos = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
         )
     }
 }

@@ -1,18 +1,13 @@
 package com.example.memories.feature.feature_feed.presentation.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +17,8 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.example.memories.core.presentation.components.AppendStateFooter
+import com.example.memories.core.presentation.components.ErrorStateCard
 import com.example.memories.core.presentation.components.LoadingIndicator
 
 @Composable
@@ -92,27 +89,5 @@ fun <T : Any> PagedListContainer(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AppendStateFooter(
-    appendState: LoadState,
-    onRetry: () -> Unit
-) {
-    when (appendState) {
-        is LoadState.Loading -> {
-            LoadingIndicator(showText = false)
-        }
-
-        is LoadState.Error -> {
-            Text(
-                text = appendState.error.message ?: "Failed to load more",
-                modifier = Modifier.clickable(onClick = onRetry),
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        else -> {}
     }
 }

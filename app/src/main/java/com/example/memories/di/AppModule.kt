@@ -52,8 +52,8 @@ import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.Tog
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.ToggleHiddenUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.FetchRecentSearchUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SaveSearchIdUseCase
-import com.example.memories.feature.feature_media_edit.data.repository.MediaRepositoryImpl
-import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
+import com.example.memories.core.data.repository.MediaRepositoryImpl
+import com.example.memories.core.domain.repository.MediaRepository
 import com.example.memories.core.domain.usecase.DownloadVideoUseCase
 import com.example.memories.core.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.feature.feature_media_edit.domain.usecase.MediaUseCases
@@ -90,11 +90,14 @@ import com.example.memories.feature.feature_other.domain.usecase.GetTopTagsUseCa
 import com.example.memories.feature.feature_other.domain.usecase.GetTotalMemoryCountUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
+import com.example.memories.core.data.data_source.remote.RemoteMediaService
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_6_7
 import com.example.memories.core.data.repository.AppSettingRepositoryImpl
 import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
+import com.example.memories.core.domain.usecase.FetchRemoteImagesUseCase
+import com.example.memories.core.domain.usecase.FetchRemoteVideosUseCase
 import com.example.memories.core.domain.usecase.InvokeNotificationUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.feed_usecase.SaveToCacheStorageWithUriUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.hidden_usecase.GetHiddenFeedUseCase
@@ -186,8 +189,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaRepository(mediaManager: MediaManager): MediaRepository {
-        return MediaRepositoryImpl(mediaManager)
+    fun provideMediaRepository(mediaManager: MediaManager, remoteMediaService: RemoteMediaService): MediaRepository {
+        return MediaRepositoryImpl(
+            mediaManager,
+            remoteMediaService = remoteMediaService
+        )
     }
 
     @Provides
@@ -213,7 +219,9 @@ object AppModule {
             downloadVideoUseCase = DownloadVideoUseCase(repository),
             composeShaderUseCase = ComposeShaderUseCase(repository),
             saveToCacheStorageWithBitmapUseCase = SaveToCacheStorageWithBitmapUseCase(repository),
-            generateSharableUriUseCase = GenerateSharableUriUseCase(repository)
+            generateSharableUriUseCase = GenerateSharableUriUseCase(repository),
+            fetchRemoteImagesUseCase = FetchRemoteImagesUseCase(repository),
+            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(repository)
         )
     }
 
@@ -367,7 +375,9 @@ object AppModule {
             updateMemoryUseCase = MemoryUpdateUseCase(memoryRepository),
             tagDeleteTagUseCase = DeleteTagUseCase(tagRepository),
             generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
-            suggestTagsUseCase = SuggestTagsUseCase(tagSuggestionRepository)
+            suggestTagsUseCase = SuggestTagsUseCase(tagSuggestionRepository),
+            fetchRemoteImagesUseCase = FetchRemoteImagesUseCase(mediaRepository),
+            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(mediaRepository)
         )
     }
 
@@ -567,7 +577,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    @GithubApi
+    fun provideGithubRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.github.com/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -576,8 +587,25 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGitHubApi(retrofit: Retrofit): GithubService =
+    @PexelsApi
+    fun proviePexelsRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.pexels.com/v1/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+
+
+    @Provides
+    @Singleton
+    fun provideGitHubApi(@GithubApi retrofit: Retrofit): GithubService =
         retrofit.create(GithubService::class.java)
+
+    @Provides
+    @Singleton
+    fun providePexelsApi(@PexelsApi retrofit: Retrofit): RemoteMediaService =
+        retrofit.create(RemoteMediaService::class.java)
 
 
     @Provides

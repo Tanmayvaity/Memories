@@ -275,7 +275,7 @@ private fun SelectionTopBar(
 }
 
 @Composable
-private fun MediaGridItem(
+fun MediaGridItem(
     media: MediaModel,
     selected: Boolean,
     selectionMode: Boolean,
@@ -286,7 +286,7 @@ private fun MediaGridItem(
     Box(
         modifier = Modifier
             .padding(1.dp)
-            .aspectRatio(1f)
+//            .aspectRatio(1f)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
     ) {
         AsyncImage(

@@ -3,7 +3,7 @@ package com.example.memories.feature.feature_media_edit.domain.usecase
 import com.example.memories.feature.feature_media_edit.domain.model.ShaderStep
 import com.example.memories.feature.feature_media_edit.domain.model.AdjustType
 import com.example.memories.feature.feature_media_edit.domain.model.FilterType
-import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
+import com.example.memories.core.domain.repository.MediaRepository
 
 /**
  * Produces a single [ShaderStep] that bakes the chosen [FilterType] together with all active

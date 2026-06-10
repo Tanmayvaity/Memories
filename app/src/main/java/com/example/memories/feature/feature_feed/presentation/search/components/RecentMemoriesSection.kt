@@ -32,7 +32,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.util.formatTime
-import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
+import com.example.memories.core.presentation.components.ErrorStateCard
 import com.example.memories.feature.feature_feed.presentation.common.SectionState
 import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer
 import com.example.memories.ui.theme.MemoriesTheme

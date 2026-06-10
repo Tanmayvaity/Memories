@@ -74,15 +74,20 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.video.videoFramePercent
 import com.example.memories.R
 import com.example.memories.core.domain.model.MediaActionType
 import com.example.memories.core.domain.model.MediaType
+import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.TagModel
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.domain.model.Video
 import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
@@ -98,6 +103,7 @@ import com.example.memories.feature.feature_memory.presentation.components.TagRo
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TopLevelScreen
 import com.example.memories.ui.theme.MemoriesTheme
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -118,6 +124,8 @@ fun MemoryRoot(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val remoteImages = viewModel.remoteImages.collectAsLazyPagingItems()
+    val remoteVideos = viewModel.remoteVideos.collectAsLazyPagingItems()
 
     LaunchedEffect(Unit) {
         if (state.creationState == CreationState.CREATE && uriList.isNotEmpty()) {
@@ -166,7 +174,9 @@ fun MemoryRoot(
         state = state,
         onTagClick = onTagClick,
         onNavigateToCamera = onNavigateToCamera,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        remoteImages = remoteImages,
+        remoteVideos = remoteVideos
     )
 }
 
@@ -181,6 +191,8 @@ fun MemoryScreen(
     onTagClick: (AppScreen.TagWithMemories) -> Unit = {},
     onNavigateToCamera: (AppScreen.Camera) -> Unit = {},
     snackbarHostState: SnackbarHostState,
+    remoteImages : LazyPagingItems<Photo>,
+    remoteVideos : LazyPagingItems<Video>,
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -318,6 +330,8 @@ fun MemoryScreen(
                 onEvent(MemoryEvents.AddMediaUri(uriType, position))
             },
             onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
+            remoteImages = remoteImages,
+            remoteVideos = remoteVideos
         )
 
         if (showDatePicker) {
@@ -595,7 +609,9 @@ private fun MemoryScreenPreview() {
     MemoriesTheme {
         MemoryScreen(
             state = MemoryState(isLoading = true),
-            snackbarHostState = remember { SnackbarHostState() }
+            snackbarHostState = remember { SnackbarHostState() },
+            remoteImages = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
+            remoteVideos = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
         )
     }
 }

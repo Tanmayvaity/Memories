@@ -1,6 +1,5 @@
 package com.example.memories.feature.feature_feed.presentation.search.components
 
-import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -26,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.HeadingText
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.feature.feature_feed.presentation.components.ErrorStateCard
+import com.example.memories.core.presentation.components.ErrorStateCard
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItem
 import com.example.memories.feature.feature_feed.presentation.common.SectionState
 import com.example.memories.feature.feature_feed.presentation.common.SectionStateContainer

@@ -5,12 +5,24 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.core.domain.model.MediaActionType
 import com.example.memories.core.domain.model.MediaType
+import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.domain.model.Video
+import com.example.memories.core.presentation.UiState
+import com.example.memories.navigation.CustomNavType.mediaType
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Reusable orchestration for the media-capture flow shared by MemoryScreen and MediaEditScreen.
@@ -44,8 +56,11 @@ fun MediaCaptureHost(
     onUpdateMediaActionType: (MediaActionType) -> Unit,
     onMediaSelected: (UriType, position: Int) -> Unit,
     onNavigateToCamera: () -> Unit,
+    remoteImages : LazyPagingItems<Photo> = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
+    remoteVideos : LazyPagingItems<Video> = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
 ) {
     val context = LocalContext.current
+    var showWebTypeSheet by remember { mutableStateOf(false) }
 
     val onCaptureSuccess: (Boolean) -> Unit = { successful ->
         if (successful && tempMediaUri != null && currentPosition != null &&
@@ -113,6 +128,11 @@ fun MediaCaptureHost(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                 )
                 onPickerSheetDismiss()
+            },
+            onWeb = {
+                onUpdateMediaActionType(MediaActionType.WEB_PICKER)
+                showWebTypeSheet = true
+                onPickerSheetDismiss()
             }
         )
     }
@@ -126,4 +146,14 @@ fun MediaCaptureHost(
             }
         )
     }
+
+    if(showWebTypeSheet){
+        WebMediaSelectorSheet(
+            onDismiss = {showWebTypeSheet = false},
+            onMediaSelected = {},
+            remoteImages = remoteImages,
+            remoteVideos = remoteVideos
+        )
+    }
 }
+

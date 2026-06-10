@@ -3,7 +3,7 @@ package com.example.memories.feature.feature_media_edit.domain.usecase
 import androidx.core.net.toUri
 import com.example.memories.core.domain.model.Result
 import com.example.memories.core.domain.model.UriType
-import com.example.memories.feature.feature_media_edit.domain.repository.MediaRepository
+import com.example.memories.core.domain.repository.MediaRepository
 
 /**
  * Saves a list of media to cache storage and returns the resulting cache [UriType]s.

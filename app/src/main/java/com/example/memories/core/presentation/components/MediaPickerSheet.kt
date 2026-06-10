@@ -13,6 +13,7 @@ fun MediaPickerSheet(
     onDeviceCamera: () -> Unit,
     onCustomCamera: () -> Unit,
     onGallery: () -> Unit,
+    onWeb: () -> Unit
 ) {
     ActionSelectorBottomSheet(
         onDismiss = onDismiss,
@@ -39,6 +40,12 @@ fun MediaPickerSheet(
                 content = "Select from your device photos",
                 onClick = onGallery
             ),
+            MenuItem(
+                title = "Choose from the web",
+                icon = R.drawable.ic_web,
+                content = "Select media from the pexels api",
+                onClick = onWeb
+            )
         )
     )
 }
