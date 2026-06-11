@@ -24,7 +24,6 @@ A modern Android diary app to capture and relive your precious moments through p
 | **Database** | Room with Paging 3 |
 | **Background Work** | WorkManager, AlarmManager |
 | **DI** | Dagger Hilt |
-| **Cloud** | Google Drive API |
 | **Async** | Kotlin Coroutines, Flows |
 | **REST API** | Retrofit |
 
