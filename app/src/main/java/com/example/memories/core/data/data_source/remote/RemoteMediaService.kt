@@ -12,7 +12,6 @@ interface RemoteMediaService {
 
     @GET("curated/")
     suspend fun getRemoteImageMediaResponse(
-        @Header("Authorization") apiKey : String = BuildConfig.apiKey,
         @Query("page") page : Int,
         @Query("per_page") perPage: Int = 30
     ) : RemoteImageMediaResponse
@@ -20,7 +19,6 @@ interface RemoteMediaService {
 
     @GET("videos/popular")
     suspend fun getRemoteVideoMediaResponse(
-        @Header("Authorization") apiKey: String = BuildConfig.apiKey,
         @Query("page") page : Int,
         @Query("per_page") perPage: Int = 30
     ) : RemoteVideoMediaResponse

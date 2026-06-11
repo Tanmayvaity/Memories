@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.room.Room
 import androidx.work.WorkManager
+import com.example.memories.BuildConfig
 import com.example.memories.core.data.data_source.CameraSettingsDatastore
 import com.example.memories.core.data.data_source.media.MediaManager
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
@@ -90,6 +91,7 @@ import com.example.memories.feature.feature_other.domain.usecase.GetTopTagsUseCa
 import com.example.memories.feature.feature_other.domain.usecase.GetTotalMemoryCountUseCase
 import com.example.memories.core.data.data_source.alarm.AlarmManagerService
 import com.example.memories.core.data.data_source.notification.MemoryNotificationSchedulerImpl
+import com.example.memories.core.data.data_source.remote.ApiKeyInterceptor
 import com.example.memories.core.data.data_source.remote.RemoteMediaService
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_6_7
@@ -136,6 +138,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import javax.inject.Singleton
 import kotlin.jvm.java
@@ -577,6 +580,14 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideOkhttpClient() : OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(ApiKeyInterceptor(BuildConfig.apiKey))
+            .build()
+    }
+
+    @Provides
+    @Singleton
     @GithubApi
     fun provideGithubRetrofit(): Retrofit {
         return Retrofit.Builder()
@@ -588,9 +599,12 @@ object AppModule {
     @Provides
     @Singleton
     @PexelsApi
-    fun proviePexelsRetrofit(): Retrofit {
+    fun proviePexelsRetrofit(
+        client : OkHttpClient
+    ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.pexels.com/v1/")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
