@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.flowOf
 fun WebMediaSelectorSheet(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onMediaSelected: () -> Unit,
+    onMediaSelected: (url: String, isVideo: Boolean) -> Unit,
     remoteImages: LazyPagingItems<Photo>,
     remoteVideos: LazyPagingItems<Video>
 ) {
@@ -69,7 +69,10 @@ fun WebMediaSelectorSheet(
                             key = { "photo-${it.id}" },
                             gridState = imageGridState
                         ) { image ->
-                            MediaGridCell(url = image.src.portrait)
+                            MediaGridCell(
+                                url = image.src.portrait,
+                                onClick = { onMediaSelected(image.src.portrait, false) }
+                            )
                         }
                     }
 
@@ -79,7 +82,14 @@ fun WebMediaSelectorSheet(
                             key = { "video-${it.id}" },
                             gridState = videoGridState
                         ) { video ->
-                            MediaGridCell(url = video.image, isVideo = true)  // video thumbnail
+                            MediaGridCell(
+                                url = video.image, // video thumbnail
+                                isVideo = true,
+                                onClick = {
+                                    // Only the CDN file link is downloadable; `url` is a web page.
+                                    video.downloadLink?.let { link -> onMediaSelected(link, true) }
+                                }
+                            )
                         }
                     }
                 }
@@ -94,7 +104,7 @@ private fun WebMediaSelectorSheetPreview() {
     MemoriesTheme {
         WebMediaSelectorSheet(
             onDismiss = {},
-            onMediaSelected = {},
+            onMediaSelected = { _, _ -> },
             remoteImages = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
             remoteVideos =  flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
         )

@@ -5,6 +5,7 @@ import com.example.memories.core.domain.usecase.DownloadWithBitmapUseCase
 import com.example.memories.core.domain.usecase.FetchRemoteImagesUseCase
 import com.example.memories.core.domain.usecase.FetchRemoteVideosUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
+import com.example.memories.core.domain.usecase.SaveRemoteMediaUseCase
 
 data class MediaUseCases(
     val uriToBitmapUseCase: UriToBitmapUseCase,
@@ -15,5 +16,6 @@ data class MediaUseCases(
     val saveToCacheStorageWithBitmapUseCase: SaveToCacheStorageWithBitmapUseCase,
     val generateSharableUriUseCase: GenerateSharableUriUseCase,
     val fetchRemoteImagesUseCase: FetchRemoteImagesUseCase,
-    val fetchRemoteVideosUseCase: FetchRemoteVideosUseCase
+    val fetchRemoteVideosUseCase: FetchRemoteVideosUseCase,
+    val saveRemoteMediaUseCase: SaveRemoteMediaUseCase
 )

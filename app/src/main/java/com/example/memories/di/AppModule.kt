@@ -113,6 +113,7 @@ import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.F
 import com.example.memories.feature.feature_feed.domain.usecase.search_usecase.SearchUseCase
 import com.example.memories.feature.feature_feed.presentation.common.MemoryActionHandler
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
+import com.example.memories.core.domain.usecase.SaveRemoteMediaUseCase
 import com.example.memories.feature.feature_feed.domain.usecase.history_usecase.HistoryUseCaseWrapper
 import com.example.memories.feature.feature_notifications.domain.usecase.NotificationUseCase
 import com.example.memories.feature.feature_notifications.domain.usecase.SetAllNotificationsUseCase
@@ -224,7 +225,8 @@ object AppModule {
             saveToCacheStorageWithBitmapUseCase = SaveToCacheStorageWithBitmapUseCase(repository),
             generateSharableUriUseCase = GenerateSharableUriUseCase(repository),
             fetchRemoteImagesUseCase = FetchRemoteImagesUseCase(repository),
-            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(repository)
+            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(repository),
+            saveRemoteMediaUseCase = SaveRemoteMediaUseCase(repository)
         )
     }
 
@@ -380,7 +382,8 @@ object AppModule {
             generateSharableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
             suggestTagsUseCase = SuggestTagsUseCase(tagSuggestionRepository),
             fetchRemoteImagesUseCase = FetchRemoteImagesUseCase(mediaRepository),
-            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(mediaRepository)
+            fetchRemoteVideosUseCase = FetchRemoteVideosUseCase(mediaRepository),
+            saveRemoteMediaUseCase = SaveRemoteMediaUseCase(mediaRepository)
         )
     }
 

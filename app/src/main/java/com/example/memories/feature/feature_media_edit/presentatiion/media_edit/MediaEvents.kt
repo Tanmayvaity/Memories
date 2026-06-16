@@ -47,6 +47,8 @@ sealed class MediaEvents {
 
     data class AddMediaUri(val uriType: UriType, val position: Int) : MediaEvents()
     data class RemoveMediaUri(val position: Int) : MediaEvents()
+
+    data class SelectWebMedia(val url: String, val isVideo: Boolean, val position: Int) : MediaEvents()
     data class OpenDeviceCamera(val mediaType: MediaType) : MediaEvents()
     data class UpdateCurrentPosition(val position: Int) : MediaEvents()
     data class UpdateMediaActionType(val type: MediaActionType) : MediaEvents()

@@ -284,6 +284,30 @@ class MediaViewModel @Inject constructor(
                 }
             }
 
+            is MediaEvents.SelectWebMedia -> {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(downloadingPositions = it.downloadingPositions + event.position)
+                    }
+                    try {
+                        val result = mediaUseCases.saveRemoteMediaUseCase(
+                            url = event.url,
+                            isImage = !event.isVideo
+                        )
+                        val uriType = result.getOrNull()
+                        if (uriType != null) {
+                            _state.update {
+                                it.copy(uriMap = it.uriMap + (event.position to uriType))
+                            }
+                        }
+                    } finally {
+                        _state.update {
+                            it.copy(downloadingPositions = it.downloadingPositions - event.position)
+                        }
+                    }
+                }
+            }
+
             is MediaEvents.RemoveMediaUri -> {
                 _state.update {
                     it.copy(

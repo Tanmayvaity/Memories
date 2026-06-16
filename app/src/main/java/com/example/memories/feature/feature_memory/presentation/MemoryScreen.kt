@@ -91,6 +91,7 @@ import com.example.memories.core.domain.model.Video
 import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCaptureHost
 import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
@@ -329,6 +330,9 @@ fun MemoryScreen(
             onMediaSelected = { uriType, position ->
                 onEvent(MemoryEvents.AddMediaUri(uriType, position))
             },
+            onWebMediaSelected = { url, isVideo, position ->
+                onEvent(MemoryEvents.SelectWebMedia(url, isVideo, position))
+            },
             onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
             remoteImages = remoteImages,
             remoteVideos = remoteVideos
@@ -501,6 +505,7 @@ private fun MediaGrid(
         items(MEDIA_GRID_SLOTS) { index ->
             MediaGridItem(
                 item = state.uriMap[index],
+                isDownloading = index in state.downloadingPositions,
                 onRemove = { onEvent(MemoryEvents.RemoveMediaUri(index)) },
                 onAdd = { onAddClick(index) }
             )
@@ -511,6 +516,7 @@ private fun MediaGrid(
 @Composable
 private fun MediaGridItem(
     item: UriType?,
+    isDownloading: Boolean = false,
     onRemove: () -> Unit,
     onAdd: () -> Unit,
 ) {
@@ -523,6 +529,13 @@ private fun MediaGridItem(
             .clip(RoundedCornerShape(25.dp))
             .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(25.dp))
     ) {
+        if (isDownloading) {
+            LoadingIndicator(
+                showText = false,
+                modifier = Modifier.align(Alignment.Center)
+            )
+            return@Box
+        }
         AnimatedContent(targetState = item?.uri, label = "media_slot") { uri ->
             if (uri != null) {
                 Box(modifier = Modifier.fillMaxSize()) {

@@ -38,6 +38,7 @@ import java.io.FileOutputStream
 import java.lang.UnsupportedOperationException
 import com.example.memories.core.util.TAG
 import java.net.URI
+import java.net.URL
 
 class MediaManager(
     val context: Context,
@@ -298,6 +299,41 @@ class MediaManager(
         }.fold(
             onSuccess = { Result.Success(it) },
             onFailure = { Result.Error(it) }
+        )
+    }
+
+    /**
+     * Downloads a remote http(s) media [url] (e.g. a Pexels image/video link) into the cache
+     * `images/`/`videos/` dir and returns a shareable [FileProvider] content [UriType]. The raw URL
+     * is streamed straight to disk — no auth header is attached, since these are public CDN links.
+     */
+    suspend fun saveRemoteMediaToCache(
+        url: String,
+        isImage: Boolean
+    ): Result<UriType> = withContext(Dispatchers.IO) {
+        runCatching {
+            val file = createMediaFile(isImage = isImage)
+            URL(url).openStream().use { input ->
+                FileOutputStream(file).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            Log.d(TAG, "saveRemoteMediaToCache: saved $url to ${file.path}")
+            val contentUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            UriType(
+                uri = contentUri.toString(),
+                type = if (isImage) Type.IMAGE_JPG else Type.VIDEO_MP4
+            )
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = {
+                Log.e(TAG, "saveRemoteMediaToCache: error ${it.message}")
+                Result.Error(it)
+            }
         )
     }
 

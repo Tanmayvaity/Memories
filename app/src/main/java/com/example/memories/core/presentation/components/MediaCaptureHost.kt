@@ -24,23 +24,6 @@ import com.example.memories.core.presentation.UiState
 import com.example.memories.navigation.CustomNavType.mediaType
 import kotlinx.coroutines.flow.flowOf
 
-/**
- * Reusable orchestration for the media-capture flow shared by MemoryScreen and MediaEditScreen.
- *
- * The caller owns the sheet-visibility booleans (`showPickerSheet`, `showTypeSheet`) and the slot
- * position. The host owns the three ActivityResult launchers, the conditional sheet rendering, and
- * the bridge that fires the device-camera launcher once the ViewModel has produced a `tempMediaUri`.
- *
- * Caller responsibilities:
- *  - Set `showPickerSheet = true` when the user taps an "add media" affordance (after dispatching
- *    `UpdateCurrentPosition(position)` to the host VM).
- *  - In `onRequestDeviceCameraUri`, dispatch the VM's `OpenDeviceCamera(mediaType)` event so the VM
- *    produces a writable temp URI via `GenerateSharableUriUseCase` and writes it to its state.
- *  - In `onMediaSelected`, dispatch `AddMediaUri(uriType, position)` to the VM.
- *  - In `onNavigateToCamera`, navigate to `AppScreen.Camera`. On return, observe `takenUri` from
- *    savedStateHandle and dispatch `AddMediaUri` yourself (this host does not handle the
- *    custom-camera return path — see MemoryRoot/MediaEditRoot for the pattern).
- */
 @Composable
 fun MediaCaptureHost(
     tempMediaUri: String?,
@@ -55,6 +38,7 @@ fun MediaCaptureHost(
     onRequestDeviceCameraUri: (MediaType) -> Unit,
     onUpdateMediaActionType: (MediaActionType) -> Unit,
     onMediaSelected: (UriType, position: Int) -> Unit,
+    onWebMediaSelected: (url: String, isVideo: Boolean, position: Int) -> Unit = { _, _, _ -> },
     onNavigateToCamera: () -> Unit,
     remoteImages : LazyPagingItems<Photo> = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
     remoteVideos : LazyPagingItems<Video> = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
@@ -150,7 +134,13 @@ fun MediaCaptureHost(
     if(showWebTypeSheet){
         WebMediaSelectorSheet(
             onDismiss = {showWebTypeSheet = false},
-            onMediaSelected = {},
+            onMediaSelected = { url, isVideo ->
+                if (currentPosition != null) {
+                    onWebMediaSelected(url, isVideo, currentPosition)
+                }
+                onUpdateMediaActionType(MediaActionType.NONE)
+                showWebTypeSheet = false
+            },
             remoteImages = remoteImages,
             remoteVideos = remoteVideos
         )

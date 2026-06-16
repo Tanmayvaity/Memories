@@ -57,6 +57,7 @@ import com.example.memories.core.presentation.UiState
 import com.example.memories.core.presentation.components.ActionSelectorBottomSheet
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.IconItem
+import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCaptureHost
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.util.startChooser
@@ -329,16 +330,20 @@ fun MediaEditScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        IconItem(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add media",
-                            alpha = 0.3f,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            onClick = {
-                                onEvent(MediaEvents.UpdateCurrentPosition(currentPage))
-                                showMediaPickerSheet = true
-                            }
-                        )
+                        if (currentPage in state.downloadingPositions) {
+                            LoadingIndicator(showText = false)
+                        } else {
+                            IconItem(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add media",
+                                alpha = 0.3f,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                onClick = {
+                                    onEvent(MediaEvents.UpdateCurrentPosition(currentPage))
+                                    showMediaPickerSheet = true
+                                }
+                            )
+                        }
                     }
                 },
                 pageOverlay = { page ->
@@ -436,6 +441,9 @@ fun MediaEditScreen(
         onUpdateMediaActionType = { type -> onEvent(MediaEvents.UpdateMediaActionType(type)) },
         onMediaSelected = { uriType, position ->
             onEvent(MediaEvents.AddMediaUri(uriType, position))
+        },
+        onWebMediaSelected = { url, isVideo, position ->
+            onEvent(MediaEvents.SelectWebMedia(url, isVideo, position))
         },
         onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
         remoteImages = remoteImages,

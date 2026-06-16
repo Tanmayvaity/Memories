@@ -1,5 +1,6 @@
 package com.example.memories.core.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,9 +22,14 @@ import com.example.memories.core.util.PlayButton
 @Composable
 fun MediaGridCell(
     url: String,
-    isVideo : Boolean = false
+    isVideo : Boolean = false,
+    onClick : () -> Unit = {}
 ) {
-    Box(modifier = Modifier.padding(1.dp)) {
+    Box(
+        modifier = Modifier
+            .padding(1.dp)
+            .clickable(onClick = onClick)
+    ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(if (LocalInspectionMode.current) R.drawable.ic_launcher_background else url)

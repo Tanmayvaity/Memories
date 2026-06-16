@@ -65,6 +65,7 @@ data class EditorState(
     val isDownloadingForNavigation: Boolean = false,
 
     val uriMap: Map<Int, UriType> = emptyMap(),
+    val downloadingPositions: Set<Int> = emptySet(),
     val tempMediaUri: String? = null,
     val currentPosition: Int? = null,
     val mediaActionType: MediaActionType? = null,

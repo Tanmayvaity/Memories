@@ -356,6 +356,31 @@ class MemoryViewModel @Inject constructor(
                 suggestTagsForUris(listOf(event.uriType))
             }
 
+            is SelectWebMedia -> {
+                viewModelScope.launch {
+                    _memoryState.update {
+                        it.copy(downloadingPositions = it.downloadingPositions + event.position)
+                    }
+                    try {
+                        val result = memoryUseCase.saveRemoteMediaUseCase(
+                            url = event.url,
+                            isImage = !event.isVideo
+                        )
+                        val uriType = result.getOrNull()
+                        if (uriType != null) {
+                            _memoryState.update {
+                                it.copy(uriMap = it.uriMap + (event.position to uriType))
+                            }
+                            suggestTagsForUris(listOf(uriType))
+                        }
+                    } finally {
+                        _memoryState.update {
+                            it.copy(downloadingPositions = it.downloadingPositions - event.position)
+                        }
+                    }
+                }
+            }
+
             is RemoveMediaUri -> {
                 _memoryState.update {
                     val newUriMap = it.uriMap - event.position

@@ -8,6 +8,7 @@ import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
 import com.example.memories.core.domain.usecase.GetMemoryByIdUseCase
+import com.example.memories.core.domain.usecase.SaveRemoteMediaUseCase
 
 data class MemoryUseCase(
     val createMemoryUseCase : MemoryCreateUseCase,
@@ -20,5 +21,6 @@ data class MemoryUseCase(
     val generateSharableUriUseCase: GenerateSharableUriUseCase,
     val suggestTagsUseCase: SuggestTagsUseCase,
     val fetchRemoteImagesUseCase: FetchRemoteImagesUseCase,
-    val fetchRemoteVideosUseCase: FetchRemoteVideosUseCase
+    val fetchRemoteVideosUseCase: FetchRemoteVideosUseCase,
+    val saveRemoteMediaUseCase: SaveRemoteMediaUseCase
 )

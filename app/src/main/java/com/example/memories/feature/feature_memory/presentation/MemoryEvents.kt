@@ -51,6 +51,8 @@ sealed class MemoryEvents {
     data class AddMediaUri(val uriType : UriType,val position : Int) : MemoryEvents()
     data class RemoveMediaUri(val position : Int) : MemoryEvents()
 
+    data class SelectWebMedia(val url : String, val isVideo : Boolean, val position : Int) : MemoryEvents()
+
 
     data class OpenDeviceCamera(val mediaType: MediaType) : MemoryEvents()
 

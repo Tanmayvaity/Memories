@@ -35,7 +35,22 @@ data class Video(
     val url: String,
     val image: String,
     val duration: Long,
-    val user : User
+    val user : User,
+    @SerializedName("video_files") val videoFiles: List<VideoFile> = emptyList()
+) {
+    val downloadLink: String?
+        get() = videoFiles.firstOrNull { it.quality == "hd" && it.fileType == "video/mp4" }?.link
+            ?: videoFiles.firstOrNull { it.fileType == "video/mp4" }?.link
+            ?: videoFiles.firstOrNull()?.link
+}
+
+data class VideoFile(
+    val id: Long,
+    val quality: String?,
+    @SerializedName("file_type") val fileType: String?,
+    val width: Int?,
+    val height: Int?,
+    val link: String
 )
 
 data class User(

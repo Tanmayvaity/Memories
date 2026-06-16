@@ -21,6 +21,7 @@ data class MemoryState(
     val isSuggestingTags: Boolean = false,
     val tagTextFieldValue: String = "",
     val uriMap: Map<Int, UriType> = emptyMap(),
+    val downloadingPositions: Set<Int> = emptySet(),
     val memoryForTimeStamp: Long? = null,
     val timeStamp: Long? = null,
     val memory: MemoryWithMediaModel? = null,

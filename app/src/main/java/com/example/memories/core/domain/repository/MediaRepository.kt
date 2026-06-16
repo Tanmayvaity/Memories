@@ -61,6 +61,12 @@ interface MediaRepository {
         uri : Uri
     ): Result<Uri>
 
+    /** Downloads a remote media [url] into cache and returns the resulting content URI + type. */
+    suspend fun saveRemoteMediaToCache(
+        url : String,
+        isImage : Boolean
+    ): Result<UriType>
+
 
     fun generateShareableUri(isImage : Boolean? = false,uri : Uri? = null) : Uri?
 
