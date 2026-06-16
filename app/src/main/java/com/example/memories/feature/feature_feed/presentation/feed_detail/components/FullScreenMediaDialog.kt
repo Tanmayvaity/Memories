@@ -132,7 +132,7 @@ fun FullScreenMediaDialog(
                     uris = uriList,
                     imageContentScale = contentScale,
                     pagerState = pagerState,
-                    onPlayIconClick = onPlayIconClick
+                    isActive = true
                 )
 
 

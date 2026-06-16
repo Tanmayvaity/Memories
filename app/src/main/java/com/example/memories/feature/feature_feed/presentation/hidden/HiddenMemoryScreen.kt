@@ -13,18 +13,23 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -32,6 +37,7 @@ import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
 import com.example.memories.core.util.hideWithCallback
+import com.example.memories.core.util.rememberSettledActiveKey
 import com.example.memories.feature.feature_feed.presentation.common.MemoryAction
 import com.example.memories.feature.feature_feed.presentation.components.PagedListContainer
 import com.example.memories.feature.feature_feed.presentation.components.SearchTextField
@@ -69,11 +75,33 @@ fun HiddenMemoryScreen(
 ) {
 
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
     var showDeleteSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentItem by remember { mutableStateOf<MemoryWithMediaModel?>(null) }
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            repeatMode = Player.REPEAT_MODE_OFF
+            playWhenReady = false
+        }
+    }
+
+    val activeKey = rememberSettledActiveKey(
+        listState = lazyListState
+    )
+
+    DisposableEffect(Unit) {
+        onDispose { exoPlayer.release() }
+    }
+
+
+    LaunchedEffect(lazyListState.isScrollInProgress) {
+        if(lazyListState.isScrollInProgress){
+            exoPlayer.pause()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -114,6 +142,7 @@ fun HiddenMemoryScreen(
                 itemKey = { item -> item.memory.memoryId },
                 itemContentType = { "memory_item" }
             ) { memory ->
+                val isPlayerActive = activeKey.value == memory.memory.memoryId
                 MemoryItemCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -148,7 +177,9 @@ fun HiddenMemoryScreen(
                     onDeleteButtonClick = {
                         currentItem = memory
                         showDeleteSheet = true
-                    }
+                    },
+                    isPlayerActive = isPlayerActive,
+                    player = exoPlayer
                 )
             }
         }

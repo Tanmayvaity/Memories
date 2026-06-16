@@ -301,6 +301,7 @@ fun MediaEditScreen(
                 uris = (0 until MAX_MEDIA_PAGES).map { state.uriMap[it] ?: UriType(null, null) },
                 imageContentScale = ContentScale.Crop,
                 pagerState = pagerState,
+                isActive = true,
                 imageModifier = {
                     Modifier.graphicsLayer {
                         if (runtimeShader != null) {

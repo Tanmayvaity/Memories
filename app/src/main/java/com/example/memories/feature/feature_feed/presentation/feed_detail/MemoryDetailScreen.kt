@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -50,6 +52,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -63,11 +66,14 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.window.core.layout.WindowSizeClass
 import com.example.memories.R
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.domain.model.UriType
+import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaPager
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
@@ -194,7 +200,12 @@ fun MemoryDetailScreen(
             scrollingDown
         }
     }
-
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            repeatMode = Player.REPEAT_MODE_OFF
+            playWhenReady = false
+        }
+    }
     LaunchedEffect(state.isSharing,state.isDownloading) {
         if(!state.isSharing){
             showShareCard = false
@@ -203,6 +214,19 @@ fun MemoryDetailScreen(
             showShareCard = false
         }
     }
+
+    LaunchedEffect(showImageDetail) {
+        if(showImageDetail && exoPlayer.isPlaying){
+            exoPlayer.pause()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -277,47 +301,25 @@ fun MemoryDetailScreen(
                 if (memory != null && !isLoading) {
                     val item = memory.memory
                     if (memory.mediaList.isNotEmpty()) {
-//                        HorizontalPager(
-//                            state = pagerState,
-//                            modifier = Modifier.heightIn(max = 300.dp)
-//                        ) { page ->
-//                            val itemUri = memory.mediaList[page].uri
-//
-////                            AsyncImage(
-////                                model = ImageRequest.Builder(LocalContext.current)
-////                                    .data(
-////                                        if (previewMode) R.drawable.ic_launcher_background else itemUri
-////                                    )
-////                                    .crossfade(true)
-////                                    .build(),
-////                                contentDescription = "Media item $page",
-////                                modifier = Modifier
-////                                    .fillMaxWidth()
-////                                    .clickable {
-////                                        showImageDetail = true
-////                                    },
-////                                contentScale = ContentScale.FillWidth
-////                            )
-//
-//                            MediaPager(
-//                                uris =
-//                            )
-//                        }
-
                         MediaPager(
                             uris = memory.mediaList.map { UriType(it.uri, it.type) },
                             imageContentScale = ContentScale.FillWidth,
-                            imageModifier = {
-                                Modifier.clickable {
-                                    showImageDetail = true
-                                }
-                            },
-                            playVideoCapability = false,
-                            onPlayIconClick = { uri ->
-                                onEvent(
-                                    MemoryDetailEvents.PlayVideo(uri)
+                            isActive = true,
+                            pageOverlay = {page ->
+                                IconItem(
+                                    drawableRes = R.drawable.ic_open ,
+                                    contentDescription = "open media",
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp),
+                                    alpha = 0.3f,
+                                    onClick = {
+                                        showImageDetail = true
+                                    },
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
+                            },
+                            player = exoPlayer
                         )
 
                     }

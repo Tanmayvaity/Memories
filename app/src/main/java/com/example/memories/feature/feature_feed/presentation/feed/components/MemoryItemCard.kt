@@ -2,10 +2,12 @@ package com.example.memories.feature.feature_feed.presentation.feed.components
 
 import android.R.attr.contentDescription
 import android.R.attr.fontWeight
+import android.R.attr.maxLines
 import android.R.attr.onClick
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
+import android.text.TextUtils.substring
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
@@ -42,7 +44,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -65,6 +70,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.exoplayer.ExoPlayer
 import coil3.compose.AsyncImage
 import com.example.memories.R
 import com.example.memories.core.domain.model.MediaModel
@@ -92,10 +98,11 @@ fun MemoryItemCard(
     onDeleteButtonClick: () -> Unit = {},
     elevation: Int = 0,
     shape: Shape = RoundedCornerShape(16.dp),
+    isPlayerActive : Boolean = false,
+    player : ExoPlayer? = null
 ) {
 
     val isPreviewModeOn = LocalInspectionMode.current
-
     val pager = if (memoryItem.mediaList.isNotEmpty()) {
         rememberPagerState(pageCount = { if (isPreviewModeOn) 5 else memoryItem.mediaList.size })
     } else null
@@ -106,10 +113,7 @@ fun MemoryItemCard(
         ),
         shape = shape,
         modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-            ),
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
@@ -125,7 +129,9 @@ fun MemoryItemCard(
                     pagerState = pager,
                     pagerHeight = 250.dp,
                     imageContentScale = ContentScale.Crop,
-                    playVideoCapability = false
+                    showPlayerController = true,
+                    player = player,
+                    isActive = isPlayerActive
                 )
             }
             Column(
@@ -157,7 +163,7 @@ fun MemoryItemCard(
                         maxLines = 3,
                         lineHeight = 20.sp,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 6.dp)
+                        modifier = Modifier.padding(top = 6.dp),
 
                     )
                 }
@@ -205,6 +211,29 @@ fun MemoryItemCard(
                         color = MaterialTheme.colorScheme.error.copy(0.6f),
                     )
                 }
+                HorizontalDivider(
+                    modifier = Modifier
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable{
+                            onClick()
+                        }
+                        .padding( 16.dp)
+                    ,
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text(
+                        text = "View Details",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Icon(
+                        painter = painterResource(R.drawable.ic_open_down),
+                        contentDescription = "view details"
+                    )
+                }
+
 
 
             }
@@ -221,6 +250,7 @@ fun MemoryItemCard(
 fun MemoryItemCardPreview(modifier: Modifier = Modifier) {
     MemoriesTheme {
         MemoryItemCard(
+            player = null,
             memoryItem = MemoryWithMediaModel(
                 memory = MemoryModel(
                     title = "Trip to the Hills",
@@ -232,7 +262,8 @@ fun MemoryItemCardPreview(modifier: Modifier = Modifier) {
                         uri = "android.resource://com.example.memories/drawable/ic_launcher_background",
                         memoryId = "",
                     )
-                )
+                ),
+
             )
         )
     }

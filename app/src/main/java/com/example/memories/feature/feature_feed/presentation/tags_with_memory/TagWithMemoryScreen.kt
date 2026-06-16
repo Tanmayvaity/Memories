@@ -31,7 +31,6 @@ import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryWithMediaModel
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.LoadingIndicator
-import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItemCard
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.flow.flowOf

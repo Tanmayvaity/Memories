@@ -32,6 +32,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -66,6 +71,8 @@ import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
 import com.example.memories.core.util.hideWithCallback
+import com.example.memories.core.util.rememberActiveItemKey
+import com.example.memories.core.util.rememberSettledActiveKey
 import com.example.memories.feature.feature_feed.domain.model.FetchType
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
@@ -125,6 +132,17 @@ fun FeedScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentMemoryEntryMode by remember { mutableStateOf<MemoryEntryMode?>(null) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            repeatMode = Player.REPEAT_MODE_OFF
+            playWhenReady = false
+        }
+    }
+    val activeKey = rememberSettledActiveKey(
+        listState = lazyListState
+    )
+
 
     val isScrollingUp by remember {
         var previousIndex = 0
@@ -145,6 +163,17 @@ fun FeedScreen(
         }.also {
             previousIndex = lazyListState.firstVisibleItemIndex
             previousOffset = lazyListState.firstVisibleItemScrollOffset
+        }
+    }
+
+
+    DisposableEffect(Unit) {
+        onDispose { exoPlayer.release() }
+    }
+
+    LaunchedEffect(lazyListState.isScrollInProgress) {
+        if(lazyListState.isScrollInProgress){
+            exoPlayer.pause()
         }
     }
 
@@ -257,9 +286,12 @@ fun FeedScreen(
             itemKey = { item -> item.memory.memoryId },
             itemContentType = { "memory_item" }
         ) { memory ->
+            val isPlayerActive = activeKey.value == memory.memory.memoryId
+
             MemoryItemCard(
                 modifier = Modifier.animateItem(),
                 memoryItem = memory,
+                isPlayerActive = isPlayerActive,
                 backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                 elevation = 0,
                 shape = RoundedCornerShape(16.dp),
@@ -289,7 +321,8 @@ fun FeedScreen(
                 onDeleteButtonClick = {
                     currentItem = memory
                     showDeleteDialog = true
-                }
+                },
+                player = exoPlayer
             )
         }
 

@@ -12,8 +12,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
@@ -26,6 +31,7 @@ import androidx.window.core.layout.WindowSizeClass
 import com.example.memories.core.presentation.components.IconItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 
 @Composable
@@ -83,7 +89,7 @@ fun SheetState.hideWithCallback(
 }
 
 @Composable
-fun PlayButton(modifier: Modifier = Modifier,onClick: () -> Unit = {}) {
+fun PlayButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     IconItem(
         imageVector = Icons.Default.PlayArrow,
         contentDescription = "Video media",
@@ -97,28 +103,85 @@ fun PlayButton(modifier: Modifier = Modifier,onClick: () -> Unit = {}) {
 
 @Composable
 fun WindowSizeClass.AdaptiveContent(
-    compact : @Composable () -> Unit = {},
-    medium : @Composable () -> Unit = {},
-    expanded : () -> Unit = {},
-    large : () -> Unit = {},
-    xLarge : () -> Unit = {}
-){
-    when{
+    compact: @Composable () -> Unit = {},
+    medium: @Composable () -> Unit = {},
+    expanded: () -> Unit = {},
+    large: () -> Unit = {},
+    xLarge: () -> Unit = {}
+) {
+    when {
         this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) -> {
             xLarge()
         }
+
         this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND) -> {
             large()
         }
+
         this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> {
             expanded()
         }
+
         this.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> {
             medium()
         }
+
         else -> {
             compact()
         }
     }
 
+}
+
+
+@Composable
+fun rememberActiveItemKey(
+    listState: LazyListState,
+    zoneTop: Float = 0f,
+    zoneBottom: Float = 0.6f,
+): State<Any?> = remember(listState) {
+    derivedStateOf {
+        val layout = listState.layoutInfo
+        val vpStart = layout.viewportStartOffset
+        val vpEnd = layout.viewportEndOffset
+        val vpHeight = (vpEnd - vpStart).toFloat()
+        if (vpHeight <= 0f) return@derivedStateOf null
+
+        val zoneStartPx = vpStart + zoneTop * vpHeight
+        val zoneEndPx = vpStart + zoneBottom * vpHeight
+        val zoneCenter = (zoneStartPx + zoneEndPx) / 2f
+        layout.visibleItemsInfo
+            // keep only items that actually overlap the zone
+            .filter { item ->
+                val itemTop = item.offset.toFloat()
+                val itemBottom = (item.offset + item.size).toFloat()
+                itemBottom > zoneStartPx && itemTop < zoneEndPx
+            }
+            // of those, the one whose center is closest to zone center wins
+            .minByOrNull { item ->
+                val itemCenter = item.offset + item.size / 2f
+                abs(itemCenter - zoneCenter)
+            }
+            ?.key
+    }
+
+}
+
+
+@Composable
+fun rememberSettledActiveKey(listState: LazyListState): State<Any?> {
+    val rawActiveKey = rememberActiveItemKey(listState)   // from step 1
+    val committedKey = remember { mutableStateOf<Any?>(null) }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress to rawActiveKey.value }
+            .collect { (scrolling, key) ->
+                if (scrolling) {
+                    committedKey.value = null      // pause everything during scroll
+                } else {
+                    committedKey.value = key       // settle → commit the centered item
+                }
+            }
+    }
+    return committedKey
 }
