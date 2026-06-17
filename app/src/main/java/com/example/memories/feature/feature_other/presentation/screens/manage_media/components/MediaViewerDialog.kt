@@ -102,6 +102,8 @@ fun MediaViewerDialog(
                     uris = listOf(UriType(media.uri, media.type)),
                     imageContentScale = ContentScale.Fit,
                     pagerState = pagerState,
+                    showPlayerController = true,
+                    isActive = true
                 )
 
                 if (associatedMemory != null) {
