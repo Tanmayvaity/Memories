@@ -54,6 +54,24 @@ android {
         buildConfig = true
     }
 
+    testOptions{
+        unitTests{
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
+
+    packaging {
+        resources {
+            // Exclude duplicate license files from the final build packaging
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
+
+            // Alternatively, if you hit more JUnit metadata conflicts:
+            // pickFirst 'META-INF/LICENSE.md'
+        }
+    }
+
 }
 androidComponents{
     ksp{
@@ -84,7 +102,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.expressvie)
     implementation(libs.androidx.material3.icons)
+    implementation(libs.core.ktx)
     testImplementation(libs.junit)
+//    testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -162,4 +182,18 @@ dependencies {
 
     // mlkit
     implementation(libs.mlkit.image.labeling)
+
+
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.io.mockk)
+    testImplementation(libs.androidx.paging.testing)
+    testImplementation(libs.squareup.mockwebserver)
+
+
+    testImplementation("org.robolectric:robolectric:4.12")
+
+//    testImplementation(platform(libs.junit.bom))
+//    testRuntimeOnly(libs.junit.platform.launcher)
+
+    androidTestImplementation("io.mockk:mockk-android:1.14.11")
 }

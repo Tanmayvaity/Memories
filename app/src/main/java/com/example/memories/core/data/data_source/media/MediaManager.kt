@@ -37,11 +37,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.lang.UnsupportedOperationException
 import com.example.memories.core.util.TAG
+import kotlinx.coroutines.CoroutineDispatcher
 import java.net.URI
 import java.net.URL
 
 class MediaManager(
     val context: Context,
+    val dispatcher : CoroutineDispatcher = Dispatchers.IO
 ) {
 
 //    companion object {
@@ -49,41 +51,11 @@ class MediaManager(
 //    }
 
 
-    // reads the list of provided uri, copies them to the generated file and returns the list of File
-    suspend fun sharedUriToInternalUri(
-        uriList: List<Uri>
-    ): List<File> = withContext(Dispatchers.IO) {
-        val resolver = context.contentResolver
-        val internalFiles = mutableListOf<File>()
-        try {
-            uriList.forEach { uri ->
-                val file = if (context.contentResolver.getType(uri)?.startsWith("video") == true) {
-                    createVideoFile(context)
-                } else {
-                    createTempFile(context)
-                }
-                resolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(file)?.use { output ->
-                        input.copyTo(output)
-                    }
-
-                }
-                if (file != null) {
-                    internalFiles.add(file)
-                }
-
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "sharedUriToInternalUri: ${e.message}")
-            e.printStackTrace()
-        }
-        return@withContext internalFiles
-    }
 
     suspend fun saveToInternalStorage(
         uriList: List<Uri>,
-    ): Result<List<Uri>> = withContext(Dispatchers.IO) {
-
+    ): Result<List<Uri>> = withContext(dispatcher) {
+        val createdFiles = mutableListOf<File>()
         val resolver = context.contentResolver
         val baseDir = context.getExternalFilesDir(null)
             ?: throw IllegalStateException("External files dir not available")
@@ -140,13 +112,16 @@ class MediaManager(
                     } ?: throw IllegalStateException("Unable to open output stream")
                     Log.d(TAG, "saveToInternalStorage: file name : ${file.name} at ${file.path}")
 
+                    createdFiles.add(file)
+
                     bitmap.recycle()
                 }else{
                     resolver.openInputStream(uri)?.use { input ->
                         FileOutputStream(file)?.use { output ->
                             input.copyTo(output)
                         }
-                    }
+                    } ?: throw IllegalStateException("Unable to open input stream")
+                    createdFiles.add(file)
                     Log.d(TAG, "saveToInternalStorage: file : ${file.name} : ${file.path}")
                 }
 
@@ -154,14 +129,23 @@ class MediaManager(
             }
         }.fold(
             onSuccess = { Result.Success(it) },
-            onFailure = { Result.Error(it) }
+            onFailure = { throwable ->
+                Log.w(TAG, "saveToInternalStorage failed! Cleaning up ${createdFiles.size} partial files.")
+                createdFiles.forEach { file ->
+                    runCatching {
+                        if (file.exists()) file.delete()
+                    }
+                }
+                Result.Error(throwable)
+
+            }
         )
     }
 
     suspend fun saveToCacheStorage(
         uri: Uri,
         bitmap: Bitmap
-    ): Result<UriType> = withContext(Dispatchers.IO) {
+    ): Result<UriType> = withContext(dispatcher) {
 
         val resolver = context.contentResolver
         val baseDir = context.cacheDir
@@ -195,9 +179,9 @@ class MediaManager(
                 "$prefix${System.currentTimeMillis()}.$extension"
             )
 //            val bitmap = uriToBitmap(uri).getOrNull()
-//                ?: throw IllegalStateException("Bitmap is null")
-            val size = getBitmapSize(bitmap)
-            Log.i(TAG, "saveToCacheStorage: bitmap size -> ${size.toFloat() / 1024 / 1024}")
+////                ?: throw IllegalStateException("Bitmap is null")
+//            val size = getBitmapSize(bitmap)
+//            Log.i(TAG, "saveToCacheStorage: bitmap size -> ${size.toFloat() / 1024 / 1024}")
 
 //            val contentUri = FileProvider.getUriForFile(
 //                context,
@@ -253,7 +237,7 @@ class MediaManager(
 
     suspend fun saveToCacheStorageWithUri(
         uri: Uri,
-    ): Result<Uri> = withContext(Dispatchers.IO) {
+    ): Result<Uri> = withContext(dispatcher) {
 
         val resolver = context.contentResolver
         val baseDir = context.cacheDir
@@ -261,7 +245,7 @@ class MediaManager(
         runCatching {
             val mimeType = getMimeType(uri)
             val extension = getExtension(mimeType)
-            val type = Type.fromUri(uri,context)
+            val type = getType(mimeType)
             if (type == Type.UNKNOWN_TYPE) throw IllegalArgumentException("Unknown type")
 
             Log.i(
@@ -310,7 +294,7 @@ class MediaManager(
     suspend fun saveRemoteMediaToCache(
         url: String,
         isImage: Boolean
-    ): Result<UriType> = withContext(Dispatchers.IO) {
+    ): Result<UriType> = withContext(dispatcher) {
         runCatching {
             val file = createMediaFile(isImage = isImage)
             URL(url).openStream().use { input ->
@@ -344,7 +328,7 @@ class MediaManager(
      */
     suspend fun saveBitmapToCacheStorage(
         bitmap: Bitmap
-    ): Result<Uri> = withContext(Dispatchers.IO) {
+    ): Result<Uri> = withContext(dispatcher) {
         runCatching {
             val file = createMediaFile(isImage = true)
             file.outputStream().use { output ->
@@ -361,7 +345,7 @@ class MediaManager(
         )
     }
 
-    private fun getMimeType(
+    internal fun getMimeType(
         uri: Uri
     ): String {
         val resolver = context.contentResolver
@@ -381,13 +365,13 @@ class MediaManager(
         } ?: throw IllegalArgumentException("Unable to determine mimetype")
     }
 
-    private fun getExtension(mimeType: String): String {
+    internal fun getExtension(mimeType: String): String {
         return MimeTypeMap.getSingleton()
             .getExtensionFromMimeType(mimeType)
             ?: throw IllegalArgumentException("Unable to determine extension from mimetype")
     }
 
-    private fun getType(mimeType: String): Type {
+    internal fun getType(mimeType: String): Type {
         return when (mimeType) {
             "image/jpeg" -> Type.IMAGE_JPG
             "image/jpg" -> Type.IMAGE_JPG
@@ -397,13 +381,13 @@ class MediaManager(
         }
     }
 
-    private fun getBitmapSize(bitmap: Bitmap): Int = bitmap.allocationByteCount
+    internal fun getBitmapSize(bitmap: Bitmap): Int = bitmap.allocationByteCount
 
 
     suspend fun uriToBitmap(
         uri: Uri,
         degrees: Float = 0f
-    ): Result<Bitmap> = withContext(Dispatchers.IO) {
+    ): Result<Bitmap> = withContext(dispatcher) {
         if (uri == null) throw IllegalArgumentException("Uri is null")
 
         try {
@@ -451,7 +435,7 @@ class MediaManager(
 
     suspend fun downloadImageWithBitmap(
         bitmap: Bitmap
-    ): Result<String> = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(dispatcher) {
         val resolver = context.contentResolver
         val imageCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Images.Media.getContentUri(
@@ -494,7 +478,7 @@ class MediaManager(
 
     suspend fun downloadVideo(
         uri: Uri
-    ): Result<String> = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(dispatcher) {
         val resolver = context.contentResolver
         val videoCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Video.Media.getContentUri(
@@ -533,37 +517,37 @@ class MediaManager(
 
     }
 
-    suspend fun saveBitmapToInternalStorage(
-        bitmap: Bitmap?,
-    ): Result<Uri> =
-        withContext(Dispatchers.IO) {
-            if (bitmap == null) {
-                return@withContext Result.Error(Throwable("Bitmap is Null"))
-            }
-
-            val file = createTempFile(context = context)
-            try {
-                FileOutputStream(file)?.use { output ->
-
-                    bitmap?.let {
-                        it.compress(
-                            Bitmap.CompressFormat.JPEG,
-                            100,
-                            output
-                        )
-                    }
-
+        suspend fun saveBitmapToInternalStorage(
+            bitmap: Bitmap?,
+        ): Result<Uri> =
+            withContext(dispatcher) {
+                if (bitmap == null) {
+                    return@withContext Result.Error(Throwable("Bitmap is Null"))
                 }
 
+                val file = createTempFile(context = context)
+                try {
+                    FileOutputStream(file)?.use { output ->
 
-                val uri = Uri.fromFile(file)
-                Log.i(TAG, "internal bitmap uri : ${uri.toString()}")
-                return@withContext Result.Success(uri)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return@withContext Result.Error(e)
+                        bitmap?.let {
+                            it.compress(
+                                Bitmap.CompressFormat.JPEG,
+                                100,
+                                output
+                            )
+                        }
+
+                    }
+
+
+                    val uri = Uri.fromFile(file)
+                    Log.i(TAG, "internal bitmap uri : ${uri.toString()}")
+                    return@withContext Result.Success(uri)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    return@withContext Result.Error(e)
+                }
             }
-        }
 
     private fun getCollection(): Uri {
         val collection =
@@ -612,22 +596,19 @@ class MediaManager(
 
     suspend fun deleteInternalMedia(
         uriList: List<Uri>
-    ): Result<String> = withContext(Dispatchers.IO) {
-        uriList.forEach { uri ->
-            try {
+    ): Result<String> = withContext(dispatcher) {
+        runCatching {
+            uriList.forEach { uri ->
                 uri.path?.let { path ->
                     val file = File(path)
-                    if (file.exists()) {
-                        file.delete()
-                    }
+                    if (file.exists()) file.delete()
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "deleteInternalMedia: ${e}")
-                Result.Error(e)
             }
-
-        }
-        Result.Success("Media Deleted Successfully")
+            "Media Deleted Successfully"
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { Result.Error(it) }
+        )
     }
 
 
@@ -655,7 +636,7 @@ class MediaManager(
         uri: Uri,
         shaderCode: String,
         rotationDegrees: Float = 0f
-    ): Bitmap? = withContext(Dispatchers.IO) {
+    ): Bitmap? = withContext(dispatcher) {
         try {
             val source = ImageDecoder.decodeBitmap(
                 ImageDecoder.createSource(context.contentResolver, uri)
