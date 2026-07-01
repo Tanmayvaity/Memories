@@ -54,6 +54,9 @@ fun NavGraphBuilder.createOtherGraph(
             },
             onNavigateToAnalytics = { route ->
                 navController.navigate(route)
+            },
+            onBottomBarVisibilityToggle = { visibility ->
+                onBottomBarVisibilityChange(visibility)
             }
         )
     }

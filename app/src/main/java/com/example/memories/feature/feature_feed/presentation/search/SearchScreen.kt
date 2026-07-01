@@ -38,6 +38,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.memories.LocalTheme
 import com.example.memories.core.domain.model.MemoryWithMediaModel
+import com.example.memories.core.util.RevealBottomBarWhenNotScrollable
 import com.example.memories.feature.feature_feed.presentation.common.SectionState
 import com.example.memories.feature.feature_feed.presentation.search.components.ExploreByCategorySection
 import com.example.memories.feature.feature_feed.presentation.search.components.MemorySearchBar
@@ -55,6 +56,7 @@ import kotlinx.coroutines.launch
 fun SearchRoot(
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel<SearchViewModel>(),
+    onBottomBarVisibilityToggle : (Boolean) -> Unit,
     onNavigate: (AppScreen) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -70,7 +72,8 @@ fun SearchRoot(
         onNavigateToMemoryCreate = onNavigate,
         onNavigateToTagCreate = onNavigate,
         memoriesForTag = memoriesForTag,
-        isSearching = isSearching
+        isSearching = isSearching,
+        onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
     )
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +87,8 @@ fun SearchScreen(
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
     onNavigateToTagCreate: (AppScreen.Tags) -> Unit = {},
     memoriesForTag: LazyPagingItems<MemoryWithMediaModel>,
-    isSearching : Boolean = false
+    isSearching : Boolean = false,
+    onBottomBarVisibilityToggle : (Boolean) -> Unit = {}
 ) {
     val theme = LocalTheme.current
     var tagClickIndex by rememberSaveable { mutableStateOf(0) }
@@ -111,6 +115,10 @@ fun SearchScreen(
                 Color(0xFF9575CD)
             )
         )
+    }
+
+    RevealBottomBarWhenNotScrollable(lazyGridState) {
+        onBottomBarVisibilityToggle(true)
     }
 
     LaunchedEffect(state.selectedTag) {

@@ -32,6 +32,7 @@ import com.example.memories.core.presentation.ThemeEvents
 import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.CustomSettingRow
 import com.example.memories.core.presentation.components.LoadingIconItem
+import com.example.memories.core.util.RevealBottomBarWhenNotScrollable
 import com.example.memories.feature.feature_other.domain.model.LockMethod
 import com.example.memories.feature.feature_other.presentation.AppInfoSettingType
 import com.example.memories.feature.feature_other.presentation.BiometricPromptManager
@@ -68,6 +69,7 @@ fun OtherRoot(
     onNavigateToHiddenMemory: (AppScreen.HiddenMemory) -> Unit,
     onNavigateToStorage: (AppScreen.Storage) -> Unit,
     onNavigateToAnalytics: (AppScreen.Analytics) -> Unit,
+    onBottomBarVisibilityToggle : (Boolean) -> Unit,
     themeViewModel: ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
     otherViewModel: OtherViewModel = hiltViewModel()
 ) {
@@ -189,7 +191,8 @@ fun OtherRoot(
 
     OtherScreen(
         onSettingEvent = otherViewModel::settingClickEvent,
-        state = state
+        state = state,
+        onBottomBarVisibilityToggle = onBottomBarVisibilityToggle
     )
 
 
@@ -278,9 +281,14 @@ fun OtherRoot(
 @Composable
 fun OtherScreen(
     onSettingEvent: (SettingClickEvent) -> Unit = {},
-    state: OtherState = OtherState()
+    state: OtherState = OtherState(),
+    onBottomBarVisibilityToggle: (Boolean) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+
+    RevealBottomBarWhenNotScrollable(scrollState) {
+        onBottomBarVisibilityToggle(true)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),

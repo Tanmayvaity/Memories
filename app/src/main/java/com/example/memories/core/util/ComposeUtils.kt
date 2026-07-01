@@ -3,6 +3,7 @@ package com.example.memories.core.util
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
@@ -65,6 +66,22 @@ fun Modifier.simpleVerticalScrollbar(
                 size = Size(width.toPx(), scrollbarHeight),
                 alpha = alpha
             )
+        }
+    }
+}
+
+
+@Composable
+fun RevealBottomBarWhenNotScrollable(
+    scrollState: ScrollableState,
+    onUnableToScroll: () -> Unit,
+) {
+    val canScroll by remember(scrollState) {
+        derivedStateOf { scrollState.canScrollForward || scrollState.canScrollBackward }
+    }
+    LaunchedEffect(canScroll) {
+        if (!canScroll) {
+            onUnableToScroll()
         }
     }
 }

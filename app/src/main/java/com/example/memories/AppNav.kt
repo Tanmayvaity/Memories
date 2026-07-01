@@ -1,6 +1,9 @@
 package com.example.memories
 
+import android.R.attr.visibility
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -25,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +52,7 @@ import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.TOP_LEVEL_DESTINATIONS
 import com.example.memories.navigation.TopLevelDestination
 import com.example.memories.navigation.TopLevelNavigation
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,6 +100,10 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                 navController = navController,
                 onBottomBarVisibilityChange = { visibility ->
                     isBottomBarVisible = visibility
+                    if(visibility){
+                        scrollBehavior.state.heightOffset = 0f
+                        scrollBehavior.state.contentOffset = 0f
+                    }
                 },
             )
         }

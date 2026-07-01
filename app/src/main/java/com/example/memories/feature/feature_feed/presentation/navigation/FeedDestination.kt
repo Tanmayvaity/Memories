@@ -1,20 +1,15 @@
 package com.example.memories.feature.feature_feed.presentation.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
-import com.example.memories.core.util.isOnBackStack
 import com.example.memories.feature.feature_feed.presentation.feed.FeedRoot
 import com.example.memories.feature.feature_feed.presentation.feed_detail.MemoryDetailRoot
 import com.example.memories.feature.feature_feed.presentation.hidden.HiddenMemoryRoot
 import com.example.memories.feature.feature_feed.presentation.history.HistoryRoot
 import com.example.memories.feature.feature_feed.presentation.search.SearchRoot
-import com.example.memories.feature.feature_feed.presentation.search.SearchViewModel
 import com.example.memories.feature.feature_feed.presentation.tags.TagsRoot
 import com.example.memories.feature.feature_feed.presentation.tags_with_memory.TagWithMemoryRoot
 import com.example.memories.navigation.AppScreen
@@ -37,9 +32,9 @@ fun NavGraphBuilder.createFeedGraph(
             onNavigateToMemoryCreate = { route ->
                 navController.navigate(route)
             },
-            onBottomBarVisibilityToggle = { it ->
-                onBottomBarVisibilityChange(it)
-            }
+            onBottomBarVisibilityToggle = { visibility ->
+                onBottomBarVisibilityChange(visibility)
+            },
         )
     }
     composable<TopLevelScreen.Search> (
@@ -52,6 +47,9 @@ fun NavGraphBuilder.createFeedGraph(
             onNavigate = { route ->
                 navController.navigate(route)
             },
+            onBottomBarVisibilityToggle = { visibility ->
+                onBottomBarVisibilityChange(visibility)
+            }
         )
     }
 

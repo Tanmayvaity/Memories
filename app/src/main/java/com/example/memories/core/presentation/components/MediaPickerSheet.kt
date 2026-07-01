@@ -50,7 +50,7 @@ fun MediaPickerSheet(
             MenuItem(
                 title = "Choose from Internal Storage",
                 icon = R.drawable.ic_directory,
-                content = "select media from the internal directory",
+                content = "Select media from the internal directory",
                 onClick = onInternal
             )
         )

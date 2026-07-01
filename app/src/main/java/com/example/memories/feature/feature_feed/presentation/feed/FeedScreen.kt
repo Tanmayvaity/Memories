@@ -70,6 +70,7 @@ import com.example.memories.core.presentation.components.GeneralAlertSheet
 import com.example.memories.core.presentation.components.IconItem
 import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MemoryDeleteBottomSheet
+import com.example.memories.core.util.RevealBottomBarWhenNotScrollable
 import com.example.memories.core.util.hideWithCallback
 import com.example.memories.core.util.rememberActiveItemKey
 import com.example.memories.core.util.rememberSettledActiveKey
@@ -93,7 +94,7 @@ fun FeedRoot(
     onNavigateToImageEdit: (AppScreen.MediaEdit) -> Unit,
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
-    onBottomBarVisibilityToggle: (Boolean) -> Unit
+    onBottomBarVisibilityToggle: (Boolean) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val memories = viewModel.memories.collectAsLazyPagingItems()
@@ -166,6 +167,9 @@ fun FeedScreen(
         }
     }
 
+    RevealBottomBarWhenNotScrollable(lazyListState) {
+        onBottomBarVisibilityToggle(true)
+    }
 
     DisposableEffect(Unit) {
         onDispose { exoPlayer.release() }
