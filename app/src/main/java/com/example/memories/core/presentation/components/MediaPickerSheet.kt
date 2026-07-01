@@ -13,7 +13,8 @@ fun MediaPickerSheet(
     onDeviceCamera: () -> Unit,
     onCustomCamera: () -> Unit,
     onGallery: () -> Unit,
-    onWeb: () -> Unit
+    onWeb: () -> Unit,
+    onInternal : () -> Unit
 ) {
     ActionSelectorBottomSheet(
         onDismiss = onDismiss,
@@ -45,6 +46,12 @@ fun MediaPickerSheet(
                 icon = R.drawable.ic_web,
                 content = "Select media from the pexels api",
                 onClick = onWeb
+            ),
+            MenuItem(
+                title = "Choose from Internal Storage",
+                icon = R.drawable.ic_directory,
+                content = "select media from the internal directory",
+                onClick = onInternal
             )
         )
     )

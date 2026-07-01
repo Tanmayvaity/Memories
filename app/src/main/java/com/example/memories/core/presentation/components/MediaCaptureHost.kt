@@ -1,5 +1,7 @@
 package com.example.memories.core.presentation.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -40,11 +43,29 @@ fun MediaCaptureHost(
     onMediaSelected: (UriType, position: Int) -> Unit,
     onWebMediaSelected: (url: String, isVideo: Boolean, position: Int) -> Unit = { _, _, _ -> },
     onNavigateToCamera: () -> Unit,
-    remoteImages : LazyPagingItems<Photo> = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
-    remoteVideos : LazyPagingItems<Video> = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
+    remoteImages: LazyPagingItems<Photo> = flowOf(PagingData.from(emptyList<Photo>())).collectAsLazyPagingItems(),
+    remoteVideos: LazyPagingItems<Video> = flowOf(PagingData.from(emptyList<Video>())).collectAsLazyPagingItems()
 ) {
     val context = LocalContext.current
     var showWebTypeSheet by remember { mutableStateOf(false) }
+
+    val browseFilesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { safeUri ->
+            currentPosition?.let {
+                val uriType = UriType(
+                    uri = safeUri.toString(),
+                    type = Type.fromUri(
+                        uri = safeUri,
+                        context = context
+                    )
+                )
+                onMediaSelected(uriType, currentPosition)
+            }
+
+        }
+    }
 
     val onCaptureSuccess: (Boolean) -> Unit = { successful ->
         if (successful && tempMediaUri != null && currentPosition != null &&
@@ -117,7 +138,15 @@ fun MediaCaptureHost(
                 onUpdateMediaActionType(MediaActionType.WEB_PICKER)
                 showWebTypeSheet = true
                 onPickerSheetDismiss()
+            },
+            onInternal = {
+                onUpdateMediaActionType(MediaActionType.INTERNAL)
+                browseFilesLauncher.launch(
+                    arrayOf("image/*", "video/*")
+                )
+                onPickerSheetDismiss()
             }
+
         )
     }
 
@@ -131,9 +160,9 @@ fun MediaCaptureHost(
         )
     }
 
-    if(showWebTypeSheet){
+    if (showWebTypeSheet) {
         WebMediaSelectorSheet(
-            onDismiss = {showWebTypeSheet = false},
+            onDismiss = { showWebTypeSheet = false },
             onMediaSelected = { url, isVideo ->
                 if (currentPosition != null) {
                     onWebMediaSelected(url, isVideo, currentPosition)

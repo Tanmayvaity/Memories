@@ -447,8 +447,7 @@ fun MediaEditScreen(
         },
         onNavigateToCamera = { onNavigateToCamera(AppScreen.Camera) },
         remoteImages = remoteImages,
-        remoteVideos = remoteVideos
-
+        remoteVideos = remoteVideos,
     )
 }
 

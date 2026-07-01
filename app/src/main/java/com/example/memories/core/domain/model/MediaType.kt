@@ -11,5 +11,6 @@ enum class MediaActionType {
     CUSTOM_APP_CAMERA_FEATURE,
     PHOTO_PICKER,
     WEB_PICKER,
+    INTERNAL,
     NONE
 }
