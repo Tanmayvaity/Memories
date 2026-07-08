@@ -1,13 +1,16 @@
 package com.example.memories.feature.feature_memory.data.data_source
 
 import android.content.Context
+import android.media.FaceDetector.Face.CONFIDENCE_THRESHOLD
 import android.net.Uri
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.label.ImageLabeling
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -23,25 +26,27 @@ class ImageTagSuggester(
     }
 
     suspend fun suggest(uri: Uri): List<String> {
-        return try {
-            val image = InputImage.fromFilePath(context, uri)
-            suspendCancellableCoroutine { continuation ->
-                labeler.process(image)
-                    .addOnSuccessListener { labels ->
-                        val result = labels
-                            .sortedByDescending { it.confidence }
-                            .take(MAX_SUGGESTIONS)
-                            .map { it.text }
-                        continuation.resume(result)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e(TAG, "labeling failed: ${e.message}")
-                        continuation.resume(emptyList())
-                    }
+        return withContext(Dispatchers.IO) {
+            try {
+                val image = InputImage.fromFilePath(context, uri)
+                suspendCancellableCoroutine { continuation ->
+                    labeler.process(image)
+                        .addOnSuccessListener { labels ->
+                            val result = labels
+                                .sortedByDescending { it.confidence }
+                                .take(MAX_SUGGESTIONS)
+                                .map { it.text }
+                            continuation.resume(result)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e(TAG, "labeling failed: ${e.message}")
+                            continuation.resume(emptyList())
+                        }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "suggest error: ${e.message}")
+                emptyList()
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "suggest error: ${e.message}")
-            emptyList()
         }
     }
 
