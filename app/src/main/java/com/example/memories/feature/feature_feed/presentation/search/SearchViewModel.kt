@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @Suppress("UNCHECKED_CAST")
@@ -48,8 +49,8 @@ class SearchViewModel @Inject constructor(
     private val _inputText = MutableStateFlow("")
     val inputText = _inputText.asStateFlow()
 
-    val isSearching: StateFlow<Boolean>
-        field = MutableStateFlow<Boolean>(false)
+    val status: StateFlow<SearchStatus>
+        field = MutableStateFlow<SearchStatus>(SearchStatus.IDLE)
 
     private val _currentTag = MutableStateFlow<TagModel?>(null)
 
@@ -71,30 +72,34 @@ class SearchViewModel @Inject constructor(
                 initialValue = SectionState.Loading
             )
     val searchResults: StateFlow<List<MemoryWithMediaModel>> = combine(
-        _inputText.debounce(400).distinctUntilChanged(),
+        _inputText,
         recentSearches
     ) { query, recentState ->
         query to recentState
     }.flatMapLatest { (query, recentState) ->
         when {
             query.isBlank() && recentState is SectionState.Success -> {
-                isSearching.update { false }
+                status.update { SearchStatus.IDLE }
                 flowOf(recentState.data.reversed())
             }
 
             query.isBlank() -> {
-                isSearching.update { false }
+                status.update { SearchStatus.IDLE }
                 flowOf(emptyList())
             }
 
             else -> {
+                status.update { SearchStatus.TYPING }
+                delay(DEBOUNCE_DELAY)
+
                 Log.d(TAG, "search query executed ")
                 searchUseCase.searchByTitleUseCase(query)
                     .onStart {
-                        isSearching.update { true }
+                        status.update { SearchStatus.SEARCHING }
+                        delay(MIN_SPINNER_DURATION)
                     }
                     .onEach {
-                        isSearching.update { false }
+                        status.update { SearchStatus.SETTLED }
                     }
             }
         }
@@ -214,9 +219,25 @@ class SearchViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "SearchViewModel"
+        private val DEBOUNCE_DELAY = 400.milliseconds
+        private val MIN_SPINNER_DURATION = 300.milliseconds
     }
 
 
+}
+
+enum class SearchStatus {
+    /** Query is blank — recent searches are shown. */
+    IDLE,
+
+    /** A keystroke landed; the query is debouncing and has not run yet. */
+    TYPING,
+
+    /** Typing paused and the query is in flight. */
+    SEARCHING,
+
+    /** The query finished; [SearchState.searchResults] reflects it. */
+    SETTLED
 }
 
 @Stable

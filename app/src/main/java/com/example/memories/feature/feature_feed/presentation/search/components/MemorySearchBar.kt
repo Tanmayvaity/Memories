@@ -65,6 +65,7 @@ import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.feature.feature_feed.presentation.feed.components.MemoryItem
 import com.example.memories.feature.feature_feed.presentation.search.SearchEvents
 import com.example.memories.feature.feature_feed.presentation.search.SearchState
+import com.example.memories.feature.feature_feed.presentation.search.SearchStatus
 import com.example.memories.navigation.AppScreen
 import com.example.memories.ui.theme.MemoriesTheme
 import kotlinx.coroutines.launch
@@ -80,7 +81,7 @@ fun MemorySearchBar(
     onClearInput: () -> Unit = {},
     onItemClick : (String) -> Unit = {},
     onCrossClick : (String) -> Unit = {},
-    isSearching : Boolean = false
+    status : SearchStatus = SearchStatus.IDLE
 ) {
     var expanded by remember { mutableStateOf(false) }
     val horizontalPadding by animateDpAsState(
@@ -117,13 +118,13 @@ fun MemorySearchBar(
 
                 trailingIcon = {
 
-                    if(isSearching){
+                    if(status == SearchStatus.SEARCHING){
                         ContainedLoadingIndicator(
                             modifier = Modifier.size(32.dp),
                         )
                     }
 
-                    if (searchText.isNotEmpty() && !isSearching) {
+                    if (searchText.isNotEmpty() && status != SearchStatus.SEARCHING) {
                         IconButton(onClick = {
                             onClearInput()
                         }) {
@@ -188,7 +189,7 @@ fun MemorySearchBar(
                     )
                 }
             }
-            if(state.searchResults.isEmpty() && !isSearching) {
+            if(status == SearchStatus.SETTLED && state.searchResults.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Top,
@@ -215,14 +216,14 @@ fun MemorySearchBar(
 @PreviewLightDark
 @Composable
 fun MemorySearchBarPreview(modifier: Modifier = Modifier) {
-    val data = List(20){ MemoryWithMediaModel() }
+    val data = List(0){ MemoryWithMediaModel() }
     MemoriesTheme {
         MemorySearchBar(
-            searchText = "5",
+            searchText = "zzzz",
             state = SearchState(
                 searchResults = data ,
             ),
-            isSearching = false
+            status = SearchStatus.SETTLED
         )
     }
 }
