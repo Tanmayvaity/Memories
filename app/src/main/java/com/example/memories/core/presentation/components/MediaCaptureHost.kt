@@ -1,6 +1,6 @@
 package com.example.memories.core.presentation.components
 
-import android.content.Intent
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -23,8 +22,6 @@ import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.domain.model.Video
-import com.example.memories.core.presentation.UiState
-import com.example.memories.navigation.CustomNavType.mediaType
 import kotlinx.coroutines.flow.flowOf
 
 @Composable

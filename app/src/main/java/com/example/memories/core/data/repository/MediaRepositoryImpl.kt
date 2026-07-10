@@ -79,7 +79,7 @@ class MediaRepositoryImpl @Inject constructor(
         return mediaManager.saveRemoteMediaToCache(url, isImage)
     }
 
-    override fun generateShareableUri(isImage: Boolean?, uri: Uri?): Uri? {
+    override suspend fun generateShareableUri(isImage: Boolean?, uri: Uri?): Uri? {
         return mediaManager.generateShareableUri(isImage, uri)
     }
 

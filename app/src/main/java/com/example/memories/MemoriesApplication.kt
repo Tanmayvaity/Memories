@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import android.os.StrictMode
 import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil3.ImageLoader
@@ -52,6 +53,9 @@ class MemoriesApplication : Application(), Configuration.Provider, SingletonImag
             )
         }
 
+        CoroutineScope(Dispatchers.IO).launch{
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")
+        }
         createNotificationChannels()
     }
 

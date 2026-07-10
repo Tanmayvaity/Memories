@@ -735,13 +735,14 @@ class MediaManager(
     }
 
 
-    fun generateShareableUri(isImage: Boolean? = true,uri : Uri? = null): Uri? {
+    suspend fun generateShareableUri(isImage: Boolean? = true,uri : Uri? = null): Uri? = withContext(
+        Dispatchers.IO) {
 
         if(uri != null){
-            return generateSharableUri(uri)
+            return@withContext generateSharableUri(uri)
         }
 
-        if(isImage == null) return null
+        if(isImage == null) return@withContext null
 
         val dirName = if (isImage) "images" else "videos"
         val prefix = if (isImage) "IMG_" else "VID_"
@@ -758,7 +759,7 @@ class MediaManager(
             "$prefix${System.currentTimeMillis()}.$extension"
         )
 
-        return FileProvider.getUriForFile(
+        return@withContext FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file

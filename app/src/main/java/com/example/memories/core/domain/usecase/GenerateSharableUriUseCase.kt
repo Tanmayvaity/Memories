@@ -7,7 +7,7 @@ import com.example.memories.core.domain.repository.MediaRepository
 class GenerateSharableUriUseCase (
     private val mediaRepository: MediaRepository
 ) {
-    operator fun invoke(isImage : Boolean?,uri: Uri? = null) : Result<Uri?> {
+    suspend operator fun invoke(isImage : Boolean?, uri: Uri? = null) : Result<Uri?> {
 
         return try{
             val uri = mediaRepository.generateShareableUri(isImage,uri)

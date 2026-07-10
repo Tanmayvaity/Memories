@@ -68,7 +68,7 @@ interface MediaRepository {
     ): Result<UriType>
 
 
-    fun generateShareableUri(isImage : Boolean? = false,uri : Uri? = null) : Uri?
+    suspend fun generateShareableUri(isImage : Boolean? = false,uri : Uri? = null) : Uri?
 
     fun getRemoteImages() : Flow<PagingData<Photo>>
 

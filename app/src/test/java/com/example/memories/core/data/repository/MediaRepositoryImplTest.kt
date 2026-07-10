@@ -74,9 +74,9 @@ class MediaRepositoryImplTest {
     }
 
     @Test
-    fun generateShareableUri_passesThrough() {
+    fun generateShareableUri_passesThrough() = runTest{
         val out = mockk<Uri>()
-        every { mediaManager.generateShareableUri(true, null) } returns out
+        coEvery { mediaManager.generateShareableUri(true, null) } returns out
 
         assertSame(out, repository.generateShareableUri(true, null))
     }

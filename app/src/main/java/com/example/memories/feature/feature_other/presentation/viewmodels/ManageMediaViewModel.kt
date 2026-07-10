@@ -163,7 +163,7 @@ class ManageMediaViewModel @Inject constructor(
         }
     }
 
-    private fun shareableUriFor(uri: Uri?, type: Type): Uri? {
+    private suspend fun shareableUriFor(uri: Uri?, type: Type): Uri? {
         if (uri == null) return null
         val result = mediaUseCase.generateShareableUriUseCase(type.isImageFile(), uri)
         return (result as? Result.Success)?.data
