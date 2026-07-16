@@ -14,4 +14,10 @@ sealed class TagEvents {
     data class InputTextChange(val value : String) : TagEvents()
 
     data class CreateTag(val name : String) : TagEvents()
+
+    data class UpdateTag(val id : String, val name : String) : TagEvents()
+}
+
+sealed class TagUiEvent {
+    data class ShowMessage(val message : String) : TagUiEvent()
 }

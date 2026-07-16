@@ -36,6 +36,10 @@ interface TagDao {
     suspend fun insertTag(tag : TagEntity)
 
 
+    @Query("UPDATE TagEntity SET label = :label WHERE tag_id = :id")
+    suspend fun updateTagLabel(id : String, label : String)
+
+
     @Transaction
     @Query("SELECT * FROM TagEntity where tag_id = :id")
     fun getMemoryByTag(id : String): Flow<TagsWithMemory?>

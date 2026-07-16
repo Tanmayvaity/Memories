@@ -14,6 +14,8 @@ interface TagRepository {
 
     suspend fun getTagByLabel(label: String): TagModel?
 
+    suspend fun updateTag(id: String, label: String)
+
     suspend fun deleteTag(id: String)
 
     fun getTagsWithMemoryCount(

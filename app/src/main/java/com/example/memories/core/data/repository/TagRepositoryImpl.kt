@@ -31,6 +31,10 @@ class TagRepositoryImpl @Inject constructor(
         return tagDao.getTagByLabel(label)?.toDomain()
     }
 
+    override suspend fun updateTag(id: String, label: String) {
+        tagDao.updateTagLabel(id, label)
+    }
+
     override suspend fun deleteTag(id: String) {
         tagDao.deleteTag(id)
     }

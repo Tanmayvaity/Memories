@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,8 +55,9 @@ import com.example.memories.feature.feature_feed.presentation.common.isEmpty
 import com.example.memories.core.presentation.components.ErrorStateCard
 import com.example.memories.feature.feature_feed.presentation.components.SearchTextField
 import com.example.memories.feature.feature_feed.presentation.search.components.EmptyResultPlaceHolder
-import com.example.memories.feature.feature_feed.presentation.tags.components.CreateTagBottomSheet
 import com.example.memories.feature.feature_feed.presentation.tags.components.SortTagsBottomSheet
+import com.example.memories.feature.feature_feed.presentation.tags.components.TagActionsBottomSheet
+import com.example.memories.feature.feature_feed.presentation.tags.components.TagFormBottomSheet
 import com.example.memories.feature.feature_feed.presentation.tags.components.TagCard
 import com.example.memories.navigation.AppScreen
 
@@ -69,6 +71,17 @@ fun TagsRoot(
     val state by viewmodel.state.collectAsStateWithLifecycle()
     val tags by viewmodel.tags.collectAsStateWithLifecycle()
     val inputText by viewmodel.inputText.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewmodel.uiEvent.collect { event ->
+            when (event) {
+                is TagUiEvent.ShowMessage -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     TagsScreen(
         state = state,
@@ -93,7 +106,10 @@ fun TagsScreen(
 ) {
     var showSortBySheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val actionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteTagSheet by remember { mutableStateOf(false) }
+    var showActionsSheet by remember { mutableStateOf(false) }
+    var showEditTagSheet by remember { mutableStateOf(false) }
     var tagItem: TagWithMemoryCountModel? = null
     var showTagSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -215,7 +231,7 @@ fun TagsScreen(
                                 },
                                 onLongClick = {
                                     tagItem = tag
-                                    showDeleteTagSheet = true
+                                    showActionsSheet = true
                                 }
                             )
                         }
@@ -245,20 +261,69 @@ fun TagsScreen(
             )
         }
         if (showTagSheet) {
-            CreateTagBottomSheet(
+            TagFormBottomSheet(
                 onDismiss = { showTagSheet = false },
                 isLoading = state.isTagInserting,
-                onCreateTag = { name ->
+                onSubmit = { name ->
                     if (name.isEmpty() || name.isBlank()) {
                         Toast.makeText(
                             context,
                             "Tag name cannot be empty",
                             Toast.LENGTH_SHORT
                         ).show()
-                        return@CreateTagBottomSheet
+                        return@TagFormBottomSheet
                     }
                     onEvent(TagEvents.CreateTag(name))
                     showTagSheet = false
+                }
+            )
+        }
+
+        if (showActionsSheet && tagItem != null) {
+            val hideSheet = { onHidden: () -> Unit ->
+                actionsSheetState.hideWithCallback(scope) {
+                    showActionsSheet = false
+                    onHidden()
+                }
+            }
+            TagActionsBottomSheet(
+                tagLabel = tagItem!!.tagLabel,
+                state = actionsSheetState,
+                onDismiss = {
+                    hideSheet {
+                        tagItem = null
+                    }
+                },
+                onRename = {
+                    hideSheet { showEditTagSheet = true }
+                },
+                onDelete = {
+                    hideSheet { showDeleteTagSheet = true }
+                }
+            )
+        }
+
+        if (showEditTagSheet && tagItem != null) {
+            TagFormBottomSheet(
+                isEdit = true,
+                initialName = tagItem!!.tagLabel,
+                isLoading = state.isTagUpdating,
+                onDismiss = {
+                    showEditTagSheet = false
+                    tagItem = null
+                },
+                onSubmit = { name ->
+                    if (name.isEmpty() || name.isBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Tag name cannot be empty",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@TagFormBottomSheet
+                    }
+                    onEvent(TagEvents.UpdateTag(id = tagItem!!.tagId, name = name))
+                    showEditTagSheet = false
+                    tagItem = null
                 }
             )
         }

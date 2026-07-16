@@ -3,6 +3,7 @@ package com.example.memories.feature.feature_feed.presentation.tags
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memories.core.domain.model.Result
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.TagWithMemoryCountModel
 import com.example.memories.feature.feature_feed.domain.usecase.tag_usecase.TagUseCaseWrapper
@@ -11,6 +12,7 @@ import com.example.memories.feature.feature_feed.presentation.common.toSectionSt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,10 +28,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
@@ -55,6 +60,9 @@ class TagsViewModel @Inject constructor(
 
     private val _inputText = MutableStateFlow<String>("")
     val inputText = _inputText.asStateFlow()
+
+    private val _uiEvent = Channel<TagUiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
 
     val tags: StateFlow<SectionState<List<TagWithMemoryCountModel>>> = combine(
@@ -88,8 +96,31 @@ class TagsViewModel @Inject constructor(
                 _state.update { it.copy(isTagInserting = true) }
 
                 viewModelScope.launch {
-                    tagsUseCase.addTagUseCase(event.name)
+                    val result = tagsUseCase.addTagUseCase(event.name)
                     _state.update { it.copy(isTagInserting = false) }
+                    if (result is Result.Error) {
+                        _uiEvent.send(
+                            TagUiEvent.ShowMessage(
+                                result.error.message ?: "Could not create tag"
+                            )
+                        )
+                    }
+                }
+            }
+
+            is TagEvents.UpdateTag -> {
+                _state.update { it.copy(isTagUpdating = true) }
+
+                viewModelScope.launch {
+                    val result = tagsUseCase.updateTagUseCase(event.id, event.name)
+                    _state.update { it.copy(isTagUpdating = false) }
+                    if (result is Result.Error) {
+                        _uiEvent.send(
+                            TagUiEvent.ShowMessage(
+                                result.error.message ?: "Could not update tag"
+                            )
+                        )
+                    }
                 }
             }
 
@@ -126,4 +157,5 @@ data class TagsState(
     val sortByType: SortBy = SortBy.Count,
     val orderByType: SortOrder = SortOrder.Descending,
     val isTagInserting: Boolean = false,
+    val isTagUpdating: Boolean = false,
 )

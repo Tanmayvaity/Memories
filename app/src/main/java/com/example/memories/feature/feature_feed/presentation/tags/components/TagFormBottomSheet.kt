@@ -49,13 +49,15 @@ import com.example.memories.ui.theme.MemoriesTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CreateTagBottomSheet(
+fun TagFormBottomSheet(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onCreateTag: (String) -> Unit,
+    onSubmit: (String) -> Unit,
     isLoading : Boolean ,
+    initialName : String = "",
+    isEdit : Boolean = false,
 ) {
-    var tagName by remember { mutableStateOf("") }
+    var tagName by remember { mutableStateOf(initialName) }
     val suggestionColors = listOf(
         Color(0xFF3F8CFF), // Blue
         Color(0xFF27AE60), // Green
@@ -79,7 +81,7 @@ fun CreateTagBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Create New Tag",
+                text = if (isEdit) "Rename Tag" else "Create New Tag",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -102,7 +104,7 @@ fun CreateTagBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = if (isEdit) Icons.Default.Edit else Icons.Default.Add,
                         contentDescription = null,
                         tint = selectedColor,
                         modifier = Modifier.size(30.dp)
@@ -123,11 +125,11 @@ fun CreateTagBottomSheet(
                 OutlinedTextField(
                     value = tagName,
                     onValueChange = { tagName = it },
-                    placeholder = { 
+                    placeholder = {
                         Text(
                             text = "e.g. Summer Vacation",
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        ) 
+                        )
                     },
                     leadingIcon = {
                         Icon(
@@ -200,7 +202,7 @@ fun CreateTagBottomSheet(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { onCreateTag(tagName) },
+                onClick = { onSubmit(tagName) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -225,7 +227,7 @@ fun CreateTagBottomSheet(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Create Tag",
+                            text = if (isEdit) "Save Changes" else "Create Tag",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -259,12 +261,26 @@ fun CreateTagBottomSheet(
 
 @Preview(showBackground = true)
 @Composable
-fun CreateTagBottomSheetPreview() {
+fun TagFormBottomSheetCreatePreview() {
     MemoriesTheme {
-        CreateTagBottomSheet(
+        TagFormBottomSheet(
             onDismiss = {},
-            onCreateTag = { _ -> },
+            onSubmit = { _ -> },
             isLoading = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TagFormBottomSheetEditPreview() {
+    MemoriesTheme {
+        TagFormBottomSheet(
+            onDismiss = {},
+            onSubmit = { _ -> },
+            isLoading = false,
+            initialName = "Summer Vacation",
+            isEdit = true
         )
     }
 }
