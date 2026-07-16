@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -56,7 +57,8 @@ fun LowerBox(
     cameraMode: CameraMode = CameraMode.PHOTO,
     isVideoPlaying: Boolean = false,
     isPictureTimerRunning: Boolean = false,
-    isImageSaving: Boolean = false
+    isImageSaving: Boolean = false,
+    enabled: Boolean = true
 ) {
     val cameraActionItems: List<CameraMode> = CameraMode.entries
     var selectedIndex by remember { mutableStateOf(cameraMode.ordinal) }
@@ -85,15 +87,13 @@ fun LowerBox(
                     .size(80.dp)
                     .border(
                         width = 5.dp,
-                        color = Color.White,
+                        color = if(enabled) Color.White else Color.White.copy(alpha = 0.5f),
                         shape = CircleShape
                     )
-                    .clickable(
-//                            enabled = if (isPictureTimerRunning) false else true,
-                        onClick = {
-                            onClick()
-                        }
-                    ),
+                    .clickable(enabled = enabled){
+                        onClick()
+                    }
+                    .alpha(if (enabled) 1f else 0.5f),
             ) {
                 //internal circle with icon
                 Icon(
@@ -227,7 +227,8 @@ private fun LowerBoxPreview() {
             isImageSaving = true,
             isPictureTimerRunning = false,
             isVideoPlaying = false,
-            cameraMode = CameraMode.VIDEO
+            cameraMode = CameraMode.VIDEO,
+            enabled = false
         )
     }
 }

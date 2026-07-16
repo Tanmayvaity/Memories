@@ -17,7 +17,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
@@ -54,15 +58,21 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memories.R
 import com.example.memories.core.domain.model.CameraSettingsState
 import com.example.memories.core.presentation.MediaResult
 import com.example.memories.core.presentation.components.RationaleDialog
+import com.example.memories.core.presentation.permission.AppPermission
+import com.example.memories.core.presentation.permission.hasPermission
+import com.example.memories.core.presentation.permission.rememberHasPermission
+import com.example.memories.core.presentation.permission.rememberPermissionRequester
 import com.example.memories.core.util.PermissionHelper
 import com.example.memories.core.util.createSettingsIntent
 import com.example.memories.feature.feature_camera.domain.model.CameraMode
 import com.example.memories.feature.feature_camera.presentation.camera.components.LowerBox
 import com.example.memories.feature.feature_camera.presentation.camera.components.UpperBox
+import com.example.memories.navigation.AppScreen
 import kotlinx.coroutines.delay
 import java.util.Locale
 import java.util.UUID
@@ -89,7 +99,7 @@ fun CameraRoot(
 
     LaunchedEffect(Unit) {
         viewModel.mediaEventFlow.collect { event ->
-            when(event){
+            when (event) {
                 is MediaResult.Error -> {
                     Toast.makeText(
                         context,
@@ -122,42 +132,44 @@ fun CameraRoot(
         showCameraScreen = true
     }
 
-    PermissionHelper(
-        lifecycleOwner = lifecycleOwner,
-        onGranted = {
-            showRationale = false
-            showCameraScreen = true
-        },
-        onRationale = {
-            showRationale = true
-            showCameraScreen = false
-        },
-        onRequest = { permission ->
-            cameraRequestLauncher.launch(
-                Manifest.permission.CAMERA
-            )
-        },
-        permission = Manifest.permission.CAMERA,
-        context = context
-    )
-    PermissionHelper(
-        lifecycleOwner = lifecycleOwner,
-        onGranted = {
-            showAudioRationale = false
-            showCameraScreen = true
-        },
-        onRationale = {
-            showAudioRationale = true
-            showCameraScreen = false
-        },
-        onRequest = { permission ->
-            audioRequestLauncher.launch(
-                Manifest.permission.RECORD_AUDIO
-            )
-        },
-        permission = Manifest.permission.RECORD_AUDIO,
-        context = context
-    )
+//    PermissionHelper(
+//        lifecycleOwner = lifecycleOwner,
+//        onGranted = {
+//            showRationale = false
+//            showCameraScreen = true
+//        },
+//        onRationale = {
+//            showRationale = true
+//            showCameraScreen = false
+//        },
+//        onRequest = { permission ->
+//            cameraRequestLauncher.launch(
+//                Manifest.permission.CAMERA
+//            )
+//        },
+//        permission = Manifest.permission.CAMERA,
+//        context = context
+//    )
+
+
+//    PermissionHelper(
+//        lifecycleOwner = lifecycleOwner,
+//        onGranted = {
+//            showAudioRationale = false
+//            showCameraScreen = true
+//        },
+//        onRationale = {
+//            showAudioRationale = true
+//            showCameraScreen = false
+//        },
+//        onRequest = { permission ->
+//            audioRequestLauncher.launch(
+//                Manifest.permission.RECORD_AUDIO
+//            )
+//        },
+//        permission = Manifest.permission.RECORD_AUDIO,
+//        context = context
+//    )
 
     if (showRationale) {
         RationaleDialog(
@@ -194,7 +206,27 @@ fun CameraRoot(
         )
     }
 
+    val requestPermission = rememberPermissionRequester(
+        onGranted = { viewModel.onEvent(CameraEvent.Preview(lifecycleOwner)) },
+    )
+    LaunchedEffect(Unit) {
+        if (context.hasPermission(AppPermission.CAMERA)) {
+            showCameraScreen = true
+        } else {
+            requestPermission(arrayOf(Manifest.permission.CAMERA))
+        }
+    }
 
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                showCameraScreen = context.hasPermission(AppPermission.CAMERA)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
 
     CameraScreen(
@@ -205,7 +237,6 @@ fun CameraRoot(
         onBack = {
             onBack(null)
         },
-
         cameraSettingsState = state.cameraSettingsState
     )
 
@@ -229,11 +260,13 @@ fun CameraScreen(
             Log.d(TAG, "CameraScreen: ${cameraSettingsState.toString()}")
         }
     }
-
+    val audioRequestPermission = rememberPermissionRequester(
+        onGranted = { onEvent(CameraEvent.VideoMode) },
+    )
     val lifecycleOwner = LocalLifecycleOwner.current
     var co by remember { mutableStateOf(Offset(0f, 0f)) }
     var showTimer by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     DisposableEffect(Unit) {
         val observer = object : LifecycleEventObserver {
             override fun onStateChanged(
@@ -283,146 +316,169 @@ fun CameraScreen(
     ) {
         Log.d(TAG, "CameraScreen: permissionStatus = ${permissionStatus} ")
         if (permissionStatus != null && !permissionStatus) {
-            Text(
-                text = "Camera permission has not been granted",
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-        if (permissionStatus != null && permissionStatus) {
-            Text(
-                text = "Camera",
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-
-
-
-        state.surfaceRequest?.let { surfaceRequest ->
-            CameraXViewfinder(
-                surfaceRequest = surfaceRequest,
-                coordinateTransformer = coordinateTransformer,
+            Column(
                 modifier = Modifier
-                    .align(Alignment.Center)
                     .fillMaxWidth()
-                    .aspectRatio(state.aspectRatio.ratio)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = { tapCoords ->
-                                onEvent(CameraEvent.ChangeLensFacing)
-                            },
-                            onTap = { offset ->
-                                co = offset
-                                with(coordinateTransformer) {
-                                    onEvent(CameraEvent.TapToFocus(offset.transform()))
-                                }
-
-
-                                autofocusRequest = UUID.randomUUID() to offset
-                            }
-                        )
+                    .align(Alignment.Center),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Camera permission has not been granted",
+                    textAlign = TextAlign.Center,
+                    color = Color.White
+                )
+                Button(
+                    onClick = {
+                        createSettingsIntent(context = context)
                     }
-                    .pointerInput(Unit) {
+                ) {
+                    Text(
+                        text = "Go to Settings"
+                    )
+                }
+            }
+        } else if (permissionStatus != null && permissionStatus) {
+            state.surfaceRequest?.let { surfaceRequest ->
+                CameraXViewfinder(
+                    surfaceRequest = surfaceRequest,
+                    coordinateTransformer = coordinateTransformer,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .aspectRatio(state.aspectRatio.ratio)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onDoubleTap = { tapCoords ->
+                                    onEvent(CameraEvent.ChangeLensFacing)
+                                },
+                                onTap = { offset ->
+                                    co = offset
+                                    with(coordinateTransformer) {
+                                        onEvent(CameraEvent.TapToFocus(offset.transform()))
+                                    }
+
+
+                                    autofocusRequest = UUID.randomUUID() to offset
+                                }
+                            )
+                        }
+                        .pointerInput(Unit) {
 //                        detectTransformGestures { _, _, zoom, _ ->
 //                            val scale = (state.zoomScale + (zoom - 1f)).coerceIn(0f, 1f)
 //                            Log.d(TAG, "zoom scale : $scale")
 //                            onEvent(CameraEvent.Zoom(scale))
 //                        }
-                    }
-            )
-
-            AnimatedVisibility(
-                visible = showAutofocusIndicator,
-                enter = fadeIn(
-                    animationSpec = tween(200)
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(200)
-                ),
-                // will change this later
-                modifier = Modifier.offset(y = 155.dp)
-            ) {
-                Spacer(
-                    Modifier
-                        .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
-                        .offset((-24).dp, (-24).dp)
-//                        .offset(y = 150.dp)
-                        .border(1.dp, Color.White, CircleShape)
-                        .size(48.dp)
-
+                        }
                 )
-            }
 
+                AnimatedVisibility(
+                    visible = showAutofocusIndicator,
+                    enter = fadeIn(
+                        animationSpec = tween(200)
+                    ),
+                    exit = fadeOut(
+                        animationSpec = tween(200)
+                    ),
+                    // will change this later
+                    modifier = Modifier.offset(y = 155.dp)
+                ) {
+                    Spacer(
+                        Modifier
+                            .offset { autofocusCoords.takeOrElse { Offset.Zero }.round() }
+                            .offset((-24).dp, (-24).dp)
+//                        .offset(y = 150.dp)
+                            .border(1.dp, Color.White, CircleShape)
+                            .size(48.dp)
+
+                    )
+                }
+
+            }
         }
 
-        UpperBox(
-            modifier = Modifier.align(Alignment.TopEnd),
-            torchState = state.torchState,
-            onTorchToggle = {
-                onEvent(CameraEvent.TorchToggle)
-            },
-            onAspectRatioChange = {
-                onEvent(CameraEvent.ToggleAspectRatio)
-            },
-            onTimerSet = {
-                onEvent(CameraEvent.ToggleTimerMode)
-            },
-            isVideoPlaying = state.videoState == VideoState.Started,
-            isPictureTimerRunning = state.timerMode == TimerMode.Running,
-            onToggleCamera = {
-                onEvent(CameraEvent.ChangeLensFacing)
-            }
-        )
-
-        LowerBox(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
-            isImageSaving = state.cameraMediaSaving,
-            isPictureTimerRunning = state.timerMode == TimerMode.Running,
-            onClick = {
-                if (state.timerMode == TimerMode.Started) {
-                    onEvent(CameraEvent.Timer)
-                    return@LowerBox
+        if (permissionStatus != null && permissionStatus) {
+            UpperBox(
+                modifier = Modifier.align(Alignment.TopEnd),
+                torchState = state.torchState,
+                onTorchToggle = {
+                    onEvent(CameraEvent.TorchToggle)
+                },
+                onAspectRatioChange = {
+                    onEvent(CameraEvent.ToggleAspectRatio)
+                },
+                onTimerSet = {
+                    onEvent(CameraEvent.ToggleTimerMode)
+                },
+                isVideoPlaying = state.videoState == VideoState.Started,
+                isPictureTimerRunning = state.timerMode == TimerMode.Running,
+                onToggleCamera = {
+                    onEvent(CameraEvent.ChangeLensFacing)
                 }
-
-                if (state.timerMode == TimerMode.Running) {
-                    onEvent(CameraEvent.CancelTimer)
-                    return@LowerBox
-                }
-
-                if (state.mode == CameraMode.VIDEO && state.videoState == VideoState.Started) {
-                    onEvent(CameraEvent.Stop)
-                    return@LowerBox
-                }
-
-
-                onEvent(CameraEvent.Take)
-            },
-            onCameraModeClick = { mode: CameraMode ->
-                when (mode) {
-                    CameraMode.PHOTO -> {
-                        onEvent(CameraEvent.PhotoMode)
+            )
+        }
+        if (permissionStatus != null && permissionStatus) {
+            LowerBox(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter),
+                isImageSaving = state.cameraMediaSaving,
+                isPictureTimerRunning = state.timerMode == TimerMode.Running,
+                onClick = {
+                    if (state.timerMode == TimerMode.Started) {
+                        onEvent(CameraEvent.Timer)
+                        return@LowerBox
                     }
 
-                    CameraMode.PORTRAIT -> {
-                        onEvent(CameraEvent.PortraitMode)
+                    if (state.timerMode == TimerMode.Running) {
+                        onEvent(CameraEvent.CancelTimer)
+                        return@LowerBox
                     }
 
-                    CameraMode.VIDEO -> {
-                        onEvent(CameraEvent.VideoMode)
+                    if (state.mode == CameraMode.VIDEO && state.videoState == VideoState.Started) {
+                        onEvent(CameraEvent.Stop)
+                        return@LowerBox
                     }
-                }
 
 
-            },
-            cameraMode = state.mode,
-            isVideoPlaying = state.videoState == VideoState.Started
+                    onEvent(CameraEvent.Take)
+                },
+                onCameraModeClick = { mode: CameraMode ->
+                    when (mode) {
+                        CameraMode.PHOTO -> {
+                            onEvent(CameraEvent.PhotoMode)
+                        }
 
-        )
+                        CameraMode.PORTRAIT -> {
+                            onEvent(CameraEvent.PortraitMode)
+                        }
+
+                        CameraMode.VIDEO -> {
+                            onEvent(CameraEvent.VideoMode)
+                            if (!context.hasPermission(AppPermission.RECORD_AUDIO)) {
+                                audioRequestPermission(arrayOf(Manifest.permission.RECORD_AUDIO))
+                            }
+                        }
+                    }
+                },
+                enabled = (state.mode != CameraMode.VIDEO) || context.hasPermission(Manifest.permission.RECORD_AUDIO),
+                cameraMode = state.mode,
+                isVideoPlaying = state.videoState == VideoState.Started
+
+            )
+        }
+
+
+
 
         if (state.videoState == VideoState.Started) {
 
             Text(
-                text = String.format(Locale.ENGLISH, "%02d:%02d",  state.timeElapsed/ 60, state.timeElapsed % 60),
+                text = String.format(
+                    Locale.ENGLISH,
+                    "%02d:%02d",
+                    state.timeElapsed / 60,
+                    state.timeElapsed % 60
+                ),
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -484,10 +540,10 @@ fun CameraScreen(
 
     BackHandler(
         enabled = true
-    ){
-        if(state.timerMode == TimerMode.Running){
+    ) {
+        if (state.timerMode == TimerMode.Running) {
             onEvent(CameraEvent.CancelTimer)
-        }else{
+        } else {
             onBack()
         }
     }

@@ -1,10 +1,12 @@
 package com.example.memories.core.presentation.components
 
 
+import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,8 +24,11 @@ import com.example.memories.core.domain.model.Photo
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.core.domain.model.Video
+import com.example.memories.core.presentation.permission.hasPermission
+import com.example.memories.core.util.createSettingsIntent
 import kotlinx.coroutines.flow.flowOf
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaCaptureHost(
     tempMediaUri: String?,
@@ -45,7 +50,7 @@ fun MediaCaptureHost(
 ) {
     val context = LocalContext.current
     var showWebTypeSheet by remember { mutableStateOf(false) }
-
+    var showPermissionDeniedSheet by remember { mutableStateOf(false) }
     val browseFilesLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -115,9 +120,15 @@ fun MediaCaptureHost(
         MediaPickerSheet(
             onDismiss = onPickerSheetDismiss,
             onDeviceCamera = {
-                onUpdateMediaActionType(MediaActionType.DEVICE_CAMERA)
+                if(context.hasPermission(Manifest.permission.CAMERA)){
+                    onUpdateMediaActionType(MediaActionType.DEVICE_CAMERA)
+                    onShowTypeSheet()
+                }else{
+                   showPermissionDeniedSheet = true
+                }
+
                 onPickerSheetDismiss()
-                onShowTypeSheet()
+
             },
             onCustomCamera = {
                 onUpdateMediaActionType(MediaActionType.CUSTOM_APP_CAMERA_FEATURE)
@@ -169,6 +180,18 @@ fun MediaCaptureHost(
             },
             remoteImages = remoteImages,
             remoteVideos = remoteVideos
+        )
+    }
+
+    if(showPermissionDeniedSheet){
+        PermissionDeniedSheet(
+            onDismiss = {
+                showPermissionDeniedSheet = false
+            },
+            onOpenSettings = {
+                createSettingsIntent(context)
+                showPermissionDeniedSheet = false
+            }
         )
     }
 }

@@ -247,7 +247,7 @@ fun BiometricResultBottomSheet(
 @Composable
 private fun BiometricResultBottomSheetPreview() {
     BiometricResultBottomSheet(
-        result = BiometricResult.AuthenticationSuccess,
+        result = BiometricResult.AuthenticationError("Error"),
         onAction = {}
     )
 }
