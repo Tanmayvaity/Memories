@@ -97,6 +97,7 @@ import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
+import com.example.memories.feature.feature_memory.presentation.components.MediaPreviewDialog
 import com.example.memories.feature.feature_memory.presentation.components.RecommendedTagsRow
 import com.example.memories.feature.feature_memory.presentation.components.ReminderDatePickerDialog
 import com.example.memories.feature.feature_memory.presentation.components.SelectTagBottomSheet
@@ -207,6 +208,7 @@ fun MemoryScreen(
     var showMediaPickerSelectorSheet by remember { mutableStateOf(false) }
     var showMediaTypeSelectorSheet by remember { mutableStateOf(false) }
     var tagItem by remember { mutableStateOf<TagModel?>(null) }
+    var previewSlot by remember { mutableStateOf<Int?>(null) }
 
     val tagBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -249,7 +251,8 @@ fun MemoryScreen(
                     onAddClick = { index ->
                         onEvent(MemoryEvents.UpdateCurrentPosition(index))
                         showMediaPickerSelectorSheet = true
-                    }
+                    },
+                    onPreviewClick = { index -> previewSlot = index }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -337,6 +340,22 @@ fun MemoryScreen(
             remoteImages = remoteImages,
             remoteVideos = remoteVideos
         )
+
+        previewSlot?.let { slot ->
+            // Only filled slots are pageable, so the grid index has to be mapped onto its
+            // position within the ordered media list before handing it to the pager.
+            val filledSlots = state.uriMap.entries.sortedBy { it.key }
+            val page = filledSlots.indexOfFirst { it.key == slot }
+            if (page == -1) {
+                previewSlot = null
+            } else {
+                MediaPreviewDialog(
+                    uriList = filledSlots.map { it.value },
+                    initialPage = page,
+                    onDismiss = { previewSlot = null }
+                )
+            }
+        }
 
         if (showDatePicker) {
             ReminderDatePickerDialog(
@@ -493,9 +512,8 @@ private fun MediaGrid(
     state: MemoryState,
     onEvent: (MemoryEvents) -> Unit,
     onAddClick: (Int) -> Unit,
+    onPreviewClick: (Int) -> Unit,
 ) {
-    val context = LocalContext.current
-
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.heightIn(max = 300.dp),
@@ -507,7 +525,8 @@ private fun MediaGrid(
                 item = state.uriMap[index],
                 isDownloading = index in state.downloadingPositions,
                 onRemove = { onEvent(MemoryEvents.RemoveMediaUri(index)) },
-                onAdd = { onAddClick(index) }
+                onAdd = { onAddClick(index) },
+                onPreview = { onPreviewClick(index) }
             )
         }
     }
@@ -519,9 +538,10 @@ private fun MediaGridItem(
     isDownloading: Boolean = false,
     onRemove: () -> Unit,
     onAdd: () -> Unit,
+    onPreview: () -> Unit,
 ) {
     val context = LocalContext.current
-    val itemType = item?.uri?.let { Type.fromUri(it.toUri(), context) }
+    val itemType = item?.type
 
     Box(
         modifier = Modifier
@@ -538,13 +558,17 @@ private fun MediaGridItem(
         }
         AnimatedContent(targetState = item?.uri, label = "media_slot") { uri ->
             if (uri != null) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = onPreview),
+                ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(uri)
                             .videoFramePercent(0.5)
                             .build(),
-                        contentDescription = null,
+                        contentDescription = "Preview media",
                         contentScale = ContentScale.Crop,
                     )
 
@@ -560,7 +584,10 @@ private fun MediaGridItem(
                     )
 
                     if (itemType != null && itemType.isVideoFile()) {
-                        PlayButton(modifier = Modifier.align(Alignment.Center))
+                        PlayButton(
+                            modifier = Modifier.align(Alignment.Center),
+                            onClick = onPreview
+                        )
                     }
                 }
             } else {
