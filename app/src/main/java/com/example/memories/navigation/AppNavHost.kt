@@ -9,6 +9,7 @@ import com.example.memories.feature.feature_backup.presentation.navigation.creat
 import com.example.memories.feature.feature_notifications.presentation.navigation.createNotificationGraph
 import com.example.memories.feature.feature_camera.presentation.camera.navigation.createCameraGraph
 import com.example.memories.feature.feature_feed.presentation.navigation.createFeedGraph
+import com.example.memories.feature.feature_firebase.navigation.createRemoteSyncGraph
 import com.example.memories.feature.feature_media_edit.presentatiion.media_edit.navigation.createMediaEditGraph
 import com.example.memories.feature.feature_memory.presentation.navigation.createMemoryGraph
 import com.example.memories.feature.feature_onboarding.presentation.navigation.createOnboardingGraph
@@ -65,6 +66,11 @@ fun AppNavHost(
         createBackupGraph(
             navController = navController,
             onBottomBarVisibilityChange = onBottomBarVisibilityChange
+        )
+
+        createRemoteSyncGraph(
+            navController = navController,
+            onBottomBarVisibilityChange = onBottomBarVisibilityChange,
         )
 
 

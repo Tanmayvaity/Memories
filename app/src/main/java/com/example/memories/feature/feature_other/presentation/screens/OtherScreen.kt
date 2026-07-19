@@ -33,6 +33,7 @@ import com.example.memories.core.presentation.ThemeViewModel
 import com.example.memories.core.presentation.components.CustomSettingRow
 import com.example.memories.core.presentation.components.LoadingIconItem
 import com.example.memories.core.util.RevealBottomBarWhenNotScrollable
+import com.example.memories.feature.feature_firebase.navigation.IS_FIREBASE_ENABLED
 import com.example.memories.feature.feature_other.domain.model.LockMethod
 import com.example.memories.feature.feature_other.presentation.AppInfoSettingType
 import com.example.memories.feature.feature_other.presentation.BiometricPromptManager
@@ -69,6 +70,7 @@ fun OtherRoot(
     onNavigateToHiddenMemory: (AppScreen.HiddenMemory) -> Unit,
     onNavigateToStorage: (AppScreen.Storage) -> Unit,
     onNavigateToAnalytics: (AppScreen.Analytics) -> Unit,
+    onNavigateToFirebase: (AppScreen.RemoteSync) -> Unit,
     onBottomBarVisibilityToggle : (Boolean) -> Unit,
     themeViewModel: ThemeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
     otherViewModel: OtherViewModel = hiltViewModel()
@@ -158,6 +160,10 @@ fun OtherRoot(
 
                 SettingClickEvent.DEVELOPER_INFO_ITEM_CLICK -> {
                     onNavigateToDeveloperInfoScreen(AppScreen.DeveloperInfo)
+                }
+
+                SettingClickEvent.REMOTE_SYNC_ITEM_CLICK -> {
+                    onNavigateToFirebase(AppScreen.RemoteSync)
                 }
 
                 SettingClickEvent.HIDDEN_ITEM_CLICK -> {
@@ -343,6 +349,18 @@ fun OtherScreen(
                         }
                     } else {
                         null
+                    }
+                )
+            }
+
+            if (IS_FIREBASE_ENABLED) {
+                CustomSettingRow(
+                    drawableRes = R.drawable.ic_remote_sync,
+                    contentDescription = "Remote Sync Details",
+                    heading = "Remote Sync Details",
+                    content = "Sync your memories to the cloud",
+                    onClick = {
+                        onSettingEvent(SettingClickEvent.REMOTE_SYNC_ITEM_CLICK)
                     }
                 )
             }

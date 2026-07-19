@@ -23,6 +23,8 @@ android {
     val properties = Properties()
     properties.load(FileInputStream(file))
 
+    flavorDimensions += "backend"
+
     defaultConfig {
         applicationId = "com.example.memories"
         minSdk = 24
@@ -43,6 +45,21 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+
+    productFlavors {
+        create("base"){
+            dimension = "backend"
+            applicationIdSuffix = ".base"
+            versionNameSuffix = "-base"
+        }
+        create("firebase"){
+            dimension = "backend"
+            applicationIdSuffix = ".firebase"
+            versionNameSuffix = "-firebase"
+        }
+
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

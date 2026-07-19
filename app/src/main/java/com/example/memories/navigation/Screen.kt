@@ -94,5 +94,8 @@ sealed class AppScreen(val route: String) {
     @Serializable
     data object Analytics : AppScreen("Analytics")
 
+    @Serializable
+    data object RemoteSync : AppScreen("RemoteSync")
+
 }
 
