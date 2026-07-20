@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_firebase.presentation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,7 +46,8 @@ import com.example.memories.R
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.SettingCard
 import com.example.memories.core.util.noRippleClickable
-import com.example.memories.feature.feature_backup.presentation.AccountCard
+import com.example.memories.feature.feature_firebase.presentation.components.AuthSheet
+import com.example.memories.feature.feature_firebase.presentation.components.LogoutSheet
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
@@ -59,6 +67,37 @@ fun FirebaseScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
 ) {
+    // Auth state is still local scaffolding — swap for a ViewModel once the Firebase SDK is wired.
+    var isSignedIn by rememberSaveable { mutableStateOf(true) }
+    var showLogoutSheet by rememberSaveable { mutableStateOf(false) }
+    var showAuthSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showLogoutSheet) {
+        LogoutSheet(
+            email = SIGNED_IN_EMAIL,
+            onConfirmLogout = {
+                showLogoutSheet = false
+                isSignedIn = false
+            },
+            onDismiss = { showLogoutSheet = false }
+        )
+    }
+
+    if (showAuthSheet) {
+        AuthSheet(
+            onSubmit = { _, _, _ ->
+                showAuthSheet = false
+                isSignedIn = true
+            },
+            onSocialSignIn = {
+                showAuthSheet = false
+                isSignedIn = true
+            },
+            onForgotPassword = { /* TODO */ },
+            onDismiss = { showAuthSheet = false }
+        )
+    }
+
     Scaffold(
         topBar = {
             AppTopBar(
@@ -87,8 +126,17 @@ fun FirebaseScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Account card
-            AccountCard()
+            AnimatedContent(targetState = isSignedIn) { isSignedIn ->
+                when(isSignedIn){
+                    true -> {
+                        AccountCard(onSignOutClick = { showLogoutSheet = true })
+                    }
+                    false -> {
+                        SignedOutCard(onSignInClick = { showAuthSheet = true })
+                    }
+                }
 
+            }
             // Sync section
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -141,8 +189,11 @@ fun FirebaseScreen(
     }
 }
 
+private const val SIGNED_IN_NAME = "John Doe"
+private const val SIGNED_IN_EMAIL = "john.doe@gmail.com"
+
 @Composable
-private fun AccountCard() {
+private fun AccountCard(onSignOutClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -176,12 +227,12 @@ private fun AccountCard() {
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "John Doe",
+                        text = SIGNED_IN_NAME,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "john.doe@gmail.com",
+                        text = SIGNED_IN_EMAIL,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -218,7 +269,7 @@ private fun AccountCard() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .noRippleClickable(onClick = { /* TODO */ })
+                    .noRippleClickable(onClick = onSignOutClick)
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -234,6 +285,44 @@ private fun AccountCard() {
                     contentDescription = "Sign Out",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SignedOutCard(onSignInClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "You're signed out",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Sign in to back up your memories and keep them in step across devices.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 18.sp
+            )
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                onClick = onSignInClick
+            ) {
+                Text(
+                    text = "Sign in or create account",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }

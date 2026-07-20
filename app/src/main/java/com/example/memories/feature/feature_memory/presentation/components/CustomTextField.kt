@@ -99,7 +99,7 @@ fun CustomTextField(
             fontSize = fontSize,
         )
     )
-    
+
     LaunchedEffect(isFocused) {
         if (!isFocused) return@LaunchedEffect
         snapshotFlow {
