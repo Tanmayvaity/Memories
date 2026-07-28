@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_firebase.presentation
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,11 +33,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,8 +49,13 @@ import com.example.memories.R
 import com.example.memories.core.presentation.components.AppTopBar
 import com.example.memories.core.presentation.components.SettingCard
 import com.example.memories.core.util.noRippleClickable
+import com.example.memories.feature.feature_firebase.domain.model.ProviderLinkAction
+import com.example.memories.feature.feature_firebase.domain.model.SocialProvider
 import com.example.memories.feature.feature_firebase.presentation.components.AuthSheet
+import com.example.memories.feature.feature_firebase.presentation.components.LinkProviderSheet
+import com.example.memories.feature.feature_firebase.presentation.components.LinkedAccountsCard
 import com.example.memories.feature.feature_firebase.presentation.components.LogoutSheet
+import com.example.memories.feature.feature_firebase.presentation.components.SyncSettingRow
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
@@ -67,10 +75,17 @@ fun FirebaseScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
 ) {
-    // Auth state is still local scaffolding — swap for a ViewModel once the Firebase SDK is wired.
+    // Auth state — including which providers are linked — is still local scaffolding. Swap for a
+    // ViewModel once the Firebase SDK is wired.
     var isSignedIn by rememberSaveable { mutableStateOf(true) }
     var showLogoutSheet by rememberSaveable { mutableStateOf(false) }
     var showAuthSheet by rememberSaveable { mutableStateOf(false) }
+    var connectedProviders by rememberSaveable(stateSaver = ConnectedProvidersSaver) {
+        mutableStateOf(setOf(SocialProvider.GOOGLE))
+    }
+    var pendingLink by rememberSaveable(stateSaver = PendingLinkSaver) {
+        mutableStateOf<PendingLink?>(null)
+    }
 
     if (showLogoutSheet) {
         LogoutSheet(
@@ -95,6 +110,23 @@ fun FirebaseScreen(
             },
             onForgotPassword = { /* TODO */ },
             onDismiss = { showAuthSheet = false }
+        )
+    }
+
+    pendingLink?.let { pending ->
+        LinkProviderSheet(
+            provider = pending.provider,
+            action = pending.action,
+            email = SIGNED_IN_EMAIL,
+            onConfirm = {
+                // TODO: link/unlink the credential once Firebase Auth is wired.
+                connectedProviders = when (pending.action) {
+                    ProviderLinkAction.CONNECT -> connectedProviders + pending.provider
+                    ProviderLinkAction.DISCONNECT -> connectedProviders - pending.provider
+                }
+                pendingLink = null
+            },
+            onDismiss = { pendingLink = null }
         )
     }
 
@@ -129,7 +161,10 @@ fun FirebaseScreen(
             AnimatedContent(targetState = isSignedIn) { isSignedIn ->
                 when(isSignedIn){
                     true -> {
-                        AccountCard(onSignOutClick = { showLogoutSheet = true })
+                        AccountCard(
+                            connectedProviders = connectedProviders,
+                            onSignOutClick = { showLogoutSheet = true }
+                        )
                     }
                     false -> {
                         SignedOutCard(onSignInClick = { showAuthSheet = true })
@@ -137,6 +172,35 @@ fun FirebaseScreen(
                 }
 
             }
+
+            // Sign-in methods section
+            AnimatedVisibility(visible = isSignedIn) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "SIGN-IN METHODS",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    LinkedAccountsCard(
+                        connectedProviders = connectedProviders,
+                        onProviderAction = { provider, action ->
+                            pendingLink = PendingLink(provider = provider, action = action)
+                        }
+                    )
+                    Text(
+                        text = if (connectedProviders.size > 1) {
+                            "Signing in with any connected provider takes you to $SIGNED_IN_EMAIL."
+                        } else {
+                            "Connect another provider to sign in to $SIGNED_IN_EMAIL any way you " +
+                                    "like. You'll always need at least one."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+
             // Sync section
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -192,8 +256,33 @@ fun FirebaseScreen(
 private const val SIGNED_IN_NAME = "John Doe"
 private const val SIGNED_IN_EMAIL = "john.doe@gmail.com"
 
+private data class PendingLink(
+    val provider: SocialProvider,
+    val action: ProviderLinkAction,
+)
+
+// Enums and sets aren't saveable out of the box, so round-trip them through their names.
+private val ConnectedProvidersSaver = listSaver<Set<SocialProvider>, String>(
+    save = { providers -> providers.map { it.name } },
+    restore = { names -> names.map { SocialProvider.valueOf(it) }.toSet() }
+)
+
+private val PendingLinkSaver = listSaver<PendingLink?, String>(
+    save = { pending -> pending?.let { listOf(it.provider.name, it.action.name) }.orEmpty() },
+    restore = { saved ->
+        if (saved.isEmpty()) null
+        else PendingLink(
+            provider = SocialProvider.valueOf(saved[0]),
+            action = ProviderLinkAction.valueOf(saved[1])
+        )
+    }
+)
+
 @Composable
-private fun AccountCard(onSignOutClick: () -> Unit) {
+private fun AccountCard(
+    connectedProviders: Set<SocialProvider>,
+    onSignOutClick: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -237,24 +326,23 @@ private fun AccountCard(onSignOutClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    // Driven off the same set as the sign-in methods card so the two can't drift.
+                    val linkedProviders = SocialProvider.entries.filter { it in connectedProviders }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "G",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                        linkedProviders.forEach { provider ->
+                            Icon(
+                                painter = painterResource(provider.iconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = if (provider.tintWithTheme) MaterialTheme.colorScheme.primary
+                                else Color.Unspecified
                             )
+                            Spacer(modifier = Modifier.width(6.dp))
                         }
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "SIGNED IN WITH GOOGLE",
+                            text = linkedProviders.singleOrNull()
+                                ?.let { "SIGNED IN WITH ${it.displayName.uppercase()}" }
+                                ?: "${linkedProviders.size} SIGN-IN METHODS",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -405,40 +493,6 @@ private fun ManageBackupsCard(onClick: () -> Unit) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    }
-}
-
-@Composable
-private fun SyncSettingRow(
-    title: String,
-    subtitle: String? = null,
-    trailing: @Composable () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        trailing()
     }
 }
 

@@ -44,7 +44,8 @@ fun CustomSettingRow(
     showContentAtEnd : Boolean = true,
     showCustomContent : Boolean = false,
     customContent : @Composable () -> Unit = {},
-    endContent: (@Composable () -> Unit)? = null
+    endContent: (@Composable () -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
 ) {
 
 
@@ -59,18 +60,8 @@ fun CustomSettingRow(
         }
     }
 
-
-    Column {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .noRippleClickable(onClick = onClick),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if(!showContentAtEnd){
-               actualEndContent()
-            }
-
+    val actualLeadingContent = remember(leading) {
+        leading ?: @Composable {
             drawableRes?.let {
                 IconItem(
                     drawableRes = drawableRes,
@@ -84,6 +75,24 @@ fun CustomSettingRow(
                     alpha = 0.1f,
                 )
             }
+
+        }
+
+    }
+
+
+    Column {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .noRippleClickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if(!showContentAtEnd){
+               actualEndContent()
+            }
+
+            actualLeadingContent()
 
 
             Column(
