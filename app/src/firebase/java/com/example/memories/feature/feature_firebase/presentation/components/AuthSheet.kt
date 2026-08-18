@@ -8,7 +8,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -58,7 +57,7 @@ import androidx.compose.ui.unit.dp
 import com.example.memories.R
 import com.example.memories.core.util.noRippleClickable
 import com.example.memories.feature.feature_feed.presentation.history.components.AnimatedSegmentedRow
-import com.example.memories.feature.feature_firebase.domain.model.AuthMode
+import com.example.memories.feature.feature_firebase.presentation.AuthMode
 import com.example.memories.feature.feature_firebase.domain.model.SocialProvider
 import com.example.memories.ui.theme.MemoriesTheme
 
@@ -69,25 +68,23 @@ private const val MIN_PASSWORD_LENGTH = 6
 @Composable
 fun AuthSheet(
     modifier: Modifier = Modifier,
-    defaultMode: AuthMode = AuthMode.LOGIN,
+    authMode: AuthMode = AuthMode.LOGIN,
+    onAuthModeChange: (AuthMode) -> Unit = {},
     isLoading: Boolean = false,
-    errorMessage: String? = null,
     onSubmit: (mode: AuthMode, email: String, password: String) -> Unit = { _, _, _ -> },
     onSocialSignIn: (SocialProvider) -> Unit = {},
     onForgotPassword: () -> Unit = {},
     onDismiss: () -> Unit = {},
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
-    var mode by rememberSaveable { mutableStateOf(defaultMode) }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var hasSubmitted by rememberSaveable { mutableStateOf(false) }
 
-    // No pager backing this row, so drive the sliding indicator off the selected mode.
     val indicatorPosition by animateFloatAsState(
-        targetValue = mode.ordinal.toFloat(),
+        targetValue = authMode.ordinal.toFloat(),
         label = "authModeIndicator"
     )
 
@@ -101,18 +98,18 @@ fun AuthSheet(
             else -> null
         }
     }
-    val passwordError = remember(password, hasSubmitted, mode) {
+    val passwordError = remember(password, hasSubmitted, authMode) {
         if (!hasSubmitted) null
         else when {
             password.isBlank() -> "Enter your password"
-            mode == AuthMode.REGISTER && password.length < MIN_PASSWORD_LENGTH ->
+            authMode == AuthMode.REGISTER && password.length < MIN_PASSWORD_LENGTH ->
                 "Use at least $MIN_PASSWORD_LENGTH characters"
 
             else -> null
         }
     }
-    val confirmPasswordError = remember(password, confirmPassword, hasSubmitted, mode) {
-        if (!hasSubmitted || mode != AuthMode.REGISTER) null
+    val confirmPasswordError = remember(password, confirmPassword, hasSubmitted, authMode) {
+        if (!hasSubmitted || authMode != AuthMode.REGISTER) null
         else if (confirmPassword != password) "Passwords don't match" else null
     }
 
@@ -129,11 +126,13 @@ fun AuthSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AnimatedSegmentedRow(
-                selectedIndex = mode.ordinal,
+                selectedIndex = authMode.ordinal,
                 options = AuthMode.entries.map { it.tabLabel },
                 onSelect = { index ->
-                    mode = AuthMode.entries[index]
-                    hasSubmitted = false
+                    if (!isLoading) {
+                        onAuthModeChange(AuthMode.entries[index])
+                        hasSubmitted = false
+                    }
                 },
                 pagerPosition = indicatorPosition,
                 modifier = Modifier.fillMaxWidth()
@@ -141,15 +140,17 @@ fun AuthSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = mode.title,
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Text(
-                text = mode.subHeading,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = authMode.title,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Text(
+                    text = authMode.subHeading,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -177,12 +178,12 @@ fun AuthSheet(
                 isVisible = isPasswordVisible,
                 onVisibilityToggle = { isPasswordVisible = !isPasswordVisible },
                 errorMessage = passwordError,
-                imeAction = if (mode == AuthMode.REGISTER) ImeAction.Next else ImeAction.Done
+                imeAction = if (authMode == AuthMode.REGISTER) ImeAction.Next else ImeAction.Done
             )
 
 
             AnimatedContent(
-                targetState = mode,
+                targetState = authMode,
                 transitionSpec = {
                     val fade = fadeIn(tween(durationMillis = 150, delayMillis = 100)) togetherWith
                             fadeOut(tween(durationMillis = 100))
@@ -216,14 +217,6 @@ fun AuthSheet(
                 }
             }
 
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
@@ -237,20 +230,20 @@ fun AuthSheet(
                     val isValid = trimmedEmail.isNotBlank() &&
                             android.util.Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches() &&
                             password.isNotBlank() &&
-                            (mode == AuthMode.LOGIN || password.length >= MIN_PASSWORD_LENGTH) &&
-                            (mode == AuthMode.LOGIN || confirmPassword == password)
-                    if (isValid) onSubmit(mode, trimmedEmail, password)
+                            (authMode == AuthMode.LOGIN || password.length >= MIN_PASSWORD_LENGTH) &&
+                            (authMode == AuthMode.LOGIN || confirmPassword == password)
+                    if (isValid) onSubmit(authMode, trimmedEmail, password)
                 }
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 } else {
                     Text(
-                        text = mode.submitLabel,
+                        text = authMode.submitLabel,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -278,18 +271,18 @@ fun AuthSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = mode.footerPrompt,
+                    text = authMode.footerPrompt,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(
                     onClick = {
-                        mode = mode.toggled()
+                        onAuthModeChange(authMode.toggled())
                         hasSubmitted = false
                     }
                 ) {
                     Text(
-                        text = mode.footerAction,
+                        text = authMode.footerAction,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -420,7 +413,7 @@ private fun SocialSignInButton(
 private fun AuthSheetLoginPreview() {
     MemoriesTheme {
         AuthSheet(
-            defaultMode = AuthMode.LOGIN,
+            authMode = AuthMode.LOGIN,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         )
     }
@@ -432,7 +425,7 @@ private fun AuthSheetLoginPreview() {
 private fun AuthSheetRegisterPreview() {
     MemoriesTheme {
         AuthSheet(
-            defaultMode = AuthMode.REGISTER,
+            authMode = AuthMode.REGISTER,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         )
     }

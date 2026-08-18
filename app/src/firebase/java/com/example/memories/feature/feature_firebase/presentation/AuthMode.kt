@@ -1,4 +1,4 @@
-package com.example.memories.feature.feature_firebase.domain.model
+package com.example.memories.feature.feature_firebase.presentation
 
 enum class AuthMode(
     val tabLabel: String,

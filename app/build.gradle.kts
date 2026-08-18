@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 
+import com.google.gms.googleservices.GoogleServicesPlugin
 import org.gradle.kotlin.dsl.kotlin
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -12,7 +13,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
     alias(libs.plugins.dagger.hilt.android)
-
+    alias(libs.plugins.gms.google.services)
 }
 
 android {
@@ -90,17 +91,23 @@ android {
     }
 
 }
+
+googleServices{
+    missingGoogleServicesStrategy = GoogleServicesPlugin.MissingGoogleServicesStrategy.IGNORE
+}
+
+
 androidComponents{
     ksp{
         arg("room.schemaLocation", "$projectDir/schemas")
     }
-    kotlin{
+    kotlin {
         target {
-            compilerOptions{
+            compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_17)
             }
         }
-        compilerOptions{
+        compilerOptions {
             freeCompilerArgs.add("-Xexplicit-backing-fields")
             freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
         }
@@ -120,6 +127,7 @@ dependencies {
     implementation(libs.androidx.material3.expressvie)
     implementation(libs.androidx.material3.icons)
     implementation(libs.core.ktx)
+
     testImplementation(libs.junit)
 //    testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)
@@ -213,4 +221,9 @@ dependencies {
 //    testRuntimeOnly(libs.junit.platform.launcher)
 
     androidTestImplementation("io.mockk:mockk-android:1.14.11")
+
+
+    "firebaseImplementation"(platform(libs.google.firebase.bom))
+    "firebaseImplementation"(libs.firebase.auth)
+
 }
