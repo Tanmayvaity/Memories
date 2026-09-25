@@ -22,8 +22,10 @@ import java.net.URLConnection
 import java.text.SimpleDateFormat
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.text.startsWith
 
 const val TAG = "CoreUtil"
@@ -106,9 +108,10 @@ fun isSdkSmallerOrEqualToX(
 }
 
 
+/** Memory dates are date-only (local midnight), so no time of day is shown. */
 fun Long.formatTime(): String {
     val date = Date(this)
-    val format = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    val format = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     return format.format(date)
 }
 
@@ -116,6 +119,21 @@ fun Long.formatTime(format: String = "dd/MMM/yyyy"): String {
     val date = Date(this)
     val format = SimpleDateFormat(format, Locale.getDefault())
     return format.format(date)
+}
+
+/**
+ * Material3 `DatePicker` reports the picked day as midnight **UTC**, while the rest of the app reads
+ * timestamps in the device's zone. Converts that UTC midnight to local midnight of the same calendar
+ * date, so the date doesn't shift by the device's UTC offset (or to the previous day west of UTC).
+ */
+fun Long.utcDateToLocalStartOfDay(): Long {
+    val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+        timeInMillis = this@utcDateToLocalStartOfDay
+    }
+    return Calendar.getInstance().apply {
+        clear()
+        set(utc.get(Calendar.YEAR), utc.get(Calendar.MONTH), utc.get(Calendar.DAY_OF_MONTH))
+    }.timeInMillis
 }
 
 fun formatTime(hour: Int, minute: Int, format: String = "hh:mm a"): String {

@@ -96,6 +96,7 @@ import com.example.memories.core.presentation.components.LoadingIndicator
 import com.example.memories.core.presentation.components.MediaCaptureHost
 import com.example.memories.core.util.PlayButton
 import com.example.memories.core.util.formatTime
+import com.example.memories.core.util.utcDateToLocalStartOfDay
 import com.example.memories.feature.feature_memory.domain.model.MediaSlot
 import com.example.memories.feature.feature_memory.presentation.components.CustomTextField
 import com.example.memories.feature.feature_memory.presentation.components.MediaPreviewDialog
@@ -366,7 +367,7 @@ fun MemoryScreen(
                     focusManager.clearFocus()
                 },
                 onConfirm = { dateInMillis ->
-                    onEvent(MemoryEvents.DateChanged(dateInMillis))
+                    onEvent(MemoryEvents.DateChanged(dateInMillis?.utcDateToLocalStartOfDay()))
                     focusManager.clearFocus()
                     showDatePicker = false
                 },
@@ -621,7 +622,7 @@ private fun DateField(
     onDatePickerToggle: () -> Unit,
 ) {
     OutlinedTextField(
-        value = timestamp?.formatTime(format = "dd/MM/YYYY") ?: "",
+        value = timestamp?.formatTime(format = "dd/MM/yyyy") ?: "",
         onValueChange = {},
         label = { Text("Date") },
         placeholder = { Text("DD/MM/YYYY") },
