@@ -1,6 +1,10 @@
+
+
 package com.example.memories.core.presentation.components
 
+import android.view.LayoutInflater
 import android.view.SurfaceView
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -18,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,17 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.example.memories.R
 import com.example.memories.core.domain.model.Type
 import com.example.memories.core.domain.model.UriType
 import com.example.memories.ui.theme.MemoriesTheme
 
-
+@OptIn(UnstableApi::class)
 @Composable
 fun MediaPager(
     uris: List<UriType>,
@@ -51,6 +58,10 @@ fun MediaPager(
     emptyPageContent: @Composable () -> Unit = {},
     pageOverlay: @Composable BoxScope.(page: Int) -> Unit = {},
     showPlayerController : Boolean = true,
+    // false: controls stay hidden when a video starts and appear only when the video is tapped
+    autoShowPlayerController : Boolean = true,
+    // true: videos fill the pager (cropping edges) like ContentScale.Crop does for images
+    fillVideo : Boolean = false,
     player : ExoPlayer? = null,
     isActive : Boolean = false
 ) {
@@ -138,10 +149,20 @@ fun MediaPager(
                         AnimatedContent(targetState = settled) { settled ->
                             if(settled && isActive){
                                 AndroidView(
-                                    modifier = Modifier.fillMaxSize(),
+                                    // Pager only clips horizontally; keep zoomed video inside the pager height.
+                                    modifier = Modifier.fillMaxSize().clipToBounds(),
                                     factory = { ctx ->
-                                        PlayerView(ctx).apply {
+                                        val playerView = if (fillVideo) {
+                                            LayoutInflater.from(ctx)
+                                                .inflate(R.layout.player_view_texture, null) as PlayerView
+                                        } else {
+                                            PlayerView(ctx)
+                                        }
+                                        playerView.apply {
                                             useController = showPlayerController
+                                            controllerAutoShow = autoShowPlayerController
+                                            resizeMode = if (fillVideo) AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                            else AspectRatioFrameLayout.RESIZE_MODE_FIT
                                             setKeepContentOnPlayerReset(true)
                                         }
                                     },

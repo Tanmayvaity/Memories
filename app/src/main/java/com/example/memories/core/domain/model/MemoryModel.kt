@@ -12,6 +12,7 @@ data class MemoryModel(
     val favourite : Boolean = false,
     val timeStamp : Long = System.currentTimeMillis(),
     val memoryForTimeStamp : Long? = null,
+    val syncStatus : SyncStatus = SyncStatus.CREATE_SYNC_PENDING,
 )
 
 @Stable

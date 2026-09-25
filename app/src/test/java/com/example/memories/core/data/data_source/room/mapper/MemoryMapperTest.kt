@@ -11,6 +11,7 @@ import com.example.memories.core.data.data_source.room.mapper.toEntity
 import com.example.memories.core.domain.model.MediaModel
 import com.example.memories.core.domain.model.MemoryModel
 import com.example.memories.core.domain.model.MemoryTagCrossRefModel
+import com.example.memories.core.domain.model.SyncStatus
 import com.example.memories.core.domain.model.Type
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -26,6 +27,7 @@ class MemoryMapperTest {
         favourite: Boolean = false,
         timeStamp: Long = 100L,
         memoryFor: Long = 200L,
+        syncStatus: SyncStatus = SyncStatus.CREATE_SYNC_PENDING,
     ) = MemoryEntity(
         memoryId = id,
         title = title,
@@ -36,6 +38,7 @@ class MemoryMapperTest {
         longitude = 10L,
         latitude = 20L,
         memoryForTimeStamp = memoryFor,
+        syncStatus = syncStatus,
     )
 
     @Test
@@ -76,6 +79,33 @@ class MemoryMapperTest {
         assertEquals(9L, entity.memoryForTimeStamp)
         assertNull(entity.longitude)
         assertNull(entity.latitude)
+    }
+
+    @Test
+    fun memoryEntity_toDomain_copiesSyncStatus() {
+        SyncStatus.entries.forEach { status ->
+            assertEquals(status, memoryEntity(syncStatus = status).toDomain().syncStatus)
+        }
+    }
+
+    @Test
+    fun memoryModel_toEntity_copiesSyncStatus() {
+        val model = MemoryModel(
+            title = "T",
+            content = "C",
+            memoryForTimeStamp = 9L,
+            syncStatus = SyncStatus.SYNCED,
+        )
+
+        assertEquals(SyncStatus.SYNCED, model.toEntity().syncStatus)
+    }
+
+    @Test
+    fun memoryModel_defaultsToCreateSyncPending() {
+        assertEquals(
+            SyncStatus.CREATE_SYNC_PENDING,
+            MemoryModel(title = "T", content = "C").syncStatus
+        )
     }
 
     @Test(expected = NullPointerException::class)

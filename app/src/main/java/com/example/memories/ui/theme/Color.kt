@@ -18,3 +18,7 @@ val VeryLightGray = Color(0xffF2F2F2)
 val VeryDarkGray = Color(0xff1A1A1A)
 
 
+
+/** Sync-status accent: the one non-monochrome colour, used only for "synced". */
+val SyncedGreen = Color(0xFF2E7D32)
+val SyncedGreenOnDark = Color(0xFF81C784)
