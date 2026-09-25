@@ -9,6 +9,7 @@ import com.example.memories.core.data.data_source.room.Entity.MemoryTagCrossRef
 import com.example.memories.core.data.data_source.room.Entity.SearchEntity
 import com.example.memories.core.data.data_source.room.Entity.TagEntity
 import com.example.memories.core.data.data_source.room.converters.MediaTypeConverter
+import com.example.memories.core.data.data_source.room.converters.SyncStatusConverter
 import com.example.memories.core.data.data_source.room.dao.MediaDao
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.MemoryTagCrossRefDao
@@ -23,10 +24,11 @@ import com.example.memories.core.data.data_source.room.dao.TagDao
         MemoryTagCrossRef::class,
         SearchEntity::class
                ],
-    version = 7
+    version = 8
 )
 @TypeConverters(
-    MediaTypeConverter::class
+    MediaTypeConverter::class,
+    SyncStatusConverter::class
 )
 abstract class MemoryDatabase : RoomDatabase() {
     abstract val mediaDao: MediaDao

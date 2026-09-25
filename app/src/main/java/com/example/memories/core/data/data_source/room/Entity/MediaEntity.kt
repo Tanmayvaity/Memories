@@ -5,6 +5,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.memories.core.domain.model.LOCAL_OWNER
+import com.example.memories.core.domain.model.SyncStatus
 import com.example.memories.core.domain.model.Type
 import java.util.UUID
 
@@ -35,5 +37,9 @@ data class MediaEntity(
     val longitude : Long?,
     val latitude : Long?,
     val position : Int = 0,
-    val type : Type = Type.UNKNOWN_TYPE
+    val type : Type = Type.UNKNOWN_TYPE,
+    @ColumnInfo(name = "sync_status", defaultValue = "'CREATE_SYNC_PENDING'")
+    val syncStatus: SyncStatus = SyncStatus.CREATE_SYNC_PENDING,
+    @ColumnInfo(name = "owner", defaultValue = "'$LOCAL_OWNER'")
+    val owner: String = LOCAL_OWNER,
 )

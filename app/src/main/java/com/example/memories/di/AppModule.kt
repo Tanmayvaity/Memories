@@ -96,6 +96,7 @@ import com.example.memories.core.data.data_source.remote.ApiKeyInterceptor
 import com.example.memories.core.data.data_source.remote.RemoteMediaService
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_5_6
 import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_6_7
+import com.example.memories.core.data.data_source.room.migrations.MEMORY_MIGRATION_7_8
 import com.example.memories.core.data.repository.AppSettingRepositoryImpl
 import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryNotificationScheduler
@@ -308,7 +309,8 @@ object AppModule {
                 MEMORY_MIGRATION_3_4,
                 MEMORY_MIGRATION_4_5,
                 MEMORY_MIGRATION_5_6,
-                MEMORY_MIGRATION_6_7
+                MEMORY_MIGRATION_6_7,
+                MEMORY_MIGRATION_7_8
             )
             .build()
     }
