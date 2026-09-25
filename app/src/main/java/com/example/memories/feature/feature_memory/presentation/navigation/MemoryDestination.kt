@@ -19,6 +19,7 @@ import com.example.memories.feature.feature_memory.presentation.MemoryScreen
 import com.example.memories.navigation.AppScreen
 import com.example.memories.navigation.BASE_URL
 import com.example.memories.navigation.CustomNavType
+import com.example.memories.navigation.TopLevelScreen
 import kotlin.reflect.typeOf
 
 fun NavGraphBuilder.createMemoryGraph(
@@ -50,7 +51,8 @@ fun NavGraphBuilder.createMemoryGraph(
             },
             onGoToHomeScreen = { route ->
                 navController.navigate(route) {
-                    popUpTo(navController.graph.startDestinationId) {
+                    // Feed is the root once onboarding has removed itself from the back stack.
+                    popUpTo(TopLevelScreen.Feed) {
                         inclusive = false
                     }
                     launchSingleTop = true

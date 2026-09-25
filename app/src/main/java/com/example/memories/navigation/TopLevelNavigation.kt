@@ -2,7 +2,6 @@ package com.example.memories.navigation
 
 import androidx.annotation.DrawableRes
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.memories.R
 
 val TOP_LEVEL_DESTINATIONS = listOf(
@@ -25,10 +24,10 @@ val TOP_LEVEL_DESTINATIONS = listOf(
 )
 
 class TopLevelNavigation(private val navController: NavController) {
-
+//    navController.graph.findStartDestination().id
     fun navigateTo(destination: TopLevelDestination) {
         navController.navigate(destination.route){
-            popUpTo(navController.graph.findStartDestination().id){
+            popUpTo(TopLevelScreen.Feed){
                 saveState = true
             }
             launchSingleTop = true
