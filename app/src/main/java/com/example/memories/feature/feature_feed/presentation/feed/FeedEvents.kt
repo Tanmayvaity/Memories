@@ -16,6 +16,8 @@ sealed class FeedEvents {
     data class Action(val action: MemoryAction) : FeedEvents()
 
     object ApplyFilter : FeedEvents()
+
+    object DismissSyncCard : FeedEvents()
 }
 
 

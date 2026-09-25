@@ -302,4 +302,8 @@ interface MemoryDao {
     /** Claims rows not yet owned by any account; rows owned by another user are left untouched. */
     @Query("UPDATE MemoryEntity SET owner = :ownerId WHERE owner = '$LOCAL_OWNER'")
     suspend fun updateOwner(ownerId: String)
+
+    /** Memories owned by [ownerId] that still have something to push (anything but SYNCED). */
+    @Query("SELECT COUNT(*) FROM MemoryEntity WHERE owner = :ownerId AND sync_status != 'SYNCED'")
+    fun getPendingSyncCount(ownerId: String): Flow<Int>
 }

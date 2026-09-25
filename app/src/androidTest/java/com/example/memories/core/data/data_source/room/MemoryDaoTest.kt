@@ -7,6 +7,7 @@ import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.dao.MemoryDao
 import com.example.memories.core.data.data_source.room.dao.TagDao
 import com.example.memories.core.data.data_source.room.database.MemoryDatabase
+import com.example.memories.core.domain.model.SyncStatus
 import com.example.memories.core.domain.model.Type
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -232,5 +233,19 @@ class MemoryDaoTest {
         dao.insertMemory(TestEntities.memory("c", hidden = true))
 
         assertEquals(2, dao.getTotalMemoryCount().first())
+    }
+
+    @Test
+    fun getPendingSyncCount_countsOnlyOwnersUnsyncedMemories() = runTest {
+        dao.insertMemory(TestEntities.memory("m1", owner = "uid-a"))
+        dao.insertMemory(TestEntities.memory("m2", owner = "uid-a", syncStatus = SyncStatus.SYNC_FAILED))
+        dao.insertMemory(TestEntities.memory("m3", owner = "uid-a", syncStatus = SyncStatus.UPDATE_SYNC_PENDING))
+        dao.insertMemory(TestEntities.memory("m4", owner = "uid-a", syncStatus = SyncStatus.SYNCED))
+        dao.insertMemory(TestEntities.memory("m5", owner = "uid-b"))
+        dao.insertMemory(TestEntities.memory("m6"))
+
+        assertEquals(3, dao.getPendingSyncCount("uid-a").first())
+        assertEquals(1, dao.getPendingSyncCount("uid-b").first())
+        assertEquals(0, dao.getPendingSyncCount("uid-nobody").first())
     }
 }

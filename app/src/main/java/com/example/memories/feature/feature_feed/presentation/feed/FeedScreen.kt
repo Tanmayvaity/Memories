@@ -1,5 +1,11 @@
 package com.example.memories.feature.feature_feed.presentation.feed
 
+import com.example.memories.feature.feature_feed.presentation.feed.components.SyncStatusCard
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import android.R.attr.onClick
 import android.util.Log
 import androidx.compose.foundation.background
@@ -95,6 +101,8 @@ fun FeedRoot(
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit,
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit,
     onBottomBarVisibilityToggle: (Boolean) -> Unit,
+    // TODO: navigate to the Sync status screen once it exists.
+    onNavigateToSyncStatus: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val memories = viewModel.memories.collectAsLazyPagingItems()
@@ -105,6 +113,7 @@ fun FeedRoot(
         onNavigateToMemoryDetail = onNavigateToMemoryDetail,
         onNavigateToMemoryCreate = onNavigateToMemoryCreate,
         onBottomBarVisibilityToggle = onBottomBarVisibilityToggle,
+        onNavigateToSyncStatus = onNavigateToSyncStatus,
         memories = memories
     )
 
@@ -121,6 +130,7 @@ fun FeedScreen(
     onNavigateToMemoryDetail: (AppScreen.MemoryDetail) -> Unit = {},
     onNavigateToMemoryCreate: (AppScreen.Memory) -> Unit = {},
     onBottomBarVisibilityToggle: (Boolean) -> Unit = {},
+    onNavigateToSyncStatus: () -> Unit = {},
     memories: LazyPagingItems<MemoryWithMediaModel>,
 ) {
     var showSheet by rememberSaveable { mutableStateOf(false) }
@@ -212,6 +222,24 @@ fun FeedScreen(
                     )
                 }
             )
+        },
+        bottomBar = {
+            val summary = state.syncSummary
+            // Keep the last non-null summary so the exit animation doesn't render an empty card.
+            var lastSummary by remember { mutableStateOf(summary) }
+            if (summary != null) lastSummary = summary
+            AnimatedVisibility(
+                visible = summary != null && summary.pendingCount > 0 && !state.isSyncCardDismissed,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut(),
+            ) {
+                val shown = lastSummary ?: return@AnimatedVisibility
+                SyncStatusCard(
+                    summary = shown,
+                    onClick = onNavigateToSyncStatus,
+                    onDismiss = { onEvent(FeedEvents.DismissSyncCard) },
+                )
+            }
         },
         floatingActionButton = {
 

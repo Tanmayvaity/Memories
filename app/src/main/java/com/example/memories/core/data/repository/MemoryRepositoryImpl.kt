@@ -322,4 +322,7 @@ class MemoryRepositoryImpl @Inject constructor(
     override suspend fun updateOwner(ownerId: String) {
         memoryDao.updateOwner(ownerId)
     }
+
+    override fun getPendingSyncCount(ownerId: String): Flow<Int> =
+        memoryDao.getPendingSyncCount(ownerId)
 }

@@ -243,4 +243,11 @@ class MemoryRepositoryImplTest {
 
         coVerify { memoryDao.updateOwner("firebase-uid") }
     }
+
+    @Test
+    fun getPendingSyncCount_delegatesToDao() = runTest {
+        every { memoryDao.getPendingSyncCount("uid-a") } returns flowOf(3)
+
+        assertEquals(3, repository.getPendingSyncCount("uid-a").first())
+    }
 }

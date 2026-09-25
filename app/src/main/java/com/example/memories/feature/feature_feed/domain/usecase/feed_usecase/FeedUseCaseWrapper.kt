@@ -1,5 +1,6 @@
 package com.example.memories.feature.feature_feed.domain.usecase.feed_usecase
 
+import com.example.memories.core.domain.usecase.GetSyncSummaryUseCase
 import com.example.memories.core.domain.usecase.DownloadVideoUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.GenerateSharableUriUseCase
@@ -25,5 +26,6 @@ data class FeedUseCaseWrapper(
     val getShareableUriUseCase : GenerateSharableUriUseCase,
     val downloadVideoUseCase: DownloadVideoUseCase,
     val saveBitmapToCacheUseCase: SaveBitmapToCacheUseCase,
-    val downloadBitmapToSharedUseCase: DownloadBitmapToSharedUseCase
+    val downloadBitmapToSharedUseCase: DownloadBitmapToSharedUseCase,
+    val getSyncSummaryUseCase: GetSyncSummaryUseCase,
 )

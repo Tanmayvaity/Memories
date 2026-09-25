@@ -89,4 +89,6 @@ interface MemoryRepository {
     fun getTotalMemoryCount(): Flow<Int>
 
     suspend fun updateOwner(ownerId: String)
+
+    fun getPendingSyncCount(ownerId: String): Flow<Int>
 }

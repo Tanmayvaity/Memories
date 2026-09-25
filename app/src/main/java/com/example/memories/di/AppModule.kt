@@ -65,6 +65,7 @@ import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.core.domain.repository.MemoryMediaRepository
 import com.example.memories.core.data.repository.MemoryMediaRepositoryImpl
 import com.example.memories.core.domain.usecase.AddTagUseCase
+import com.example.memories.core.domain.usecase.GetSyncSummaryUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
 import com.example.memories.core.data.repository.TagRepositoryImpl
@@ -435,7 +436,8 @@ object AppModule {
     fun providesFeedUseCases(
         repository: MemoryRepository,
         tagRepository: TagRepository,
-        mediaRepository: MediaRepository
+        mediaRepository: MediaRepository,
+        appSettingRepository: AppSettingRepository,
     ): FeedUseCaseWrapper {
         return FeedUseCaseWrapper(
             getFeedUseCase = GetFeedUseCase(repository),
@@ -452,7 +454,8 @@ object AppModule {
             getShareableUriUseCase = GenerateSharableUriUseCase(mediaRepository),
             downloadVideoUseCase = DownloadVideoUseCase(mediaRepository),
             saveBitmapToCacheUseCase = SaveBitmapToCacheUseCase(mediaRepository),
-            downloadBitmapToSharedUseCase = DownloadBitmapToSharedUseCase(mediaRepository)
+            downloadBitmapToSharedUseCase = DownloadBitmapToSharedUseCase(mediaRepository),
+            getSyncSummaryUseCase = GetSyncSummaryUseCase(appSettingRepository, repository),
         )
 
     }

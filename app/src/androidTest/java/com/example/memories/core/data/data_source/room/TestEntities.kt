@@ -5,6 +5,7 @@ import com.example.memories.core.data.data_source.room.Entity.MemoryEntity
 import com.example.memories.core.data.data_source.room.Entity.SearchEntity
 import com.example.memories.core.data.data_source.room.Entity.TagEntity
 import com.example.memories.core.domain.model.LOCAL_OWNER
+import com.example.memories.core.domain.model.SyncStatus
 import com.example.memories.core.domain.model.Type
 
 /** Small builders so DAO tests stay readable. */
@@ -19,6 +20,7 @@ object TestEntities {
         timeStamp: Long = 1_000L,
         memoryForTimeStamp: Long = 1_000L,
         owner: String = LOCAL_OWNER,
+        syncStatus: SyncStatus = SyncStatus.CREATE_SYNC_PENDING,
     ) = MemoryEntity(
         memoryId = id,
         title = title,
@@ -30,6 +32,7 @@ object TestEntities {
         latitude = null,
         memoryForTimeStamp = memoryForTimeStamp,
         owner = owner,
+        syncStatus = syncStatus,
     )
 
     fun media(

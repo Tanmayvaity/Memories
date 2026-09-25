@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -62,6 +63,9 @@ class FeedViewModel @Inject constructor(
 
     init {
         Log.d(TAG, "FeedViewModel created: ${hashCode()}")
+        feedUseCases.getSyncSummaryUseCase()
+            .onEach { summary -> _state.update { it.copy(syncSummary = summary) } }
+            .launchIn(viewModelScope)
 
     }
 
@@ -106,6 +110,11 @@ class FeedViewModel @Inject constructor(
                 }
             }
 
+
+            // Deliberately not saved: the card should come back after a restart or process death.
+            FeedEvents.DismissSyncCard -> {
+                _state.update { it.copy(isSyncCardDismissed = true) }
+            }
 
             FeedEvents.Refresh -> {
 
