@@ -8,4 +8,4 @@ const val IS_FIREBASE_ENABLED = false
 fun NavGraphBuilder.createRemoteSyncGraph(
     navController: NavHostController,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
-) {}
+) = Unit

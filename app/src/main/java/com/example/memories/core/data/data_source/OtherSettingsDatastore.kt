@@ -154,9 +154,9 @@ class OtherSettingsDatastore(
         }
     }
 
-    suspend fun setOnboardingCompleted() {
+    suspend fun setOnboardingCompleted(completed: Boolean = true) {
         context.datastore.edit { preferences ->
-            preferences[ONBOARDING_COMPLETED] = true
+            preferences[ONBOARDING_COMPLETED] = completed
         }
     }
 

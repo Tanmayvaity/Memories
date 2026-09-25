@@ -47,12 +47,14 @@ class MemoryCreateUseCase @Inject constructor(
                 }
 
 
+                val memory = MemoryModel(
+                    title = title,
+                    content = content,
+                    memoryForTimeStamp = memoryForTimeStamp
+                )
+
                 memoryRepository.insertMemoryWithMediaAndTag(
-                    memory = MemoryModel(
-                        title = title,
-                        content = content,
-                        memoryForTimeStamp = memoryForTimeStamp
-                    ),
+                    memory = memory,
                     mediaList = permanentUriList.data.mapIndexed { index, it ->
                         MediaModel(
                             memoryId = "",

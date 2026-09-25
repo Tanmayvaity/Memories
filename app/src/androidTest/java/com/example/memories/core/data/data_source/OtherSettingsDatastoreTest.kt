@@ -37,6 +37,7 @@ class OtherSettingsDatastoreTest {
             datastore.setHiddenMemoriesLockDuration(LockDuration.ONE_MINUTE)
             datastore.setHiddenMemoriesCustomPin("")
             datastore.updateCurrentUser(LOCAL_OWNER)
+            datastore.setOnboardingCompleted(false)
         }
     }
 
