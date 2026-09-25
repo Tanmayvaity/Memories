@@ -1,7 +1,9 @@
 package com.example.memories.feature.feature_firebase.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memories.core.domain.model.Result
 import com.example.memories.core.presentation.UiState
 import com.example.memories.feature.feature_firebase.domain.model.FirebaseUserData
 import com.example.memories.feature.feature_firebase.domain.model.SignUpResult
@@ -59,11 +61,16 @@ class FirebaseViewModel @Inject constructor(
             _state.update { it.copy(userState = UiState.Loading) }
             when (val result = remoteSyncUseCases.signInWithEmailAndPasswordUseCase(email, password)) {
                 is SignUpResult.Success -> {
+                    when (val update = remoteSyncUseCases.updateCurrentUserUseCase(result.user.uid)) {
+                        is Result.Success -> Log.d(TAG, "current user set to ${result.user.uid}; local memories, media and tags claimed")
+                        is Result.Error -> Log.e(TAG, "failed to set current user to ${result.user.uid}", update.error)
+                    }
                     _state.update {
                         it.copy(userState = UiState.Success(result.user.toUserData()))
                     }
                 }
                 else -> {
+                    Log.w(TAG, "sign in failed: $result", (result as? SignUpResult.Unknown)?.cause)
                     _state.update { it.copy(userState = null) }
                     _snackbarEvents.send(result.toErrorMessage())
                 }
@@ -76,11 +83,16 @@ class FirebaseViewModel @Inject constructor(
             _state.update { it.copy(userState = UiState.Loading) }
             when (val result = remoteSyncUseCases.createUserWithEmailAndPasswordUseCase(email, password)) {
                 is SignUpResult.Success -> {
+                    when (val update = remoteSyncUseCases.updateCurrentUserUseCase(result.user.uid)) {
+                        is Result.Success -> Log.d(TAG, "current user set to ${result.user.uid}; local memories, media and tags claimed")
+                        is Result.Error -> Log.e(TAG, "failed to set current user to ${result.user.uid}", update.error)
+                    }
                     _state.update {
                         it.copy(userState = UiState.Success(result.user.toUserData()))
                     }
                 }
                 else -> {
+                    Log.w(TAG, "sign up failed: $result", (result as? SignUpResult.Unknown)?.cause)
                     _state.update { it.copy(userState = null) }
                     _snackbarEvents.send(result.toErrorMessage())
                 }
@@ -90,7 +102,10 @@ class FirebaseViewModel @Inject constructor(
 
     private fun logout() {
         viewModelScope.launch {
-            remoteSyncUseCases.signOutUseCase()
+            when (val signOut = remoteSyncUseCases.signOutUseCase()) {
+                is Result.Success -> Log.d(TAG, "signed out; current user reset to local")
+                is Result.Error -> Log.e(TAG, "sign out failed", signOut.error)
+            }
             _state.update { it.copy(userState = null) }
         }
 
@@ -111,5 +126,9 @@ class FirebaseViewModel @Inject constructor(
         SignUpResult.NoNetwork -> "No network connection. Try again."
         is SignUpResult.Unknown -> cause.message ?: "Something went wrong. Try again."
         is SignUpResult.Success -> ""
+    }
+
+    companion object {
+        private const val TAG = "FirebaseViewModel"
     }
 }

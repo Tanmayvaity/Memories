@@ -87,4 +87,6 @@ interface MemoryRepository {
     fun getDailyStats(): Flow<List<DailyStat>>
     fun getMediaBreakdown(): Flow<MediaBreakdown>
     fun getTotalMemoryCount(): Flow<Int>
+
+    suspend fun updateOwner(ownerId: String)
 }

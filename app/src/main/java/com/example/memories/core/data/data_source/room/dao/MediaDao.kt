@@ -1,5 +1,6 @@
 package com.example.memories.core.data.data_source.room.dao
 
+import com.example.memories.core.domain.model.LOCAL_OWNER
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
@@ -30,6 +31,10 @@ ORDER BY media.time_stamp DESC
 
     @Query("UPDATE MediaEntity SET favourite = :favourite WHERE media_id = :mediaId")
     suspend fun updateMediaFavourite(mediaId: String, favourite: Boolean)
+
+    /** Claims rows not yet owned by any account; rows owned by another user are left untouched. */
+    @Query("UPDATE MediaEntity SET owner = :ownerId WHERE owner = '$LOCAL_OWNER'")
+    suspend fun updateOwner(ownerId: String)
 
 //    @Insert
 //    suspend fun insertAllMedia(mediaList: List<MediaEntity>)

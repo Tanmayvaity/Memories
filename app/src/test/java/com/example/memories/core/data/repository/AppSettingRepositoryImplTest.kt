@@ -31,6 +31,7 @@ class AppSettingRepositoryImplTest {
         every { datastore.reminderTime } returns flowOf(450)
         every { datastore.isDarkModeEnabled } returns flowOf(true)
         every { datastore.isCustomPinSet() } returns flowOf(true)
+        every { datastore.currentUser } returns flowOf("firebase-uid")
 
         val repo = repository()
 
@@ -43,6 +44,7 @@ class AppSettingRepositoryImplTest {
         assertEquals(450, repo.reminderTime.first())
         assertTrue(repo.isDarkModeEnabled.first())
         assertTrue(repo.isCustomPinSet.first())
+        assertEquals("firebase-uid", repo.currentUser.first())
     }
 
     @Test
@@ -57,6 +59,7 @@ class AppSettingRepositoryImplTest {
         repo.setHiddenMemoryLockMethod(LockMethod.CUSTOM_PIN)
         repo.setHiddenMemoryLockDuration(LockDuration.ONE_MINUTE)
         repo.setHiddenMemoryCustomPin("1234")
+        repo.updateCurrentUser("firebase-uid")
 
         coVerify { datastore.setDarkMode(true) }
         coVerify { datastore.enableAllNotifications(false) }
@@ -66,6 +69,7 @@ class AppSettingRepositoryImplTest {
         coVerify { datastore.setHiddenMemoriesLockMethod(LockMethod.CUSTOM_PIN) }
         coVerify { datastore.setHiddenMemoriesLockDuration(LockDuration.ONE_MINUTE) }
         coVerify { datastore.setHiddenMemoriesCustomPin("1234") }
+        coVerify { datastore.updateCurrentUser("firebase-uid") }
     }
 
     @Test

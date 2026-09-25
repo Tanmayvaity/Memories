@@ -76,4 +76,7 @@ class TagRepositoryImpl @Inject constructor(
         return tagDao.getTagsWithMemoryCountBySearch(query).map { tags -> tags.map { tag -> tag.toDomain() } }
     }
 
+    override suspend fun updateOwner(ownerId: String) {
+        tagDao.updateOwner(ownerId)
+    }
 }

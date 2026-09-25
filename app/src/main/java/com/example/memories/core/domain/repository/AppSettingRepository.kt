@@ -19,7 +19,10 @@ interface AppSettingRepository {
     val isCustomPinSet : Flow<Boolean>
 
     val isDarkModeEnabled : Flow<Boolean>
+    val currentUser: Flow<String>
+
     suspend fun setDarkMode( toDarkMode : Boolean)
+    suspend fun updateCurrentUser(userId: String)
 
     suspend fun enableAllNotifications(enabled : Boolean)
     suspend fun enableReminderNotification(enabled : Boolean)

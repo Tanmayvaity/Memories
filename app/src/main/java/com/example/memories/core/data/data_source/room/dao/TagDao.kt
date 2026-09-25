@@ -1,5 +1,6 @@
 package com.example.memories.core.data.data_source.room.dao
 
+import com.example.memories.core.domain.model.LOCAL_OWNER
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -149,5 +150,9 @@ ORDER BY label ASC
     """
     )
     fun getTagsWithMemoryCountBySearch(query: String): Flow<List<TagWithMemoryCount>>
+
+    /** Claims rows not yet owned by any account; rows owned by another user are left untouched. */
+    @Query("UPDATE TagEntity SET owner = :ownerId WHERE owner = '$LOCAL_OWNER'")
+    suspend fun updateOwner(ownerId: String)
 
 }

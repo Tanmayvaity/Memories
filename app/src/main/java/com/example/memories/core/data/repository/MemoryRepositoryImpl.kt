@@ -319,4 +319,7 @@ class MemoryRepositoryImpl @Inject constructor(
 
     override fun getTotalMemoryCount(): Flow<Int> = memoryDao.getTotalMemoryCount()
 
+    override suspend fun updateOwner(ownerId: String) {
+        memoryDao.updateOwner(ownerId)
+    }
 }

@@ -28,6 +28,8 @@ class AppSettingRepositoryImpl @Inject constructor(
         get() = otherSettingsDatastore.isCustomPinSet()
     override val isDarkModeEnabled: Flow<Boolean>
         get() = otherSettingsDatastore.isDarkModeEnabled
+    override val currentUser: Flow<String>
+        get() = otherSettingsDatastore.currentUser
 
     override suspend fun setDarkMode(toDarkMode: Boolean) {
         otherSettingsDatastore.setDarkMode(toDarkMode)
@@ -63,5 +65,9 @@ class AppSettingRepositoryImpl @Inject constructor(
 
     override suspend fun isCustomPinCorrect(pin: String) : Boolean {
         return otherSettingsDatastore.isPinCorrect(pin)
+    }
+
+    override suspend fun updateCurrentUser(userId: String) {
+        otherSettingsDatastore.updateCurrentUser(userId)
     }
 }

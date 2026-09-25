@@ -28,4 +28,6 @@ interface TagRepository {
     fun getTagsWithMemoryCountBySearch(
         query: String
     ): Flow<List<TagWithMemoryCountModel>>
+
+    suspend fun updateOwner(ownerId: String)
 }

@@ -1,6 +1,11 @@
 package com.example.memories.di
 
 import com.example.memories.feature.feature_firebase.data.FirebaseManager
+import com.example.memories.core.domain.repository.AppSettingRepository
+import com.example.memories.core.domain.repository.MemoryMediaRepository
+import com.example.memories.core.domain.repository.MemoryRepository
+import com.example.memories.core.domain.repository.TagRepository
+import com.example.memories.core.domain.usecase.UpdateCurrentUserUseCase
 import com.example.memories.feature.feature_firebase.data.FirebaseSyncRepositoryImpl
 import com.example.memories.feature.feature_firebase.domain.repository.RemoteSyncRepository
 import com.example.memories.feature.feature_firebase.domain.usecase.CreateUserWithEmailAndPasswordUseCase
@@ -33,13 +38,23 @@ object FirebaseModule {
     @Singleton
     fun provideRemoteSyncUseCaseWrapper(
         remoteSyncRepository: RemoteSyncRepository,
+        appSettingRepository: AppSettingRepository,
+        memoryRepository: MemoryRepository,
+        memoryMediaRepository: MemoryMediaRepository,
+        tagRepository: TagRepository,
     ): RemoteSyncUseCaseWrapper {
         return RemoteSyncUseCaseWrapper(
             createUserWithEmailAndPasswordUseCase = CreateUserWithEmailAndPasswordUseCase(remoteSyncRepository),
             signInWithEmailAndPasswordUseCase = SignInWithEmailAndPasswordUseCase(remoteSyncRepository),
             isUserLoggedInUseCase = IsUserLoggedInUseCase(remoteSyncRepository),
             getCurrentUserUseCase = GetCurrentUserUseCase(remoteSyncRepository),
-            signOutUseCase = SignOutUseCase(remoteSyncRepository),
+            signOutUseCase = SignOutUseCase(remoteSyncRepository, appSettingRepository),
+            updateCurrentUserUseCase = UpdateCurrentUserUseCase(
+                appSettingRepository,
+                memoryRepository,
+                memoryMediaRepository,
+                tagRepository
+            ),
         )
     }
 }

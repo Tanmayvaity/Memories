@@ -3,6 +3,7 @@ package com.example.memories.core.data.data_source
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
+import com.example.memories.core.domain.model.LOCAL_OWNER
 import com.example.memories.feature.feature_other.domain.model.LockDuration
 import com.example.memories.feature.feature_other.domain.model.LockMethod
 import kotlinx.coroutines.flow.first
@@ -35,6 +36,7 @@ class OtherSettingsDatastoreTest {
             datastore.setHiddenMemoriesLockMethod(LockMethod.NONE)
             datastore.setHiddenMemoriesLockDuration(LockDuration.ONE_MINUTE)
             datastore.setHiddenMemoriesCustomPin("")
+            datastore.updateCurrentUser(LOCAL_OWNER)
         }
     }
 
@@ -135,5 +137,18 @@ class OtherSettingsDatastoreTest {
         datastore.setHiddenMemoriesCustomPin("1234")
         assertTrue(datastore.isPinCorrect("1234"))
         assertFalse(datastore.isPinCorrect("0000"))
+    }
+
+    @Test
+    fun currentUser_defaultsToLocal() = runTest {
+        assertEquals(LOCAL_OWNER, datastore.currentUser.first())
+    }
+
+    @Test
+    fun updateCurrentUser_persistsFirebaseUid() = runTest {
+        datastore.updateCurrentUser("firebase-uid")
+        assertEquals("firebase-uid", datastore.currentUser.first())
+        datastore.updateCurrentUser(LOCAL_OWNER)
+        assertEquals(LOCAL_OWNER, datastore.currentUser.first())
     }
 }

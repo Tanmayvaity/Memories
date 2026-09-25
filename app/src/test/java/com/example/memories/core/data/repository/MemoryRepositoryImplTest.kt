@@ -236,4 +236,11 @@ class MemoryRepositoryImplTest {
 
             override fun getRefreshKey(state: PagingState<Int, MemoryWithMedia>): Int? = null
         }
+
+    @Test
+    fun updateOwner_passesOwnerIdToDao() = runTest {
+        repository.updateOwner("firebase-uid")
+
+        coVerify { memoryDao.updateOwner("firebase-uid") }
+    }
 }

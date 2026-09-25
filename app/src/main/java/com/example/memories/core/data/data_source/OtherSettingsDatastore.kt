@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
+import com.example.memories.core.domain.model.LOCAL_OWNER
 import java.lang.Compiler.enable
 import java.lang.Exception
 
@@ -38,6 +39,7 @@ class OtherSettingsDatastore(
         val HIDDEN_MEMORIES_LOCK_DURATION = stringPreferencesKey("HIDDEN_MEMORIES_LOCK_DURATION")
 
         val HIDDEN_MEMORIES_CUSTOM_PIN = stringPreferencesKey("HIDDEN_MEMORIES_CUSTOM_PIN")
+        val CURRENT_USER = stringPreferencesKey("current_user")
     }
 
     val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -83,6 +85,10 @@ class OtherSettingsDatastore(
 
     val hiddenMemoriesLockDuration = context.datastore.data.map { preferences ->
         preferences[HIDDEN_MEMORIES_LOCK_DURATION] ?: LockDuration.ONE_MINUTE.name
+    }
+
+    val currentUser: Flow<String> = context.datastore.data.map { preferences ->
+        preferences[CURRENT_USER] ?: LOCAL_OWNER
     }
 
     fun isCustomPinSet(): Flow<Boolean> {
@@ -151,6 +157,12 @@ class OtherSettingsDatastore(
     suspend fun setOnboardingCompleted() {
         context.datastore.edit { preferences ->
             preferences[ONBOARDING_COMPLETED] = true
+        }
+    }
+
+    suspend fun updateCurrentUser(userId: String) {
+        context.datastore.edit { preferences ->
+            preferences[CURRENT_USER] = userId
         }
     }
 

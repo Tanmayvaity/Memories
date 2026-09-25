@@ -120,4 +120,11 @@ class TagRepositoryImplTest {
         assertEquals("labelAsc", result.first().tagLabel)
         verify { tagDao.getTagsWithMemoryCountByLabelAscending() }
     }
+
+    @Test
+    fun updateOwner_passesOwnerIdToDao() = runTest {
+        repository.updateOwner("firebase-uid")
+
+        coVerify { tagDao.updateOwner("firebase-uid") }
+    }
 }

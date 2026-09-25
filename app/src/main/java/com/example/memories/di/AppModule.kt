@@ -62,6 +62,8 @@ import com.example.memories.feature.feature_media_edit.domain.usecase.SaveBitmap
 import com.example.memories.feature.feature_media_edit.domain.usecase.UriToBitmapUseCase
 import com.example.memories.core.data.repository.MemoryRepositoryImpl
 import com.example.memories.core.domain.repository.MemoryRepository
+import com.example.memories.core.domain.repository.MemoryMediaRepository
+import com.example.memories.core.data.repository.MemoryMediaRepositoryImpl
 import com.example.memories.core.domain.usecase.AddTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagUseCase
 import com.example.memories.core.domain.usecase.FetchTagsByLabelUseCase
@@ -364,6 +366,14 @@ object AppModule {
         tagDao: TagDao
     ): TagRepository {
         return TagRepositoryImpl(tagDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providesMemoryMediaRepository(
+        mediaDao: MediaDao
+    ): MemoryMediaRepository {
+        return MemoryMediaRepositoryImpl(mediaDao)
     }
 
     @Provides
