@@ -6,6 +6,7 @@ import com.example.memories.feature.feature_firebase.domain.model.SignUpResult
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -49,6 +50,8 @@ class FirebaseManager {
             SignUpResult.WeakPassword
         } catch (e: FirebaseAuthInvalidCredentialsException) {
             SignUpResult.InvalidEmail
+        } catch (e: FirebaseTooManyRequestsException) {
+            SignUpResult.TooManyRequests
         } catch (e: FirebaseNetworkException) {
             SignUpResult.NoNetwork
         } catch (e: CancellationException) {
@@ -64,7 +67,7 @@ class FirebaseManager {
     ): SignUpResult {
         val normalizedEmail = email.trim()
         if (normalizedEmail.isBlank()) return SignUpResult.InvalidEmail
-        if (password.isBlank()) return SignUpResult.InvalidEmail
+        if (password.isBlank()) return SignUpResult.InvalidCredentials
 
         return try {
             val result = auth.signInWithEmailAndPassword(normalizedEmail, password).await()
@@ -75,9 +78,15 @@ class FirebaseManager {
                 SignUpResult.Success(user)
             }
         } catch (e: FirebaseAuthInvalidUserException) {
-            SignUpResult.InvalidEmail
+            // Disabled account, or (with email-enumeration protection off) no such account.
+            if (e.errorCode == "ERROR_USER_DISABLED") SignUpResult.AccountDisabled
+            else SignUpResult.InvalidCredentials
         } catch (e: FirebaseAuthInvalidCredentialsException) {
-            SignUpResult.InvalidEmail
+            // Badly formatted email, or wrong password / unknown account (ERROR_INVALID_CREDENTIAL).
+            if (e.errorCode == "ERROR_INVALID_EMAIL") SignUpResult.InvalidEmail
+            else SignUpResult.InvalidCredentials
+        } catch (e: FirebaseTooManyRequestsException) {
+            SignUpResult.TooManyRequests
         } catch (e: FirebaseNetworkException) {
             SignUpResult.NoNetwork
         } catch (e: CancellationException) {

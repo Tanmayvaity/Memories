@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_firebase.presentation
 
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -15,8 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,11 +59,16 @@ fun FirebaseRoot(
     viewModel: FirebaseViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    var isCredentialsError by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.snackbarEvents.collect { message ->
-            snackbarHostState.showSnackbar(message)
+        viewModel.oneTimeUiEvents.collect { event ->
+            when (event) {
+                is FirebaseUiEvent.ShowToast ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                FirebaseUiEvent.InvalidCredentials -> isCredentialsError = true
+            }
         }
     }
 
@@ -72,7 +77,8 @@ fun FirebaseRoot(
         state = state,
         onEvent = viewModel::onEvent,
         onBack = onBack,
-        snackbarHostState = snackbarHostState,
+        isCredentialsError = isCredentialsError,
+        onCredentialsErrorCleared = { isCredentialsError = false },
     )
 }
 
@@ -83,7 +89,8 @@ fun FirebaseScreen(
     state: FirebaseState = FirebaseState(),
     onEvent: (FirebaseEvents) -> Unit = {},
     onBack: () -> Unit = {},
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    isCredentialsError: Boolean = false,
+    onCredentialsErrorCleared: () -> Unit = {},
 ) {
     var showLogoutSheet by rememberSaveable { mutableStateOf(false) }
     var showAuthSheet by rememberSaveable { mutableStateOf(false) }
@@ -117,8 +124,13 @@ fun FirebaseScreen(
     if (showAuthSheet) {
         AuthSheet(
             authMode = state.authMode,
-            onAuthModeChange = { mode -> onEvent(FirebaseEvents.AuthModeChanged(mode)) },
+            onAuthModeChange = { mode ->
+                onCredentialsErrorCleared()
+                onEvent(FirebaseEvents.AuthModeChanged(mode))
+            },
             isLoading = state.isAuthLoading,
+            isCredentialsError = isCredentialsError,
+            onCredentialsErrorCleared = onCredentialsErrorCleared,
             onSubmit = { mode, email, password ->
                 when (mode) {
                     AuthMode.LOGIN -> onEvent(FirebaseEvents.SignInEvent(email, password))
@@ -127,7 +139,10 @@ fun FirebaseScreen(
             },
             onSocialSignIn = { showAuthSheet = false },
             onForgotPassword = { /* TODO */ },
-            onDismiss = { showAuthSheet = false }
+            onDismiss = {
+                onCredentialsErrorCleared()
+                showAuthSheet = false
+            }
         )
     }
 
@@ -163,9 +178,6 @@ fun FirebaseScreen(
                 onNavigationIconClick = onBack,
                 showDivider = false
             )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
         Column(

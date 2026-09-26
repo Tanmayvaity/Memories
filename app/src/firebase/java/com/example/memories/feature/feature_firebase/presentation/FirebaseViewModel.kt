@@ -26,8 +26,8 @@ class FirebaseViewModel @Inject constructor(
     private val _state = MutableStateFlow(FirebaseState())
     val state = _state.asStateFlow()
 
-    private val _snackbarEvents = Channel<String>()
-    val snackbarEvents = _snackbarEvents.receiveAsFlow()
+    private val _oneTimeUiEvents = Channel<FirebaseUiEvent>()
+    val oneTimeUiEvents = _oneTimeUiEvents.receiveAsFlow()
 
     init {
         restoreSession()
@@ -72,7 +72,10 @@ class FirebaseViewModel @Inject constructor(
                 else -> {
                     Log.w(TAG, "sign in failed: $result", (result as? SignUpResult.Unknown)?.cause)
                     _state.update { it.copy(userState = null) }
-                    _snackbarEvents.send(result.toErrorMessage())
+                    _oneTimeUiEvents.send(
+                        if (result == SignUpResult.InvalidCredentials) FirebaseUiEvent.InvalidCredentials
+                        else FirebaseUiEvent.ShowToast(result.toErrorMessage())
+                    )
                 }
             }
         }
@@ -94,7 +97,7 @@ class FirebaseViewModel @Inject constructor(
                 else -> {
                     Log.w(TAG, "sign up failed: $result", (result as? SignUpResult.Unknown)?.cause)
                     _state.update { it.copy(userState = null) }
-                    _snackbarEvents.send(result.toErrorMessage())
+                    _oneTimeUiEvents.send(FirebaseUiEvent.ShowToast(result.toErrorMessage()))
                 }
             }
         }
@@ -122,7 +125,10 @@ class FirebaseViewModel @Inject constructor(
     private fun SignUpResult.toErrorMessage(): String = when (this) {
         SignUpResult.EmailAlreadyInUse -> "This email is already registered"
         SignUpResult.WeakPassword -> "Use at least 6 characters for your password"
-        SignUpResult.InvalidEmail -> "Enter a valid email and password"
+        SignUpResult.InvalidEmail -> "Enter a valid email address"
+        SignUpResult.InvalidCredentials -> "Incorrect email or password"
+        SignUpResult.AccountDisabled -> "This account has been disabled"
+        SignUpResult.TooManyRequests -> "Too many attempts. Try again later."
         SignUpResult.NoNetwork -> "No network connection. Try again."
         is SignUpResult.Unknown -> cause.message ?: "Something went wrong. Try again."
         is SignUpResult.Success -> ""

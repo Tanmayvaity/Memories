@@ -71,6 +71,9 @@ fun AuthSheet(
     authMode: AuthMode = AuthMode.LOGIN,
     onAuthModeChange: (AuthMode) -> Unit = {},
     isLoading: Boolean = false,
+    // Sign-in rejected with wrong email or password: both fields go red until either is edited.
+    isCredentialsError: Boolean = false,
+    onCredentialsErrorCleared: () -> Unit = {},
     onSubmit: (mode: AuthMode, email: String, password: String) -> Unit = { _, _, _ -> },
     onSocialSignIn: (SocialProvider) -> Unit = {},
     onForgotPassword: () -> Unit = {},
@@ -156,12 +159,15 @@ fun AuthSheet(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    onCredentialsErrorCleared()
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(text = "Email") },
                 singleLine = true,
                 enabled = !isLoading,
-                isError = emailError != null,
+                isError = emailError != null || isCredentialsError,
                 supportingText = emailError?.let { { Text(text = it) } },
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(
@@ -172,12 +178,16 @@ fun AuthSheet(
 
             PasswordField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    onCredentialsErrorCleared()
+                },
                 label = "Password",
                 enabled = !isLoading,
                 isVisible = isPasswordVisible,
                 onVisibilityToggle = { isPasswordVisible = !isPasswordVisible },
-                errorMessage = passwordError,
+                errorMessage = passwordError
+                    ?: if (isCredentialsError) "Incorrect email or password" else null,
                 imeAction = if (authMode == AuthMode.REGISTER) ImeAction.Next else ImeAction.Done
             )
 
@@ -414,6 +424,19 @@ private fun AuthSheetLoginPreview() {
     MemoriesTheme {
         AuthSheet(
             authMode = AuthMode.LOGIN,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+private fun AuthSheetCredentialsErrorPreview() {
+    MemoriesTheme {
+        AuthSheet(
+            authMode = AuthMode.LOGIN,
+            isCredentialsError = true,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         )
     }
