@@ -40,6 +40,7 @@ class OtherSettingsDatastore(
 
         val HIDDEN_MEMORIES_CUSTOM_PIN = stringPreferencesKey("HIDDEN_MEMORIES_CUSTOM_PIN")
         val CURRENT_USER = stringPreferencesKey("current_user")
+        val LOCAL_RETENTION = stringPreferencesKey("local_retention")
     }
 
     val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -89,6 +90,11 @@ class OtherSettingsDatastore(
 
     val currentUser: Flow<String> = context.datastore.data.map { preferences ->
         preferences[CURRENT_USER] ?: LOCAL_OWNER
+    }
+
+    /** Encoded by [LocalRetentionCodec]; null until the user picks one. */
+    val localRetention: Flow<String?> = context.datastore.data.map { preferences ->
+        preferences[LOCAL_RETENTION]
     }
 
     fun isCustomPinSet(): Flow<Boolean> {
@@ -163,6 +169,12 @@ class OtherSettingsDatastore(
     suspend fun updateCurrentUser(userId: String) {
         context.datastore.edit { preferences ->
             preferences[CURRENT_USER] = userId
+        }
+    }
+
+    suspend fun setLocalRetention(encoded: String) {
+        context.datastore.edit { preferences ->
+            preferences[LOCAL_RETENTION] = encoded
         }
     }
 

@@ -1,5 +1,7 @@
 package com.example.memories.feature.feature_firebase.presentation
 
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +33,9 @@ class FirebaseViewModel @Inject constructor(
 
     init {
         restoreSession()
+        remoteSyncUseCases.getLocalRetentionUseCase()
+            .onEach { retention -> _state.update { it.copy(localRetention = retention) } }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: FirebaseEvents) {
@@ -40,6 +45,9 @@ class FirebaseViewModel @Inject constructor(
             FirebaseEvents.LogoutEvent -> logout()
             is FirebaseEvents.AuthModeChanged -> {
                 _state.update { it.copy(authMode = event.mode) }
+            }
+            is FirebaseEvents.LocalRetentionChanged -> viewModelScope.launch {
+                remoteSyncUseCases.setLocalRetentionUseCase(event.retention)
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.memories.core.domain.repository
 
+import com.example.memories.core.domain.model.LocalRetention
 import com.example.memories.feature.feature_other.domain.model.LockDuration
 import com.example.memories.feature.feature_other.domain.model.LockMethod
 import kotlinx.coroutines.flow.Flow
@@ -20,9 +21,11 @@ interface AppSettingRepository {
 
     val isDarkModeEnabled : Flow<Boolean>
     val currentUser: Flow<String>
+    val localRetention: Flow<LocalRetention>
 
     suspend fun setDarkMode( toDarkMode : Boolean)
     suspend fun updateCurrentUser(userId: String)
+    suspend fun setLocalRetention(retention: LocalRetention)
 
     suspend fun enableAllNotifications(enabled : Boolean)
     suspend fun enableReminderNotification(enabled : Boolean)

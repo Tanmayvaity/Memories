@@ -1,5 +1,11 @@
 package com.example.memories.feature.feature_firebase.presentation
 
+import com.example.memories.feature.feature_firebase.presentation.components.label
+import com.example.memories.feature.feature_firebase.presentation.components.LocalRetentionSheet
+import com.example.memories.core.domain.model.LocalRetention
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -94,6 +100,7 @@ fun FirebaseScreen(
 ) {
     var showLogoutSheet by rememberSaveable { mutableStateOf(false) }
     var showAuthSheet by rememberSaveable { mutableStateOf(false) }
+    var showRetentionSheet by rememberSaveable { mutableStateOf(false) }
     var connectedProviders by rememberSaveable(stateSaver = ConnectedProvidersSaver) {
         mutableStateOf(setOf(SocialProvider.GOOGLE))
     }
@@ -143,6 +150,17 @@ fun FirebaseScreen(
                 onCredentialsErrorCleared()
                 showAuthSheet = false
             }
+        )
+    }
+
+    if (showRetentionSheet) {
+        LocalRetentionSheet(
+            current = state.localRetention,
+            onSave = { retention ->
+                onEvent(FirebaseEvents.LocalRetentionChanged(retention))
+                showRetentionSheet = false
+            },
+            onDismiss = { showRetentionSheet = false }
         )
     }
 
@@ -284,11 +302,35 @@ fun FirebaseScreen(
                                 Switch(checked = false, onCheckedChange = {})
                             }
                         )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        SyncSettingRow(
+                            title = "Keep memories on this device",
+                            subtitle = state.localRetention.label(),
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            onClick = { showRetentionSheet = true }
+                        )
                     }
                 }
 
                 Text(
-                    text = "Sync is optional. Your memories are always saved on this device.",
+                    text = when (val retention = state.localRetention) {
+                        LocalRetention.Forever ->
+                            "Sync is optional. Your memories are always saved on this device."
+                        LocalRetention.Never ->
+                            "Memories are removed from this device once they're safely synced."
+                        is LocalRetention.Keep ->
+                            "Synced memories older than ${retention.label()} are removed from this device."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 16.sp

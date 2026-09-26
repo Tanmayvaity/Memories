@@ -1,5 +1,8 @@
 package com.example.memories.core.data.repository
 
+import kotlinx.coroutines.flow.map
+import com.example.memories.core.domain.model.LocalRetention
+import com.example.memories.core.data.data_source.LocalRetentionCodec
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.feature.feature_other.domain.model.LockDuration
@@ -69,5 +72,12 @@ class AppSettingRepositoryImpl @Inject constructor(
 
     override suspend fun updateCurrentUser(userId: String) {
         otherSettingsDatastore.updateCurrentUser(userId)
+    }
+
+    override val localRetention: Flow<LocalRetention> =
+        otherSettingsDatastore.localRetention.map { LocalRetentionCodec.decode(it) }
+
+    override suspend fun setLocalRetention(retention: LocalRetention) {
+        otherSettingsDatastore.setLocalRetention(LocalRetentionCodec.encode(retention))
     }
 }

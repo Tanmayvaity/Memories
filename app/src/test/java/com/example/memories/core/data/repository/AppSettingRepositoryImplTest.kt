@@ -1,5 +1,7 @@
 package com.example.memories.core.data.repository
 
+import com.example.memories.core.domain.model.RetentionUnit
+import com.example.memories.core.domain.model.LocalRetention
 import com.example.memories.core.data.data_source.OtherSettingsDatastore
 import com.example.memories.feature.feature_other.domain.model.LockDuration
 import com.example.memories.feature.feature_other.domain.model.LockMethod
@@ -81,5 +83,19 @@ class AppSettingRepositoryImplTest {
 
         assertTrue(repo.isCustomPinCorrect("1234"))
         assertFalse(repo.isCustomPinCorrect("0000"))
+    }
+
+    @Test
+    fun localRetention_decodesStoredValue() = runTest {
+        every { datastore.localRetention } returns flowOf("KEEP:3:MONTHS")
+
+        assertEquals(LocalRetention.ThreeMonths, repository().localRetention.first())
+    }
+
+    @Test
+    fun setLocalRetention_storesEncodedValue() = runTest {
+        repository().setLocalRetention(LocalRetention.Keep(45, RetentionUnit.DAYS))
+
+        coVerify { datastore.setLocalRetention("KEEP:45:DAYS") }
     }
 }
