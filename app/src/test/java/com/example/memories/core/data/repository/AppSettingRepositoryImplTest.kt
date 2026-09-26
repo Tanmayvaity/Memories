@@ -98,4 +98,24 @@ class AppSettingRepositoryImplTest {
 
         coVerify { datastore.setLocalRetention("KEEP:45:DAYS") }
     }
+
+    @Test
+    fun syncToggles_readFromDatastore() = runTest {
+        every { datastore.syncOverCellular } returns flowOf(true)
+        every { datastore.syncHiddenMemories } returns flowOf(true)
+
+        val repo = repository()
+        assertEquals(true, repo.syncOverCellular.first())
+        assertEquals(true, repo.syncHiddenMemories.first())
+    }
+
+    @Test
+    fun syncToggles_writeToDatastore() = runTest {
+        val repo = repository()
+        repo.setSyncOverCellular(true)
+        repo.setSyncHiddenMemories(false)
+
+        coVerify { datastore.setSyncOverCellular(true) }
+        coVerify { datastore.setSyncHiddenMemories(false) }
+    }
 }

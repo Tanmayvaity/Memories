@@ -8,4 +8,6 @@ sealed interface FirebaseEvents {
     data object LogoutEvent : FirebaseEvents
     data class AuthModeChanged(val mode: AuthMode) : FirebaseEvents
     data class LocalRetentionChanged(val retention: LocalRetention) : FirebaseEvents
+    data class SyncOverCellularChanged(val enabled: Boolean) : FirebaseEvents
+    data class SyncHiddenMemoriesChanged(val enabled: Boolean) : FirebaseEvents
 }

@@ -8,6 +8,8 @@ data class FirebaseState(
     val authMode: AuthMode = AuthMode.LOGIN,
     val userState: UiState<FirebaseUserData>? = null,
     val localRetention: LocalRetention = LocalRetention.Default,
+    val syncOverCellular: Boolean = false,
+    val syncHiddenMemories: Boolean = false,
 ) {
     val isSignedIn: Boolean
         get() = userState is UiState.Success

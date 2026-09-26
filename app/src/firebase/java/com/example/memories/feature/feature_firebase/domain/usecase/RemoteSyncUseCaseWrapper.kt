@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_firebase.domain.usecase
 
-import com.example.memories.core.domain.usecase.GetLocalRetentionUseCase
+import com.example.memories.core.domain.usecase.SetSyncOverCellularUseCase
+import com.example.memories.core.domain.usecase.SetSyncHiddenMemoriesUseCase
 import com.example.memories.core.domain.usecase.SetLocalRetentionUseCase
 import com.example.memories.core.domain.usecase.UpdateCurrentUserUseCase
 
@@ -11,6 +12,7 @@ data class RemoteSyncUseCaseWrapper(
     val getCurrentUserUseCase: GetCurrentUserUseCase,
     val signOutUseCase: SignOutUseCase,
     val updateCurrentUserUseCase: UpdateCurrentUserUseCase,
-    val getLocalRetentionUseCase: GetLocalRetentionUseCase,
     val setLocalRetentionUseCase: SetLocalRetentionUseCase,
+    val setSyncOverCellularUseCase: SetSyncOverCellularUseCase,
+    val setSyncHiddenMemoriesUseCase: SetSyncHiddenMemoriesUseCase,
 )

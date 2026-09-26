@@ -80,4 +80,16 @@ class AppSettingRepositoryImpl @Inject constructor(
     override suspend fun setLocalRetention(retention: LocalRetention) {
         otherSettingsDatastore.setLocalRetention(LocalRetentionCodec.encode(retention))
     }
+
+    override val syncOverCellular: Flow<Boolean> = otherSettingsDatastore.syncOverCellular
+
+    override val syncHiddenMemories: Flow<Boolean> = otherSettingsDatastore.syncHiddenMemories
+
+    override suspend fun setSyncOverCellular(enabled: Boolean) {
+        otherSettingsDatastore.setSyncOverCellular(enabled)
+    }
+
+    override suspend fun setSyncHiddenMemories(enabled: Boolean) {
+        otherSettingsDatastore.setSyncHiddenMemories(enabled)
+    }
 }

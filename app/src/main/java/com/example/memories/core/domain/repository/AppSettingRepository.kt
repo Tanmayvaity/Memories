@@ -22,10 +22,14 @@ interface AppSettingRepository {
     val isDarkModeEnabled : Flow<Boolean>
     val currentUser: Flow<String>
     val localRetention: Flow<LocalRetention>
+    val syncOverCellular: Flow<Boolean>
+    val syncHiddenMemories: Flow<Boolean>
 
     suspend fun setDarkMode( toDarkMode : Boolean)
     suspend fun updateCurrentUser(userId: String)
     suspend fun setLocalRetention(retention: LocalRetention)
+    suspend fun setSyncOverCellular(enabled: Boolean)
+    suspend fun setSyncHiddenMemories(enabled: Boolean)
 
     suspend fun enableAllNotifications(enabled : Boolean)
     suspend fun enableReminderNotification(enabled : Boolean)

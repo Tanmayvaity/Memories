@@ -1,11 +1,12 @@
 package com.example.memories.di
 
+import com.example.memories.core.domain.usecase.SetSyncOverCellularUseCase
+import com.example.memories.core.domain.usecase.SetSyncHiddenMemoriesUseCase
 import com.example.memories.feature.feature_firebase.data.FirebaseManager
 import com.example.memories.core.domain.repository.AppSettingRepository
 import com.example.memories.core.domain.repository.MemoryMediaRepository
 import com.example.memories.core.domain.repository.MemoryRepository
 import com.example.memories.core.domain.repository.TagRepository
-import com.example.memories.core.domain.usecase.GetLocalRetentionUseCase
 import com.example.memories.core.domain.usecase.SetLocalRetentionUseCase
 import com.example.memories.core.domain.usecase.UpdateCurrentUserUseCase
 import com.example.memories.feature.feature_firebase.data.FirebaseSyncRepositoryImpl
@@ -57,8 +58,9 @@ object FirebaseModule {
                 memoryMediaRepository,
                 tagRepository
             ),
-            getLocalRetentionUseCase = GetLocalRetentionUseCase(appSettingRepository),
             setLocalRetentionUseCase = SetLocalRetentionUseCase(appSettingRepository),
+            setSyncOverCellularUseCase = SetSyncOverCellularUseCase(appSettingRepository),
+            setSyncHiddenMemoriesUseCase = SetSyncHiddenMemoriesUseCase(appSettingRepository),
         )
     }
 }

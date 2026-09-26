@@ -41,6 +41,8 @@ class OtherSettingsDatastore(
         val HIDDEN_MEMORIES_CUSTOM_PIN = stringPreferencesKey("HIDDEN_MEMORIES_CUSTOM_PIN")
         val CURRENT_USER = stringPreferencesKey("current_user")
         val LOCAL_RETENTION = stringPreferencesKey("local_retention")
+        val SYNC_OVER_CELLULAR = booleanPreferencesKey("sync_over_cellular")
+        val SYNC_HIDDEN_MEMORIES = booleanPreferencesKey("sync_hidden_memories")
     }
 
     val isDarkModeEnabled = context.datastore.data.map { preferences ->
@@ -95,6 +97,14 @@ class OtherSettingsDatastore(
     /** Encoded by [LocalRetentionCodec]; null until the user picks one. */
     val localRetention: Flow<String?> = context.datastore.data.map { preferences ->
         preferences[LOCAL_RETENTION]
+    }
+
+    val syncOverCellular: Flow<Boolean> = context.datastore.data.map { preferences ->
+        preferences[SYNC_OVER_CELLULAR] ?: false
+    }
+
+    val syncHiddenMemories: Flow<Boolean> = context.datastore.data.map { preferences ->
+        preferences[SYNC_HIDDEN_MEMORIES] ?: false
     }
 
     fun isCustomPinSet(): Flow<Boolean> {
@@ -175,6 +185,18 @@ class OtherSettingsDatastore(
     suspend fun setLocalRetention(encoded: String) {
         context.datastore.edit { preferences ->
             preferences[LOCAL_RETENTION] = encoded
+        }
+    }
+
+    suspend fun setSyncOverCellular(enabled: Boolean) {
+        context.datastore.edit { preferences ->
+            preferences[SYNC_OVER_CELLULAR] = enabled
+        }
+    }
+
+    suspend fun setSyncHiddenMemories(enabled: Boolean) {
+        context.datastore.edit { preferences ->
+            preferences[SYNC_HIDDEN_MEMORIES] = enabled
         }
     }
 

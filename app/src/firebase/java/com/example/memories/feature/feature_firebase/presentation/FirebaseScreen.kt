@@ -55,7 +55,6 @@ import com.example.memories.feature.feature_firebase.presentation.components.Log
 import com.example.memories.feature.feature_firebase.presentation.components.ManageBackupsCard
 import com.example.memories.feature.feature_firebase.presentation.components.SignedOutCard
 import com.example.memories.feature.feature_firebase.presentation.components.SyncSettingRow
-import com.example.memories.feature.feature_firebase.presentation.components.SyncStatusCard
 import com.example.memories.ui.theme.MemoriesTheme
 
 @Composable
@@ -276,7 +275,6 @@ fun FirebaseScreen(
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                SyncStatusCard()
 
                 SettingCard(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -287,7 +285,10 @@ fun FirebaseScreen(
                             title = "Sync over cellular",
                             subtitle = "Sync when Wi-Fi is unavailable",
                             trailing = {
-                                Switch(checked = false, onCheckedChange = {})
+                                Switch(
+                                    checked = state.syncOverCellular,
+                                    onCheckedChange = { onEvent(FirebaseEvents.SyncOverCellularChanged(it)) }
+                                )
                             }
                         )
                         HorizontalDivider(
@@ -299,7 +300,10 @@ fun FirebaseScreen(
                             title = "Sync hidden memories",
                             subtitle = "Vaulted items stay on this device by default",
                             trailing = {
-                                Switch(checked = false, onCheckedChange = {})
+                                Switch(
+                                    checked = state.syncHiddenMemories,
+                                    onCheckedChange = { onEvent(FirebaseEvents.SyncHiddenMemoriesChanged(it)) }
+                                )
                             }
                         )
                         HorizontalDivider(

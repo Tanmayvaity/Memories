@@ -1,6 +1,7 @@
 package com.example.memories.feature.feature_firebase.presentation
 
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.combine
+import com.example.memories.core.domain.repository.AppSettingRepository
 import kotlinx.coroutines.flow.launchIn
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FirebaseViewModel @Inject constructor(
     private val remoteSyncUseCases: RemoteSyncUseCaseWrapper,
+    private val appSettingRepository: AppSettingRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FirebaseState())
@@ -33,9 +35,19 @@ class FirebaseViewModel @Inject constructor(
 
     init {
         restoreSession()
-        remoteSyncUseCases.getLocalRetentionUseCase()
-            .onEach { retention -> _state.update { it.copy(localRetention = retention) } }
-            .launchIn(viewModelScope)
+        combine(
+            appSettingRepository.localRetention,
+            appSettingRepository.syncOverCellular,
+            appSettingRepository.syncHiddenMemories,
+        ) { retention, overCellular, hiddenMemories ->
+            _state.update {
+                it.copy(
+                    localRetention = retention,
+                    syncOverCellular = overCellular,
+                    syncHiddenMemories = hiddenMemories,
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onEvent(event: FirebaseEvents) {
@@ -48,6 +60,12 @@ class FirebaseViewModel @Inject constructor(
             }
             is FirebaseEvents.LocalRetentionChanged -> viewModelScope.launch {
                 remoteSyncUseCases.setLocalRetentionUseCase(event.retention)
+            }
+            is FirebaseEvents.SyncOverCellularChanged -> viewModelScope.launch {
+                remoteSyncUseCases.setSyncOverCellularUseCase(event.enabled)
+            }
+            is FirebaseEvents.SyncHiddenMemoriesChanged -> viewModelScope.launch {
+                remoteSyncUseCases.setSyncHiddenMemoriesUseCase(event.enabled)
             }
         }
     }
