@@ -1,8 +1,11 @@
 package com.example.memories.core.presentation.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,22 +18,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.memories.LocalTheme
-import com.example.memories.ui.theme.MemoriesTheme
-import com.example.memories.core.util.SmallPhonePreview
 import com.example.memories.feature.feature_feed.domain.model.FetchType
+import com.example.memories.feature.feature_feed.domain.model.FilterOption
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.domain.model.SortType
 import com.example.memories.feature.feature_feed.presentation.feed.FeedState
-import com.example.memories.feature.feature_feed.presentation.feed.components.CardList
-import com.example.memories.feature.feature_feed.presentation.feed.components.ChipRow
+import com.example.memories.ui.theme.MemoriesTheme
 import kotlin.enums.EnumEntries
 
+/**
+ * Feed filter and sort sheet. Styled like the Tags screen's sort sheet: one [SelectableOptionRow]
+ * per option, grouped under Show / Sort By / Order By.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterActionSheet(
@@ -39,108 +44,105 @@ fun FilterActionSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     title: String,
     onReset: () -> Unit = {},
-    fetchTypeEntries : EnumEntries<FetchType> = FetchType.entries,
-    onFetchTypeClick : (FetchType) -> Unit = {},
-    sortByEntries : EnumEntries<SortType> = SortType.entries,
-    onSortByClick : (SortType) -> Unit = {},
-    orderByEntries : EnumEntries<SortOrder> = SortOrder.entries,
-    onOrderByClick : (SortOrder) -> Unit = {},
+    fetchTypeEntries: EnumEntries<FetchType> = FetchType.entries,
+    onFetchTypeClick: (FetchType) -> Unit = {},
+    sortByEntries: EnumEntries<SortType> = SortType.entries,
+    onSortByClick: (SortType) -> Unit = {},
+    orderByEntries: EnumEntries<SortOrder> = SortOrder.entries,
+    onOrderByClick: (SortOrder) -> Unit = {},
     onApplyFilter: () -> Unit = {},
     state: FeedState = FeedState()
 ) {
-    val theme = LocalTheme.current
-    val currentSelectedSortItem = remember(state.sortType) { state.sortType }
-    val currentSelectedFetchItem = remember(state.type) { state.type }
-    val currentSelectedOrderByItem = remember(state.orderByType) { state.orderByType }
-
     ModalBottomSheet(
-        onDismissRequest = {
-            onDismiss()
-        },
+        onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
-            modifier = Modifier
-                .verticalScroll(state = rememberScrollState())
-                .padding(vertical = 10.dp, horizontal = 20.dp)
+            modifier = modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                HeadingText(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(3.dp),
-                    title = title
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-                TextButton(
-                    onClick = onReset
-                ) {
-                    Text(
-                        text = "Reset",
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                TextButton(onClick = onReset) {
+                    Text(text = "Reset")
                 }
             }
 
-            HeadingText(
+            FilterSection(
                 title = "Show",
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(3.dp, top = 16.dp)
+                options = fetchTypeEntries,
+                selected = state.type,
+                onSelect = onFetchTypeClick,
+                topSpacing = 16.dp,
             )
-            ChipRow(
-                items = fetchTypeEntries.toList() ,
-                selectedItemIndex = currentSelectedFetchItem.ordinal,
-                modifier = Modifier.padding(vertical = 10.dp),
-                onItemClick = { type ->
-                    onFetchTypeClick(type)
-                }
-            )
-            HeadingText(
+            FilterSection(
                 title = "Sort By",
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(3.dp, top = 16.dp, bottom = 10.dp)
+                options = sortByEntries,
+                selected = state.sortType,
+                onSelect = onSortByClick,
             )
-            CardList(
-                items = sortByEntries.toList(),
-                selectedIndex = currentSelectedSortItem.ordinal,
-                onItemClick = { item ->
-                    onSortByClick(item as SortType)
-                }
-            )
-            HeadingText(
+            FilterSection(
                 title = "Order By",
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(3.dp, top = 16.dp, bottom = 10.dp)
+                options = orderByEntries,
+                selected = state.orderByType,
+                onSelect = onOrderByClick,
             )
-            CardList(
-                items = orderByEntries.toList(),
-                selectedIndex = currentSelectedOrderByItem.ordinal,
-                onItemClick = { item ->
-                    onOrderByClick(item as SortOrder)
-                }
 
-            )
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = onApplyFilter,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 64.dp),
+                    .height(50.dp),
             ) {
-                Text(
-                    text = "Apply Filters",
-                    modifier = Modifier
-                        .padding(12.dp)
-                )
+                Text(text = "Apply Filters")
             }
-
-
         }
     }
 }
 
-
+@Composable
+private fun <T : FilterOption> FilterSection(
+    title: String,
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    topSpacing: Dp = 24.dp,
+) {
+    Spacer(modifier = Modifier.height(topSpacing))
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        options.forEach { option ->
+            SelectableOptionRow(
+                title = option.title,
+                description = option.description,
+                icon = option.icon,
+                isSelected = option == selected,
+                onSelect = { onSelect(option) }
+            )
+        }
+    }
+}
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)

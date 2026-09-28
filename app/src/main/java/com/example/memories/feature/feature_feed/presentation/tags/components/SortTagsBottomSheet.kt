@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.memories.core.presentation.components.SelectableOptionRow
 import com.example.memories.feature.feature_feed.domain.model.SortOrder
 import com.example.memories.feature.feature_feed.presentation.tags.SortBy
 import com.example.memories.feature.feature_feed.presentation.tags.TagsState
@@ -86,7 +87,7 @@ fun SortTagsBottomSheet(
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SortBy.entries.forEach { sortBy ->
-                    SortRow(
+                    SelectableOptionRow(
                         title = sortBy.title,
                         description = sortBy.description,
                         icon = sortBy.icon,
@@ -107,7 +108,7 @@ fun SortTagsBottomSheet(
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SortOrder.entries.forEach { sortOrder ->
-                    SortRow(
+                    SelectableOptionRow(
                         title = sortOrder.title,
                         description = sortOrder.description,
                         icon = sortOrder.icon,
@@ -129,69 +130,6 @@ fun SortTagsBottomSheet(
                 Text(text = "Apply Sorting")
             }
         }
-    }
-}
-
-@Composable
-private fun SortRow(
-    title: String,
-    description: String,
-    icon: Int? = null,
-    isSelected: Boolean,
-    onSelect: () -> Unit
-) {
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
-            .background(containerColor)
-            .clickable { onSelect() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
-            contentAlignment = Alignment.Center
-        ) {
-            if (icon != null) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = title,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        RadioButton(
-            selected = isSelected,
-            onClick = { onSelect() },
-            colors = RadioButtonDefaults.colors(
-                selectedColor = MaterialTheme.colorScheme.primary
-            )
-        )
     }
 }
 
